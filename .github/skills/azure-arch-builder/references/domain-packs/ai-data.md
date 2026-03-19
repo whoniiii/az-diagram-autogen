@@ -153,11 +153,11 @@ resource fabric 'Microsoft.Fabric/capacities@<fetch>' = {
 
 - Bicep으로 프로비저닝 가능한 것: Capacity만
 - Workspace, Lakehouse, Warehouse 등은 포털에서 수동 생성
-- admin 이메일은 사용자에게 확인 (`AskUserQuestion`)
+- admin 이메일은 사용자에게 확인 (`ask_user`)
 
 ### Phase 1 추가 시 필수 확인 항목
 
-Fabric이 대화 중 추가되면, 다이어그램 업데이트 전에 아래 항목을 반드시 AskUserQuestion으로 확인:
+Fabric이 대화 중 추가되면, 다이어그램 업데이트 전에 아래 항목을 반드시 ask_user로 확인:
 
 - [ ] **SKU/Capacity**: F2, F4, F8, ... — MS Docs에서 가용 SKU fetch 후 선택지 제공
 - [ ] **administration.members**: admin 이메일 — 없으면 배포 실패

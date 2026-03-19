@@ -140,10 +140,10 @@
       "id": 10,
       "category": "delta-confirmation",
       "prompt": "기존 아키텍처(Foundry + AI Search + Storage + Key Vault + PE)가 확정된 상태에서 사용자가 'Key Vault 제거하고 Fabric 추가해줘'라고 요청.",
-      "expected_output": "Key Vault 제거는 즉시 반영. Fabric 추가는 먼저 리전 가용성 확인(MS Docs fetch) 후 Fabric SKU와 admin email을 AskUserQuestion으로 확인. 확인 완료 전까지 다이어그램 확정 업데이트 안 함. 사용자가 말하지 않은 OneLake/데이터 파이프라인 등 하위 워크로드를 임의 추가하지 않음.",
+      "expected_output": "Key Vault 제거는 즉시 반영. Fabric 추가는 먼저 리전 가용성 확인(MS Docs fetch) 후 Fabric SKU와 admin email을 ask_user로 확인. 확인 완료 전까지 다이어그램 확정 업데이트 안 함. 사용자가 말하지 않은 OneLake/데이터 파이프라인 등 하위 워크로드를 임의 추가하지 않음.",
       "checks": [
-        "Fabric SKU를 AskUserQuestion으로 확인",
-        "Fabric admin email을 AskUserQuestion으로 확인",
+        "Fabric SKU를 ask_user로 확인",
+        "Fabric admin email을 ask_user로 확인",
         "확인 완료 전 다이어그램 확정 업데이트 안 함",
         "사용자 미언급 하위 워크로드(OneLake, 데이터 파이프라인) 임의 추가 안 함",
         "이미 확정된 다른 서비스(Foundry, Search, Storage) 설정은 다시 묻지 않음",
@@ -198,9 +198,9 @@
       "id": 14,
       "category": "service-discovery",
       "prompt": "사내 문서 기반 RAG 챗봇 아키텍처에 Spark 인스턴스도 추가하고 싶은데, Azure에서 관리형 Spark 옵션 뭐가 있어?",
-      "expected_output": "WebSearch로 Azure 관리형 Spark 옵션 전체를 먼저 탐색. 최소 Microsoft Fabric Spark, Azure Databricks, Azure Synapse Spark Pool, Azure HDInsight를 발견하여 비교. v1 scope인 Fabric Spark를 누락하지 않음. 기억에서 2~3개만 나열하지 않음.",
+      "expected_output": "web_search로 Azure 관리형 Spark 옵션 전체를 먼저 탐색. 최소 Microsoft Fabric Spark, Azure Databricks, Azure Synapse Spark Pool, Azure HDInsight를 발견하여 비교. v1 scope인 Fabric Spark를 누락하지 않음. 기억에서 2~3개만 나열하지 않음.",
       "checks": [
-        "WebSearch로 카테고리 전체 탐색 수행 (직접 URL fetch만 하지 않음)",
+        "web_search로 카테고리 전체 탐색 수행 (직접 URL fetch만 하지 않음)",
         "Microsoft Fabric Spark (Data Engineering 워크로드) 포함",
         "Azure Databricks 포함",
         "Azure Synapse Analytics Spark Pool 포함",
@@ -218,7 +218,7 @@
       "checks": [
         "기존 배포 아키텍처에 추가할지 사용자에게 먼저 확인",
         "Phase 1로 복귀하여 Delta Confirmation Rule 적용",
-        "VM의 미확정 필수 항목(SKU, OS, 네트워킹 등) AskUserQuestion으로 확인",
+        "VM의 미확정 필수 항목(SKU, OS, 네트워킹 등) ask_user로 확인",
         "업데이트된 아키텍처 다이어그램 생성하여 사용자에게 제시",
         "다이어그램 확정 없이 Bicep 생성으로 넘어가지 않음",
         "기존 배포 리소스 + 새 리소스가 합쳐진 전체 아키텍처 표시"
