@@ -128,6 +128,50 @@ SERVICE_ICONS = {
         "icon_svg": '<circle cx="24" cy="24" r="16" fill="#0078D4"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="600">?</text>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "Azure"
     },
+    "databricks": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="6" fill="#FF3621"/><text x="24" y="30" text-anchor="middle" font-size="16" fill="white" font-weight="700">DB</text>',
+        "color": "#FF3621", "bg": "#FFF0EE", "category": "Data"
+    },
+    "sql_server": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="11" fill="white" font-weight="700">SQL</text><rect x="12" y="28" width="24" height="8" rx="2" fill="white" opacity="0.3"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+    },
+    "sql_database": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="11" fill="white" font-weight="700">SQL</text><rect x="12" y="28" width="24" height="8" rx="2" fill="white" opacity="0.3"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+    },
+    "cosmos_db": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Cosmos</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">DB</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+    },
+    "app_service": {
+        "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="6" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="11" fill="white" font-weight="700">App</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute"
+    },
+    "aks": {
+        "icon_svg": '<polygon points="24,4 44,20 38,44 10,44 4,20" fill="#326CE5" stroke="#fff" stroke-width="1"/><text x="24" y="30" text-anchor="middle" font-size="11" fill="white" font-weight="700">K8s</text>',
+        "color": "#326CE5", "bg": "#EBF0FA", "category": "Compute"
+    },
+    "function_app": {
+        "icon_svg": '<polygon points="24,6 42,42 6,42" fill="#F0AD4E"/><text x="24" y="36" text-anchor="middle" font-size="14" fill="white" font-weight="700">ƒ</text>',
+        "color": "#F0AD4E", "bg": "#FFF8ED", "category": "Compute"
+    },
+    "synapse": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="8" fill="white" font-weight="700">Syn</text><text x="24" y="32" text-anchor="middle" font-size="8" fill="white">apse</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+    },
+    "log_analytics": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#5C2D91"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">Log</text>',
+        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring"
+    },
+    "app_insights": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#5C2D91"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">AI</text>',
+        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring"
+    },
+    "nsg": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#E8A000"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">NSG</text>',
+        "color": "#E8A000", "bg": "#FFF8E1", "category": "Network"
+    },
 }
 
 CONNECTION_STYLES = {
@@ -433,7 +477,7 @@ const serviceGroups = catOrder.filter(cat => catGroups[cat] && catGroups[cat].le
 let gx = 60, gy = 140;  // starting position for service groups
 let rowMaxH = 0;
 let rowStartX = 60;
-const MAX_ROW_W = Math.max(1200, serviceGroups.length * 300);  // rough max width before wrapping
+const MAX_ROW_W = Math.max(1600, serviceGroups.length * 400);  // wider to keep Security alongside AI/Data
 
 serviceGroups.forEach(cat => {{
   const nodes = catGroups[cat];

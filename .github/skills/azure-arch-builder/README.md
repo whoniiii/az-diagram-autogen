@@ -1,19 +1,64 @@
-# azure-arch-builder (GHCP Edition)
+# azure-arch-builder
 
-> Azure AI/Data 인프라를 자연어로 설계하고 자동 배포까지 이어주는 GitHub Copilot CLI 스킬
+> Design Azure AI/Data infrastructure in natural language and deploy automatically — a GitHub Copilot CLI skill.
 
-"AI Search랑 Foundry 만들고 싶어" 라고 말하면, 대화를 통해 아키텍처를 확정하고 Bicep 코드 생성부터 실제 Azure 배포까지 자동으로 진행합니다.
+**[한국어 README](README.ko.md)**
 
-> **Note**: 이 버전은 GitHub Copilot CLI (GHCP) 환경에 최적화되어 있습니다.
-> Claude Code CLI용 원본은 `.claude/skills/azure-arch-builder`에 있습니다.
+Say *"Create AI Search and Foundry with private endpoints"* and the skill will guide you through architecture design, generate Bicep code, review it, and deploy to Azure — all through conversation.
 
 ---
 
-## 설치
+## 🔄 What It Does
 
-### 프로젝트 스킬 (현재 프로젝트만)
+```
+You: "Build me a RAG chatbot with Foundry and AI Search"
+       ↓
+Phase 1: 🎨 Interactive architecture design + diagram
+       ↓
+Phase 2: 🔧 Bicep code generation (auto)
+       ↓
+Phase 3: ✅ Code review + compilation check (auto)
+       ↓
+Phase 4: 🚀 What-if → Preview diagram → Azure deployment
+```
 
-프로젝트 루트의 `.github/skills/` 폴더에 배치합니다:
+**Optimized services:** Microsoft Foundry, Azure OpenAI, AI Search, ADLS Gen2, Key Vault, Microsoft Fabric, Azure Data Factory, VNet/Private Endpoint, AML/AI Hub
+
+**Other Azure services:** Also supported — automatically looked up from MS Docs and generated
+
+---
+
+## ⚙️ Prerequisites
+
+| Tool | Required | Install |
+|------|----------|---------|
+| **GitHub Copilot CLI** | ✅ | [Install guide](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) |
+| **Azure CLI** | ✅ (for deployment) | `winget install Microsoft.AzureCLI` |
+| **Python 3** | ✅ (for diagrams) | `winget install Python.Python.3.12` |
+
+> Azure CLI login (`az login`) is only checked when you proceed to deployment — not during design.
+
+### 🤖 Recommended Models
+
+This skill involves complex multi-phase orchestration with 800+ lines of instructions. Model choice matters.
+
+| | Models | Notes |
+|---|---|---|
+| ✅ **Recommended** | Claude Sonnet 4.5 / 4.6 | Best cost-performance balance |
+| 🏆 **Best** | Claude Opus 4.5 / 4.6 | Most reliable instruction following |
+| ⚠️ **Minimum** | Claude Sonnet 4, GPT-5.1+ | May occasionally skip steps |
+| ❌ **Not recommended** | Haiku, Mini | Too many instructions to follow reliably |
+
+---
+
+## 📦 Installation
+
+### Project skill (this project only)
+
+```powershell
+# From your project root
+git clone <repo-url> .github/skills/azure-arch-builder
+```
 
 ```
 your-project/
@@ -21,79 +66,108 @@ your-project/
     └── skills/
         └── azure-arch-builder/
             ├── SKILL.md
-            ├── agents/
+            ├── prompts/
             ├── references/
             └── scripts/
 ```
 
-### 개인 스킬 (모든 프로젝트에서 사용)
+### Personal skill (all projects)
 
 ```powershell
-# 홈 디렉토리 기준
 New-Item -ItemType Directory -Path "$env:USERPROFILE\.copilot\skills" -Force
-git clone https://github.com/whoniiii/az_work "$env:USERPROFILE\.copilot\skills\azure-arch-builder"
+git clone <repo-url> "$env:USERPROFILE\.copilot\skills\azure-arch-builder"
 ```
+
+### Verify
+
+```
+copilot /skills
+```
+
+You should see `azure-arch-builder` in the skill list.
 
 ---
 
-## 사용법
+## 🚀 Usage
 
-설치 후 프로젝트 폴더에서 GitHub Copilot CLI를 실행합니다:
+Start GitHub Copilot CLI in your project folder:
 
 ```powershell
 cd your-project
 copilot
 ```
 
-Azure 인프라 관련 요청을 하면 스킬이 자동으로 발동됩니다:
+Then just describe what you want:
 
 ```
-"AI Search랑 Microsoft Foundry 만들어줘, private endpoint 포함해서"
-"RAG 챗봇 아키텍처 구성해줘"
-"Azure에 데이터 레이크하우스 올려줘"
+"Build a RAG chatbot with Foundry, AI Search, and ADLS Gen2"
+"Create a data platform with Fabric and ADF, private endpoints included"
+"Deploy Azure AI infrastructure with GPT-4o and embedding model"
 ```
 
-### 스킬 확인
+The skill activates automatically for Azure infrastructure requests.
+
+### Step-by-step flow
+
+**🎨 1. Architecture Design (Phase 1)**
+- Asks project name, services, SKUs, region, networking
+- Fetches latest info from MS Docs (models, SKUs, availability)
+- Generates interactive HTML architecture diagram
+- Iterates until you confirm
+
+**🔧 2. Bicep Generation (Phase 2)**
+- Creates modular Bicep templates (`main.bicep` + `modules/`)
+- Fetches latest API versions from MS Docs
+- Applies security best practices (Private Endpoint, RBAC, etc.)
+
+**✅ 3. Code Review (Phase 3)**
+- Runs `az bicep build` for compilation check
+- Reviews against checklist (Foundry Project, PE 3-set, HNS, etc.)
+- Auto-fixes issues and re-compiles
+
+**🚀 4. Deployment (Phase 4)**
+- What-if validation (no actual changes)
+- Preview diagram based on What-if results
+- User confirmation → actual deployment
+- Final diagram with deployed resource details
+
+### 📂 Output structure
 
 ```
-/skills list
+<project-name>/
+├── 01_arch_diagram_draft.html      ← Design diagram
+├── 02_arch_diagram_preview.html    ← What-if preview
+├── 03_arch_diagram_result.html     ← Deployment result
+├── main.bicep
+├── main.bicepparam
+└── modules/
+    ├── network.bicep
+    ├── foundry.bicep
+    ├── search.bicep
+    ├── storage.bicep
+    ├── keyvault.bicep
+    └── private-endpoints.bicep
 ```
 
 ---
 
-## Claude Code CLI 버전과의 차이점
+## 🌐 Language Support
 
-| 항목 | Claude Code CLI | GHCP |
-|------|----------------|------|
-| 스킬 위치 | `.claude/skills/` | `.github/skills/` 또는 `~/.copilot/skills/` |
-| URL 조회 | `WebFetch` | `web_fetch` |
-| 웹 검색 | `WebSearch` | `web_search` |
-| 사용자 질문 | `AskUserQuestion` (복수 질문, 옵션 description) | `ask_user` (단일 질문, 문자열 배열 선택지) |
-| 서브에이전트 | `Agent` | `task` (agent_type 지정) |
-| 셸 환경 | Bash | PowerShell |
-| 파일 링크 | `computer://` 프로토콜 | 파일 경로 직접 안내 |
-| 도구 사전 로드 | `ToolSearch` 필요 | 불필요 (항상 사용 가능) |
+The skill automatically detects your language and responds accordingly. All user-facing output (questions, progress messages, reports, Bicep comments) adapts to your language.
 
 ---
 
-## 특징
+## ✨ Key Features
 
-- **최신 정보 기반**: API 버전, 서비스 명칭, 속성 등을 MS Docs에서 실시간 확인하여 적용
-- **보안 우선**: Private Endpoint, 민감 정보 파일 저장 금지 등 보안 원칙 내장
-- **대화형 설계**: 사용자와 대화하며 점진적으로 아키텍처 확정
-- **단계별 승인**: 모든 주요 단계에서 사용자 확인 후 진행
-- **GHCP 네이티브**: PowerShell 셸, ask_user 도구 등 GHCP 환경에 맞게 최적화
-
----
-
-## 사전 요구사항
-
-- [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) 설치
-- Azure CLI (`az`) 설치 및 로그인 (`az login`)
-- Python 3 (다이어그램 생성용)
+- 🔍 **Live MS Docs verification** — API versions, model availability, SKU options fetched in real-time
+- 🔒 **Security by default** — Private Endpoint, RBAC, no secrets in parameter files
+- 🎨 **Interactive design** — Iterative architecture refinement with visual diagrams
+- 👤 **Step-by-step approval** — User confirmation at every major step
+- 🔄 **Cross-verification** — Critical facts checked against multiple MS Docs sources
+- ⚡ **Parallel preloading** — Next-step info loaded while waiting for user input
 
 ---
 
-## 라이선스
+## License
 
 MIT

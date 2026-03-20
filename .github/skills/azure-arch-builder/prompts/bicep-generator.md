@@ -33,7 +33,7 @@ Bicep 코드에 API 버전을 하드코딩하지 않는다.
 ### 서비스별 MS Docs URL
 
 `references/azure-dynamic-sources.md`에 전체 URL 레지스트리가 있다. 이 파일을 참조하여 fetch.
-참조 파일은 `.claude/skills/azure-arch-builder/` 또는 `.github/skills/azure-arch-builder/` 경로에서 찾는다.
+참조 파일은 `.github/skills/azure-arch-builder/` 경로에서 찾는다.
 
 > **중요**: URL에서 web_fetch로 직접 조회하여 최신 stable apiVersion을 확인한다. 레퍼런스 파일이나 이전 대화에 있던 하드코딩된 버전을 그냥 쓰지 말 것.
 
@@ -277,6 +277,15 @@ param projectPrefix = '<프로젝트 접두사>'
 // 지역은 서비스별 가용성을 MS Docs에서 확인 후 설정
 ```
 
+### @secure() 파라미터 처리
+
+`.bicepparam` 파일에 `using` 디렉티브가 있으면, `az deployment` 시 추가 `--parameters` 플래그를 함께 사용할 수 없다.
+따라서 `@secure()` 파라미터는 아래 규칙을 따른다:
+
+- **가능하면 기본값을 설정한다**: `@secure() param password string = newGuid()`
+- **사용자 입력이 필요한 @secure() 파라미터가 있으면**: `.bicepparam` 대신 JSON 파라미터 파일(`main.parameters.json`)을 함께 생성한다
+- **절대 하지 말 것**: `.bicepparam`과 `--parameters key=value`를 동시에 사용하는 명령어를 생성하는 것
+
 ## 자주 발생하는 실수 체크
 
 `references/service-gotchas.md`에 전체 체크리스트가 있다. 핵심만 요약:
@@ -300,4 +309,4 @@ param projectPrefix = '<프로젝트 접두사>'
 Bicep 생성이 완료되면:
 1. 생성된 파일 목록과 각 파일의 역할을 사용자에게 요약 보고
 2. Phase 3 (Bicep Reviewer)로 즉시 전환
-3. 리뷰어는 `agents/bicep-reviewer.md` 지침에 따라 자동 검토 및 수정 진행
+3. 리뷰어는 `prompts/bicep-reviewer.md` 지침에 따라 자동 검토 및 수정 진행

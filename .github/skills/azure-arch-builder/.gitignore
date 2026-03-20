@@ -25,3 +25,6 @@ sample_*.html
 
 # 패키지 파일 (빌드 결과물)
 *.skill
+
+# 개발 전용 폴더 (public 배포에 포함하지 않음)
+dev/
