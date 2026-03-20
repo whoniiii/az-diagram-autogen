@@ -189,7 +189,7 @@ def get_service_info(svc_type: str) -> dict:
     return SERVICE_ICONS.get(t, SERVICE_ICONS["default"])
 
 
-def generate_html(services: list, connections: list, title: str) -> str:
+def generate_html(services: list, connections: list, title: str, vnet_info: str = "") -> str:
     nodes_js = json.dumps([{
         "id": svc["id"],
         "name": svc["name"],
@@ -215,6 +215,7 @@ def generate_html(services: list, connections: list, title: str) -> str:
     pe_count = sum(1 for s in services if s.get("type", "default") == "pe")
     svc_count = len(services) - pe_count
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    vnet_info_js = json.dumps(vnet_info, ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html lang="ko">
@@ -424,6 +425,7 @@ def generate_html(services: list, connections: list, title: str) -> str:
 <script>
 const NODES = {nodes_js};
 const EDGES = {edges_js};
+const VNET_INFO = {vnet_info_js};
 
 // ── Node sizing ──
 const SVC_W = 150, SVC_H = 100;  // service node (icon above, name below)
@@ -630,9 +632,12 @@ function renderDiagram() {{
 
   // ── Draw VNet boundary around non-bottom groups ──
   const privateGroups = groupBoxes.filter(gb => !gb.isBottom);
-  if (privateGroups.length > 0) {{
-    const hasPrivateNodes = NODES.some(n => n.private && n.type !== 'pe');
-    if (hasPrivateNodes) {{
+  const hasPrivateNodes = NODES.some(n => n.private && n.type !== 'pe');
+  const hasVNetInfo = VNET_INFO && VNET_INFO.length > 0;
+  const hasPeNodes = NODES.some(n => n.type === 'pe');
+  const showVNet = hasPrivateNodes || hasVNetInfo || hasPeNodes;
+
+  if (privateGroups.length > 0 && showVNet) {{
       const vx = Math.min(...privateGroups.map(g => g.x)) - 16;
       const vy = Math.min(...privateGroups.map(g => g.y)) - 36;
       const vRight = Math.max(...privateGroups.map(g => g.x + g.w)) + 16;
@@ -646,14 +651,21 @@ function renderDiagram() {{
       vr.setAttribute('rx', '12');
       root.appendChild(vr);
 
+      const vnetLabel = VNET_INFO ? `Virtual Network (${{VNET_INFO}})` : 'Virtual Network';
       const vl = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      vl.setAttribute('class', 'vnet-boundary-label');
+      vl.setAttribute('style', 'cursor: pointer;');
       vl.innerHTML = `<svg x="${{vx + 10}}" y="${{vy + 6}}" width="20" height="20" viewBox="0 0 48 48">
         <rect x="6" y="6" width="36" height="36" rx="4" fill="none" stroke="#5C2D91" stroke-width="3"/>
         <circle cx="16" cy="18" r="3" fill="#5C2D91"/><circle cx="32" cy="18" r="3" fill="#5C2D91"/><circle cx="24" cy="32" r="3" fill="#5C2D91"/>
       </svg>
-      <text x="${{vx + 34}}" y="${{vy + 20}}" font-size="12" font-weight="600" fill="#5C2D91" font-family="Segoe UI, sans-serif">Virtual Network</text>`;
+      <text x="${{vx + 34}}" y="${{vy + 20}}" font-size="12" font-weight="600" fill="#5C2D91" font-family="Segoe UI, sans-serif">${{vnetLabel}}</text>`;
       root.appendChild(vl);
-    }}
+
+      // Store VNet rect reference for highlight
+      vr.setAttribute('id', 'vnet-rect');
+      vl.addEventListener('click', () => {{ toggleVNetHighlight(); }});
+      root.appendChild(vl);
   }}
 
   // ── Draw category group boxes ──
@@ -1320,8 +1332,54 @@ function buildSidebar() {{
   }});
 }}
 
+// ── VNet highlight toggle ──
+let _vnetHighlighted = false;
+function toggleVNetHighlight() {{
+  _vnetHighlighted = !_vnetHighlighted;
+  const vr = document.getElementById('vnet-rect');
+  if (!vr) return;
+  if (_vnetHighlighted) {{
+    vr.setAttribute('stroke-width', '4');
+    vr.setAttribute('stroke', '#5C2D91');
+    vr.setAttribute('fill', '#f0eaf8');
+  }} else {{
+    vr.setAttribute('stroke-width', '2');
+    vr.setAttribute('stroke', '#5C2D91');
+    vr.setAttribute('fill', '#f8f7ff');
+  }}
+  // Also toggle sidebar card
+  const card = document.getElementById('card-vnet-boundary');
+  if (card) card.classList.toggle('selected', _vnetHighlighted);
+}}
+
 renderDiagram();
 buildSidebar();
+
+// ── VNet sidebar card (added dynamically if VNet boundary exists) ──
+if (VNET_INFO || NODES.some(n => n.private && n.type !== 'pe') || NODES.some(n => n.type === 'pe')) {{
+  const list = document.getElementById('service-list');
+  // Insert at the top
+  const catLabel = document.createElement('div');
+  catLabel.className = 'cat-label'; catLabel.textContent = 'NETWORK';
+  const card = document.createElement('div');
+  card.className = 'service-card'; card.id = 'card-vnet-boundary';
+  const vnetIcon = '<rect x="6" y="6" width="36" height="36" rx="4" fill="none" stroke="#5C2D91" stroke-width="3"/><circle cx="16" cy="18" r="3" fill="#5C2D91"/><circle cx="32" cy="18" r="3" fill="#5C2D91"/><circle cx="24" cy="32" r="3" fill="#5C2D91"/>';
+  const vnetDetails = VNET_INFO ? VNET_INFO.split('|').map(s => s.trim()) : [];
+  card.innerHTML = `
+    <div class="service-card-header">
+      <div class="sc-icon"><svg viewBox="0 0 48 48">${{vnetIcon}}</svg></div>
+      <div>
+        <div class="service-name">Virtual Network</div>
+        <div class="service-sku">vnet</div>
+      </div>
+      <span class="private-badge">Private</span>
+    </div>
+    ${{vnetDetails.length > 0 ? `<div class="service-card-body">${{vnetDetails.map(d => `<div class="service-detail">${{d}}</div>`).join('')}}</div>` : ''}}
+  `;
+  card.addEventListener('click', () => {{ toggleVNetHighlight(); }});
+  list.insertBefore(card, list.firstChild);
+  list.insertBefore(catLabel, list.firstChild);
+}}
 setTimeout(fitToScreen, 100);
 </script>
 </body>
@@ -1335,6 +1393,8 @@ def main():
     parser.add_argument("--connections", type=str, required=True)
     parser.add_argument("--title", type=str, default="Azure Architecture")
     parser.add_argument("--output", type=str, default="archi_diagram.html")
+    parser.add_argument("--vnet-info", type=str, default="",
+                        help="VNet details shown on the boundary label, e.g. '10.0.0.0/16 | pe-subnet: 10.0.1.0/24'")
     args = parser.parse_args()
 
     try:
@@ -1344,7 +1404,7 @@ def main():
         print(f"ERROR: Invalid JSON: {e}", file=sys.stderr)
         sys.exit(1)
 
-    html = generate_html(services, connections, args.title)
+    html = generate_html(services, connections, args.title, vnet_info=args.vnet_info)
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"SUCCESS: Interactive diagram saved to {args.output}")

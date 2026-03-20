@@ -101,6 +101,11 @@ MS Docs URL은 수시로 변경되므로, **기억에서 URL 경로를 추측하
 `az`, `python`, `bicep` 등 외부 CLI 도구가 PATH에 없는 경우가 흔하다.
 **도구를 처음 사용하기 전에 경로를 탐색하고 캐시한다. 도구가 없으면 즉시 사용자에게 안내한다.**
 
+> **⚠️ Windows Store App Alias 주의**: `Get-Command python`이 `WindowsApps` 폴더의 alias를 잡을 수 있다.
+> 이 alias는 실행 시 Microsoft Store로 리다이렉트되어 실패한다.
+> **파일 시스템 직접 탐색을 먼저 하고, `Get-Command`는 마지막 fallback으로만 사용한다.**
+> `WindowsApps` 경로가 포함된 결과는 제외한다.
+
 ```powershell
 # az CLI 경로 탐색 — 처음 사용 시 1회 실행 후 결과를 재사용
 $azCmd = $null
@@ -111,10 +116,14 @@ if (-not $azCmd) {
 }
 ```
 
-**Python 경로 탐색**은 다이어그램 생성 섹션(1-2)의 코드 블록을 참조한다.
+**Python 경로 탐색**은 다이어그램 생성 섹션(1-2)의 코드 블록을 참조한다. 핵심:
+1. `$env:LOCALAPPDATA\Programs\Python` 직접 탐색 (1순위)
+2. `$env:ProgramFiles\Python*` 탐색 (2순위)
+3. `Get-Command python3/py` — `WindowsApps` 제외 (3순위)
+4. **`Get-Command python`은 사용하지 않는다** — Windows Store alias 위험
 
-**탐색 시점**: Phase 1 프리로드 시 `az account show`와 함께 az CLI 경로를 탐색한다.
-한 번 찾은 경로는 이후 모든 Phase에서 재사용한다. 매번 재탐색하지 않는다.
+**탐색 시점**: Phase 1 프리로드 시 Python + az CLI + 다이어그램 스크립트 경로를 모두 탐색한다.
+한 번 찾은 경로는 이후 모든 Phase에서 재사용한다. **매번 재탐색하지 않는다.**
 
 ### 진행 상황 안내 필수
 
@@ -170,7 +179,7 @@ ask_user와 다른 도구 호출을 같은 응답에서 동시에 실행하면, 
 
 | ask_user 질문 | 동시에 프리로드할 것 |
 |---|---|
-| 프로젝트 이름 | reference 파일 view, 아키텍처 가이던스 web_fetch, 서비스별 MS Docs web_fetch |
+| 프로젝트 이름 | reference 파일 view, 아키텍처 가이던스 web_fetch, 서비스별 MS Docs web_fetch, **Python/다이어그램 스크립트 경로 탐색** |
 | 채팅 모델 선택 | 임베딩 모델 가용성 MS Docs web_fetch (다음 질문 선택지 준비) |
 | 임베딩 모델 선택 | 서비스별 SKU 목록 MS Docs web_fetch (다음 질문 선택지 준비) |
 | SKU 선택 | 리전별 서비스 가용성 MS Docs web_fetch (다음 질문 선택지 준비) |
@@ -426,6 +435,9 @@ ask_user({
 | Phase 4 배포 결과 | `03_arch_diagram_result.html` | 실제 배포 완료 후 |
 
 **스크립트 경로 탐색 — 아래 순서로 찾는다:**
+
+**🚨 Python + 다이어그램 스크립트 경로는 Phase 1 프리로드에서 1회 확인하고, 이후 모든 다이어그램 생성에서 재사용한다. 매번 재탐색하지 않는다.**
+
 ```powershell
 # 1순위: 프로젝트 로컬 스킬 폴더
 $DiagramScript = Get-ChildItem -Path ".github\skills\azure-arch-builder" -Filter "generate_html_diagram.py" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
@@ -436,15 +448,30 @@ if (-not $DiagramScript) {
 $OutputFile = "<project-name>\01_arch_diagram_draft.html"
 
 # Python 실행 경로 탐색 (Windows 환경)
+# ⚠️ Get-Command python은 Windows Store alias를 잡을 수 있으므로, 파일 시스템 탐색을 먼저 한다
 $PythonCmd = $null
-foreach ($cmd in @('python', 'python3', 'py')) {
-  if (Get-Command $cmd -ErrorAction SilentlyContinue) { $PythonCmd = $cmd; break }
-}
+
+# 1순위: 실제 설치 경로 직접 탐색 (가장 신뢰할 수 있음)
+$PythonExe = Get-ChildItem -Path "$env:LOCALAPPDATA\Programs\Python" -Filter "python.exe" -Recurse -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -notlike '*WindowsApps*' } |
+  Select-Object -First 1 -ExpandProperty FullName
+if ($PythonExe) { $PythonCmd = $PythonExe }
+
+# 2순위: Program Files 탐색
 if (-not $PythonCmd) {
-  # 일반적인 Windows 설치 경로 탐색
-  $PythonExe = Get-ChildItem -Path "$env:LOCALAPPDATA\Programs\Python", "$env:ProgramFiles\Python*", "$env:ProgramFiles(x86)\Python*" -Filter "python.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+  $PythonExe = Get-ChildItem -Path "$env:ProgramFiles\Python*", "$env:ProgramFiles(x86)\Python*" -Filter "python.exe" -Recurse -ErrorAction SilentlyContinue |
+    Select-Object -First 1 -ExpandProperty FullName
   if ($PythonExe) { $PythonCmd = $PythonExe }
 }
+
+# 3순위: PATH에서 찾기 (Windows Store alias가 아닌 경우만)
+if (-not $PythonCmd) {
+  foreach ($cmd in @('python3', 'py')) {
+    $found = Get-Command $cmd -ErrorAction SilentlyContinue
+    if ($found -and $found.Source -notlike '*WindowsApps*') { $PythonCmd = $cmd; break }
+  }
+}
+
 if (-not $PythonCmd) {
   Write-Host ""
   Write-Host "Python이 설치되어 있지 않거나 PATH에 없습니다." -ForegroundColor Red
@@ -462,11 +489,14 @@ if (-not $PythonCmd) {
   --services '<JSON>' `
   --connections '<JSON>' `
   --title "아키텍처 제목" `
+  --vnet-info "10.0.0.0/16 | pe-subnet: 10.0.1.0/24" `
   --output $OutputFile
 
 # 생성 후 자동으로 브라우저에서 열기
 Start-Process $OutputFile
 ```
+
+> **다이어그램 생성 순서**: (1) Python 경로 확인 → (2) 다이어그램 스크립트 경로 확인 → (3) services/connections JSON 구성 → (4) 실행. Python이 없으면 JSON 구성 전에 사용자에게 설치를 안내한다. JSON을 다 만들고 Python이 없어서 실패하는 낭비를 방지한다.
 
 > **🚨 다이어그램 자동 오픈 (예외 없음)**: `generate_html_diagram.py`로 HTML 파일을 생성하면 **어떤 상황이든 반드시** 브라우저에서 자동으로 연다. 이유를 불문하고, 다이어그램이 (재)생성되면 무조건 `Start-Process` 명령을 실행한다. 다이어그램 생성과 브라우저 오픈은 항상 하나의 PowerShell 명령 블록 안에서 함께 실행한다.
 >
