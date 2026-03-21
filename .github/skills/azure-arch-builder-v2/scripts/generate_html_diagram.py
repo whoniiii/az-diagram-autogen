@@ -689,18 +689,18 @@ function renderDiagram() {{
     const allPositions = Object.values(positions);
     
     HIERARCHY.forEach((sub, subIdx) => {{
-      // Find nodes belonging to this subscription
-      const subNodes = NODES.filter(n => n.subscription === sub.subscription);
-      const subPositions = subNodes.map(n => positions[n.id]).filter(Boolean);
+      // Find nodes belonging to this subscription (with valid positions only)
+      const subNodesAll = NODES.filter(n => n.subscription === sub.subscription);
+      const subEntries = subNodesAll.map(n => ({{ node: n, pos: positions[n.id] }})).filter(e => e.pos);
       
-      if (subPositions.length === 0) return;
+      if (subEntries.length === 0) return;
       
       if (multiSub) {{
         // Draw subscription boundary
-        const sx = Math.min(...subPositions.map(p => p.x)) - 30;
-        const sy = Math.min(...subPositions.map(p => p.y)) - 50;
-        const sRight = Math.max(...subPositions.map((p, i) => p.x + (subNodes[i]?.type === 'pe' ? PE_W : SVC_W))) + 30;
-        const sBottom = Math.max(...subPositions.map((p, i) => p.y + (subNodes[i]?.type === 'pe' ? PE_H : SVC_H))) + 30;
+        const sx = Math.min(...subEntries.map(e => e.pos.x)) - 30;
+        const sy = Math.min(...subEntries.map(e => e.pos.y)) - 50;
+        const sRight = Math.max(...subEntries.map(e => e.pos.x + (e.node.type === 'pe' ? PE_W : SVC_W))) + 30;
+        const sBottom = Math.max(...subEntries.map(e => e.pos.y + (e.node.type === 'pe' ? PE_H : SVC_H))) + 30;
         
         const sr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         sr.setAttribute('x', sx); sr.setAttribute('y', sy);
@@ -718,20 +718,20 @@ function renderDiagram() {{
         root.appendChild(sl);
       }}
       
-      // Draw RG boundaries within subscription (if multiple RGs)
-      if (sub.resourceGroups && sub.resourceGroups.length > 1) {{
-        sub.resourceGroups.forEach(rgName => {{
-          const rgNodes = subNodes.filter(n => n.resourceGroup === rgName);
-          const rgPositions = rgNodes.map(n => positions[n.id]).filter(Boolean);
-          if (rgPositions.length === 0) return;
+      // Draw RG boundaries (always if multiple RGs, regardless of subscription count)
+      const uniqueRGs = [...new Set(subEntries.map(e => e.node.resourceGroup).filter(Boolean))];
+      if (uniqueRGs.length > 1 || (HIERARCHY.length > 1 && uniqueRGs.length >= 1)) {{
+        uniqueRGs.forEach(rgName => {{
+          const rgEntries = subEntries.filter(e => e.node.resourceGroup === rgName);
+          if (rgEntries.length === 0) return;
           
           const color = rgColors[colorIdx % rgColors.length];
           colorIdx++;
           
-          const rx = Math.min(...rgPositions.map(p => p.x)) - 20;
-          const ry = Math.min(...rgPositions.map(p => p.y)) - 40;
-          const rRight = Math.max(...rgPositions.map((p, i) => p.x + (rgNodes[i]?.type === 'pe' ? PE_W : SVC_W))) + 20;
-          const rBottom = Math.max(...rgPositions.map((p, i) => p.y + (rgNodes[i]?.type === 'pe' ? PE_H : SVC_H))) + 20;
+          const rx = Math.min(...rgEntries.map(e => e.pos.x)) - 20;
+          const ry = Math.min(...rgEntries.map(e => e.pos.y)) - 40;
+          const rRight = Math.max(...rgEntries.map(e => e.pos.x + (e.node.type === 'pe' ? PE_W : SVC_W))) + 20;
+          const rBottom = Math.max(...rgEntries.map(e => e.pos.y + (e.node.type === 'pe' ? PE_H : SVC_H))) + 20;
           
           const rr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
           rr.setAttribute('x', rx); rr.setAttribute('y', ry);
@@ -748,6 +748,7 @@ function renderDiagram() {{
           rl.textContent = `📁 ${{rgName}}`;
           root.appendChild(rl);
         }});
+      }}
       }}
     }});
   }}
@@ -1566,3 +1567,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
