@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Azure Interactive Architecture Diagram Generator
-서비스 목록과 연결 관계를 받아 인터랙티브 HTML 다이어그램을 생성한다.
-Azure Well-Architected Framework 스타일 다이어그램.
+Azure Interactive Architecture Diagram Generator v3
+v1의 인터랙티브 HTML + Azure 공식 아이콘 (Base64 인라인).
+
+공식 아이콘이 있으면 사용, 없으면 기존 SVG 텍스트 아이콘으로 fallback.
 
 사용법:
-  python generate_html_diagram.py \
+  python generate_html_diagram_v3.py \
     --services '[{"id":"svc1","name":"서비스명","type":"타입","sku":"SKU","private":true,"details":["상세1"]}]' \
     --connections '[{"from":"svc1","to":"svc2","label":"연결설명","type":"api"}]' \
     --title "아키텍처 제목" \
@@ -15,26 +16,42 @@ Azure Well-Architected Framework 스타일 다이어그램.
 import argparse
 import json
 import sys
+import os
 from datetime import datetime
 
-# Azure 서비스별 아이콘 SVG, 색상
-# icon: 48x48 viewBox 기준 SVG path
+# Azure 공식 아이콘 로드 (같은 폴더의 icons_azure.py)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _script_dir)
+try:
+    from icons_azure import get_icon_data_uri
+    _HAS_OFFICIAL_ICONS = True
+except ImportError:
+    _HAS_OFFICIAL_ICONS = False
+    def get_icon_data_uri(key): return ""
+
+# Azure 서비스별 아이콘 SVG, 색상 + 공식 아이콘 매핑 키
+# icon: 48x48 viewBox 기준 SVG path (fallback)
+# azure_icon_key: icons_azure.py의 키 (공식 아이콘)
 SERVICE_ICONS = {
     "openai": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="30" text-anchor="middle" font-size="18" fill="white" font-weight="700">AI</text>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "azure_openai"
     },
     "ai_foundry": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="4" fill="#0078D4"/><rect x="12" y="16" width="10" height="8" rx="2" fill="white" opacity="0.9"/><rect x="26" y="16" width="10" height="8" rx="2" fill="white" opacity="0.9"/><rect x="12" y="27" width="24" height="5" rx="2" fill="white" opacity="0.6"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "cognitive_services"
     },
     "ai_hub": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="4" fill="#0078D4"/><circle cx="24" cy="24" r="8" fill="white" opacity="0.9"/><circle cx="24" cy="24" r="4" fill="#0078D4"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "machine_learning"
     },
     "search": {
         "icon_svg": '<circle cx="20" cy="20" r="12" fill="none" stroke="#0078D4" stroke-width="3.5"/><line x1="29" y1="29" x2="40" y2="40" stroke="#0078D4" stroke-width="3.5" stroke-linecap="round"/><circle cx="20" cy="20" r="5" fill="#0078D4" opacity="0.3"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "cognitive_search"
     },
     "aml": {
         "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 32 L20 18 L26 26 L32 14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -42,15 +59,18 @@ SERVICE_ICONS = {
     },
     "storage": {
         "icon_svg": '<rect x="8" y="8" width="32" height="8" rx="3" fill="#0078D4"/><rect x="8" y="20" width="32" height="8" rx="3" fill="#0078D4" opacity="0.7"/><rect x="8" y="32" width="32" height="8" rx="3" fill="#0078D4" opacity="0.4"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "storage_accounts"
     },
     "adls": {
         "icon_svg": '<rect x="8" y="8" width="32" height="8" rx="3" fill="#0078D4"/><rect x="8" y="20" width="32" height="8" rx="3" fill="#0078D4" opacity="0.7"/><rect x="8" y="32" width="32" height="8" rx="3" fill="#0078D4" opacity="0.4"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "data_lake_storage_gen1"
     },
     "fabric": {
         "icon_svg": '<polygon points="24,6 42,18 42,34 24,46 6,34 6,18" fill="#E8740C" opacity="0.9"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="700">F</text>',
-        "color": "#E8740C", "bg": "#FEF3E8", "category": "Data"
+        "color": "#E8740C", "bg": "#FEF3E8", "category": "Data",
+        "azure_icon_key": "managed_service_fabric"
     },
     "synapse": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><path d="M15 24 L24 15 L33 24 L24 33 Z" fill="white" opacity="0.9"/>',
@@ -62,19 +82,23 @@ SERVICE_ICONS = {
     },
     "keyvault": {
         "icon_svg": '<rect x="10" y="6" width="28" height="36" rx="4" fill="#E8A000"/><circle cx="24" cy="22" r="6" fill="white"/><rect x="22" y="26" width="4" height="10" rx="1" fill="white"/>',
-        "color": "#E8A000", "bg": "#FEF7E0", "category": "Security"
+        "color": "#E8A000", "bg": "#FEF7E0", "category": "Security",
+        "azure_icon_key": "key_vaults"
     },
     "kv": {
         "icon_svg": '<rect x="10" y="6" width="28" height="36" rx="4" fill="#E8A000"/><circle cx="24" cy="22" r="6" fill="white"/><rect x="22" y="26" width="4" height="10" rx="1" fill="white"/>',
-        "color": "#E8A000", "bg": "#FEF7E0", "category": "Security"
+        "color": "#E8A000", "bg": "#FEF7E0", "category": "Security",
+        "azure_icon_key": "key_vaults"
     },
     "vnet": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="none" stroke="#5C2D91" stroke-width="2.5"/><circle cx="16" cy="18" r="4" fill="#5C2D91"/><circle cx="32" cy="18" r="4" fill="#5C2D91"/><circle cx="24" cy="32" r="4" fill="#5C2D91"/><line x1="16" y1="18" x2="32" y2="18" stroke="#5C2D91" stroke-width="1.5"/><line x1="16" y1="18" x2="24" y2="32" stroke="#5C2D91" stroke-width="1.5"/><line x1="32" y1="18" x2="24" y2="32" stroke="#5C2D91" stroke-width="1.5"/>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "virtual_networks"
     },
     "pe": {
         "icon_svg": '<circle cx="24" cy="24" r="14" fill="none" stroke="#5C2D91" stroke-width="2"/><circle cx="24" cy="24" r="6" fill="#5C2D91"/><line x1="24" y1="10" x2="24" y2="4" stroke="#5C2D91" stroke-width="2"/><line x1="24" y1="38" x2="24" y2="44" stroke="#5C2D91" stroke-width="2"/>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "private_endpoints"
     },
     "nsg": {
         "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#5C2D91"/><path d="M18 20 L24 14 L30 20 M18 28 L24 34 L30 28" stroke="white" stroke-width="2" fill="none"/>',
@@ -102,11 +126,13 @@ SERVICE_ICONS = {
     },
     "vm": {
         "icon_svg": '<rect x="6" y="8" width="36" height="26" rx="3" fill="#0078D4"/><rect x="10" y="12" width="28" height="18" rx="1" fill="white" opacity="0.2"/><rect x="16" y="36" width="16" height="4" rx="1" fill="#0078D4"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "virtual_machine"
     },
     "bastion": {
         "icon_svg": '<rect x="8" y="6" width="32" height="36" rx="4" fill="#5C2D91"/><rect x="14" y="12" width="20" height="14" rx="2" fill="white" opacity="0.3"/><circle cx="24" cy="34" r="4" fill="white" opacity="0.7"/>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "bastions"
     },
     "jumpbox": {
         "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#5C2D91"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="600">JB</text>',
@@ -128,21 +154,35 @@ SERVICE_ICONS = {
         "icon_svg": '<circle cx="24" cy="24" r="16" fill="#0078D4"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="600">?</text>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "Azure"
     },
+    "document_intelligence": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Doc</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">Intel</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "form_recognizer"
+    },
+    "form_recognizer": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Doc</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">Intel</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "form_recognizer"
+    },
     "databricks": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="6" fill="#FF3621"/><text x="24" y="30" text-anchor="middle" font-size="16" fill="white" font-weight="700">DB</text>',
-        "color": "#FF3621", "bg": "#FFF0EE", "category": "Data"
+        "color": "#FF3621", "bg": "#FFF0EE", "category": "Data",
+        "azure_icon_key": "azure_databricks"
     },
     "sql_server": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="11" fill="white" font-weight="700">SQL</text><rect x="12" y="28" width="24" height="8" rx="2" fill="white" opacity="0.3"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "sql_server"
     },
     "sql_database": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="11" fill="white" font-weight="700">SQL</text><rect x="12" y="28" width="24" height="8" rx="2" fill="white" opacity="0.3"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "sql_database"
     },
     "cosmos_db": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Cosmos</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">DB</text>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_cosmos_db"
     },
     "app_service": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="6" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="11" fill="white" font-weight="700">App</text>',
@@ -186,7 +226,12 @@ CONNECTION_STYLES = {
 
 def get_service_info(svc_type: str) -> dict:
     t = svc_type.lower().replace("-", "_").replace(" ", "_")
-    return SERVICE_ICONS.get(t, SERVICE_ICONS["default"])
+    info = SERVICE_ICONS.get(t, SERVICE_ICONS["default"]).copy()
+    # Azure 공식 아이콘 data URI 추가 (있으면)
+    azure_key = info.get("azure_icon_key", t)
+    icon_uri = get_icon_data_uri(azure_key)
+    info["icon_data_uri"] = icon_uri
+    return info
 
 
 def generate_html(services: list, connections: list, title: str, vnet_info: str = "") -> str:
@@ -198,6 +243,7 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
         "private": svc.get("private", True),
         "details": svc.get("details", []),
         "icon_svg": get_service_info(svc.get("type", "default"))["icon_svg"],
+        "icon_data_uri": get_service_info(svc.get("type", "default")).get("icon_data_uri", ""),
         "color": get_service_info(svc.get("type", "default"))["color"],
         "bg": get_service_info(svc.get("type", "default"))["bg"],
         "category": get_service_info(svc.get("type", "default"))["category"],
@@ -1104,16 +1150,26 @@ function renderDiagram() {{
     accent.setAttribute('opacity', '0.7');
     g.appendChild(accent);
 
-    // Icon (SVG)
+    // Icon — Azure 공식 아이콘 (data URI) 우선, 없으면 SVG fallback
     const iconSize = isPe ? 28 : 36;
     const iconX = (nw - iconSize) / 2;
     const iconY = isPe ? 10 : 12;
-    const iconG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    iconG.setAttribute('x', iconX); iconG.setAttribute('y', iconY);
-    iconG.setAttribute('width', iconSize); iconG.setAttribute('height', iconSize);
-    iconG.setAttribute('viewBox', '0 0 48 48');
-    iconG.innerHTML = node.icon_svg;
-    g.appendChild(iconG);
+    if (node.icon_data_uri) {{
+      // Azure 공식 아이콘 (Base64 이미지)
+      const iconImg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+      iconImg.setAttribute('x', iconX); iconImg.setAttribute('y', iconY);
+      iconImg.setAttribute('width', iconSize); iconImg.setAttribute('height', iconSize);
+      iconImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', node.icon_data_uri);
+      g.appendChild(iconImg);
+    }} else {{
+      // Fallback: 기존 SVG 텍스트 아이콘
+      const iconG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      iconG.setAttribute('x', iconX); iconG.setAttribute('y', iconY);
+      iconG.setAttribute('width', iconSize); iconG.setAttribute('height', iconSize);
+      iconG.setAttribute('viewBox', '0 0 48 48');
+      iconG.innerHTML = node.icon_svg;
+      g.appendChild(iconG);
+    }}
 
     // Name
     const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -1147,15 +1203,28 @@ function renderDiagram() {{
       g.appendChild(det);
     }}
 
-    // Category label below
+    // Service type label below (not category — show actual service type name)
     if (!isPe) {{
+      const TYPE_LABELS = {{
+        'ai_foundry': 'AI Foundry', 'openai': 'Azure OpenAI', 'search': 'AI Search',
+        'storage': 'Storage', 'adls': 'ADLS Gen2', 'keyvault': 'Key Vault', 'kv': 'Key Vault',
+        'fabric': 'Fabric', 'databricks': 'Databricks', 'adf': 'Data Factory',
+        'sql_server': 'SQL Server', 'sql_database': 'SQL Database', 'cosmos_db': 'Cosmos DB',
+        'vm': 'Virtual Machine', 'aks': 'AKS', 'app_service': 'App Service',
+        'function_app': 'Function App', 'synapse': 'Synapse', 'vnet': 'VNet',
+        'nsg': 'NSG', 'bastion': 'Bastion', 'pe': 'Private Endpoint',
+        'log_analytics': 'Log Analytics', 'app_insights': 'App Insights',
+        'monitor': 'Monitor', 'acr': 'Container Registry',
+        'document_intelligence': 'Doc Intelligence', 'form_recognizer': 'Doc Intelligence',
+      }};
+      const typeLabel = TYPE_LABELS[node.type] || node.type;
       const cat = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       cat.setAttribute('x', nw/2); cat.setAttribute('y', nh + 14);
       cat.setAttribute('text-anchor', 'middle');
       cat.setAttribute('font-size', '9'); cat.setAttribute('fill', node.color);
       cat.setAttribute('font-weight', '600');
       cat.setAttribute('font-family', 'Segoe UI, sans-serif');
-      cat.textContent = node.category;
+      cat.textContent = typeLabel;
       g.appendChild(cat);
     }}
 
@@ -1315,7 +1384,7 @@ function buildSidebar() {{
       card.className = 'service-card'; card.id = 'card-' + node.id;
       card.innerHTML = `
         <div class="service-card-header">
-          <div class="sc-icon"><svg viewBox="0 0 48 48">${{node.icon_svg}}</svg></div>
+          <div class="sc-icon">${{node.icon_data_uri ? `<img src="${{node.icon_data_uri}}" width="28" height="28" style="object-fit:contain;">` : `<svg viewBox="0 0 48 48">${{node.icon_svg}}</svg>`}}</div>
           <div>
             <div class="service-name">${{node.name}}</div>
             <div class="service-sku">${{node.sku || node.type}}</div>
