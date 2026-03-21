@@ -749,7 +749,6 @@ function renderDiagram() {{
           root.appendChild(rl);
         }});
       }}
-      }}
     }});
   }}
 
