@@ -234,7 +234,7 @@ def get_service_info(svc_type: str) -> dict:
     return info
 
 
-def generate_html(services: list, connections: list, title: str, vnet_info: str = "") -> str:
+def generate_html(services: list, connections: list, title: str, vnet_info: str = "", hierarchy: list = None) -> str:
     nodes_js = json.dumps([{
         "id": svc["id"],
         "name": svc["name"],
@@ -242,12 +242,16 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
         "sku": svc.get("sku", ""),
         "private": svc.get("private", True),
         "details": svc.get("details", []),
+        "subscription": svc.get("subscription", ""),
+        "resourceGroup": svc.get("resourceGroup", ""),
         "icon_svg": get_service_info(svc.get("type", "default"))["icon_svg"],
         "icon_data_uri": get_service_info(svc.get("type", "default")).get("icon_data_uri", ""),
         "color": get_service_info(svc.get("type", "default"))["color"],
         "bg": get_service_info(svc.get("type", "default"))["bg"],
         "category": get_service_info(svc.get("type", "default"))["category"],
     } for svc in services], ensure_ascii=False)
+
+    hierarchy_js = json.dumps(hierarchy or [], ensure_ascii=False)
 
     edges_js = json.dumps([{
         "from": conn["from"],
@@ -472,6 +476,7 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
 const NODES = {nodes_js};
 const EDGES = {edges_js};
 const VNET_INFO = {vnet_info_js};
+const HIERARCHY = {hierarchy_js};
 
 // ── Node sizing ──
 const SVC_W = 150, SVC_H = 100;  // service node (icon above, name below)
@@ -675,6 +680,77 @@ function renderDiagram() {{
   const root = document.getElementById('diagram-root');
   root.innerHTML = '';
   _routeCounter = 0;  // reset stagger counter each render
+
+  // ── Draw Subscription / Resource Group boundaries ──
+  if (HIERARCHY.length > 0) {{
+    const rgColors = ['#0078D4', '#00BCF2', '#008272', '#E8740C', '#5C2D91', '#D83B01'];
+    let colorIdx = 0;
+    const multiSub = HIERARCHY.length > 1;
+    const allPositions = Object.values(positions);
+    
+    HIERARCHY.forEach((sub, subIdx) => {{
+      // Find nodes belonging to this subscription
+      const subNodes = NODES.filter(n => n.subscription === sub.subscription);
+      const subPositions = subNodes.map(n => positions[n.id]).filter(Boolean);
+      
+      if (subPositions.length === 0) return;
+      
+      if (multiSub) {{
+        // Draw subscription boundary
+        const sx = Math.min(...subPositions.map(p => p.x)) - 30;
+        const sy = Math.min(...subPositions.map(p => p.y)) - 50;
+        const sRight = Math.max(...subPositions.map((p, i) => p.x + (subNodes[i]?.type === 'pe' ? PE_W : SVC_W))) + 30;
+        const sBottom = Math.max(...subPositions.map((p, i) => p.y + (subNodes[i]?.type === 'pe' ? PE_H : SVC_H))) + 30;
+        
+        const sr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        sr.setAttribute('x', sx); sr.setAttribute('y', sy);
+        sr.setAttribute('width', sRight - sx); sr.setAttribute('height', sBottom - sy);
+        sr.setAttribute('fill', 'none'); sr.setAttribute('stroke', '#0078D4');
+        sr.setAttribute('stroke-width', '2.5'); sr.setAttribute('stroke-dasharray', '12,4');
+        sr.setAttribute('rx', '16'); sr.setAttribute('opacity', '0.6');
+        root.appendChild(sr);
+        
+        const sl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        sl.setAttribute('x', sx + 12); sl.setAttribute('y', sy + 18);
+        sl.setAttribute('font-size', '11'); sl.setAttribute('font-weight', '600');
+        sl.setAttribute('fill', '#0078D4'); sl.setAttribute('font-family', 'Segoe UI, sans-serif');
+        sl.textContent = `📦 ${{sub.subscription}}`;
+        root.appendChild(sl);
+      }}
+      
+      // Draw RG boundaries within subscription (if multiple RGs)
+      if (sub.resourceGroups && sub.resourceGroups.length > 1) {{
+        sub.resourceGroups.forEach(rgName => {{
+          const rgNodes = subNodes.filter(n => n.resourceGroup === rgName);
+          const rgPositions = rgNodes.map(n => positions[n.id]).filter(Boolean);
+          if (rgPositions.length === 0) return;
+          
+          const color = rgColors[colorIdx % rgColors.length];
+          colorIdx++;
+          
+          const rx = Math.min(...rgPositions.map(p => p.x)) - 20;
+          const ry = Math.min(...rgPositions.map(p => p.y)) - 40;
+          const rRight = Math.max(...rgPositions.map((p, i) => p.x + (rgNodes[i]?.type === 'pe' ? PE_W : SVC_W))) + 20;
+          const rBottom = Math.max(...rgPositions.map((p, i) => p.y + (rgNodes[i]?.type === 'pe' ? PE_H : SVC_H))) + 20;
+          
+          const rr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rr.setAttribute('x', rx); rr.setAttribute('y', ry);
+          rr.setAttribute('width', rRight - rx); rr.setAttribute('height', rBottom - ry);
+          rr.setAttribute('fill', color + '08'); rr.setAttribute('stroke', color);
+          rr.setAttribute('stroke-width', '1.5'); rr.setAttribute('stroke-dasharray', '6,3');
+          rr.setAttribute('rx', '10');
+          root.appendChild(rr);
+          
+          const rl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          rl.setAttribute('x', rx + 10); rl.setAttribute('y', ry + 16);
+          rl.setAttribute('font-size', '10'); rl.setAttribute('font-weight', '600');
+          rl.setAttribute('fill', color); rl.setAttribute('font-family', 'Segoe UI, sans-serif');
+          rl.textContent = `📁 ${{rgName}}`;
+          root.appendChild(rl);
+        }});
+      }}
+    }});
+  }}
 
   // ── Draw VNet boundary around non-bottom groups ──
   const privateGroups = groupBoxes.filter(gb => !gb.isBottom);
@@ -1464,6 +1540,8 @@ def main():
     parser.add_argument("--output", type=str, default="archi_diagram.html")
     parser.add_argument("--vnet-info", type=str, default="",
                         help="VNet details shown on the boundary label, e.g. '10.0.0.0/16 | pe-subnet: 10.0.1.0/24'")
+    parser.add_argument("--hierarchy", type=str, default="",
+                        help="Subscription/RG hierarchy JSON, e.g. '[{\"subscription\":\"sub-002\",\"resourceGroups\":[\"rg-prod\",\"rg-dev\"]}]'")
     args = parser.parse_args()
 
     try:
@@ -1473,7 +1551,14 @@ def main():
         print(f"ERROR: Invalid JSON: {e}", file=sys.stderr)
         sys.exit(1)
 
-    html = generate_html(services, connections, args.title, vnet_info=args.vnet_info)
+    hierarchy = []
+    if args.hierarchy:
+        try:
+            hierarchy = json.loads(args.hierarchy)
+        except json.JSONDecodeError:
+            pass
+
+    html = generate_html(services, connections, args.title, vnet_info=args.vnet_info, hierarchy=hierarchy)
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"SUCCESS: Interactive diagram saved to {args.output}")

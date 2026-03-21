@@ -17,31 +17,80 @@ az account show 2>&1
 - 로그인 되어 있으면 → Step 1-B로 이동
 - 로그인 안 되어 있으면 → 사용자에게 `az login` 실행 요청
 
-### 1-B: 구독 선택
+### 1-B: 구독 선택 (복수 선택 가능)
 
 ```powershell
 az account list --output json
 ```
 
-구독 목록에서 최대 4개를 `ask_user` 선택지로 제공.
-사용자가 선택하면 `az account set --subscription "<ID>"` 실행.
+구독 목록에서 `ask_user` 선택지로 제공. **복수 구독 선택 가능:**
+```
+ask_user({
+  question: "분석할 Azure 구독을 선택해주세요. (복수 선택 시 하나씩 추가할 수 있습니다)",
+  choices: [
+    "sub-002 (현재 기본 구독) (Recommended)",
+    "sub-001",
+    "위 구독 모두 분석"
+  ]
+})
+```
 
-### 1-C: 스캔 범위 선택
+- 단일 구독 선택 → 해당 구독만 스캔
+- "모두 분석" 선택 → 전체 구독 스캔
+- 사용자가 추가 구독을 원하면 → 다시 ask_user로 추가
+
+### 1-C: 스캔 범위 선택 (복수 RG 선택 가능)
 
 ```
 ask_user({
   question: "어떤 범위의 Azure 리소스를 분석할까요?",
   choices: [
     "특정 리소스 그룹 지정 (Recommended)",
-    "현재 구독의 모든 리소스 그룹",
-    "여러 리소스 그룹 선택"
+    "여러 리소스 그룹 선택",
+    "현재 구독의 모든 리소스 그룹"
   ]
 })
 ```
 
 - **특정 RG** → RG 목록에서 선택 또는 직접 입력
+- **여러 RG** → ask_user를 반복하여 RG를 하나씩 추가. "이제 됐어"라고 하면 종료.
+  또는 사용자가 쉼표 구분으로 여러 개 입력 가능 (예: `rg-prod, rg-dev, rg-network`)
 - **전체 구독** → `az group list` → 전체 RG 스캔 (리소스 많으면 시간 소요 경고)
-- **여러 RG** → 순차적으로 ask_user (또는 쉼표 구분 입력)
+
+**복수 구독 + 복수 RG 조합 가능:**
+- 구독 A의 rg-prod + 구독 B의 rg-network → 둘 다 스캔하여 하나의 다이어그램에 표시
+
+---
+
+## 다이어그램 계층 구조 — 복수 구독/RG 표시
+
+**단일 구독 + 단일 RG**: 기존과 동일 (VNet 경계선만)
+**복수 RG (같은 구독)**: RG별 점선 경계 표시
+**복수 구독**: Subscription > RG 2단계 경계 표시
+
+다이어그램 JSON에 계층 정보를 전달한다:
+
+**services JSON에 `subscription`과 `resourceGroup` 필드 추가:**
+```json
+{
+  "id": "foundry",
+  "name": "foundry-xxx",
+  "type": "ai_foundry",
+  "subscription": "sub-002",
+  "resourceGroup": "rg-prod",
+  "details": [...]
+}
+```
+
+**`--hierarchy` 파라미터로 계층 정보 전달:**
+```
+--hierarchy '[{"subscription":"sub-002","resourceGroups":["rg-prod","rg-dev"]},{"subscription":"sub-001","resourceGroups":["rg-network"]}]'
+```
+
+다이어그램 스크립트는 이 정보를 기반으로:
+- 복수 RG → 각 RG를 Cluster 점선 경계로 표현 (라벨: RG 이름)
+- 복수 구독 → 구독별 큰 경계 안에 RG 경계를 중첩
+- VNet 경계는 해당 VNet이 속한 RG 안에 표시
 
 ---
 
