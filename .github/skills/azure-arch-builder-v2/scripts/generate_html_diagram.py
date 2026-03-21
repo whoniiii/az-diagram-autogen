@@ -492,26 +492,14 @@ const positions = {{}};
 const peNodes = NODES.filter(n => n.type === 'pe');
 const mainNodes = NODES.filter(n => n.type !== 'pe');
 
-// Category grouping
-const bottomCategories = ['Network', 'External', 'Monitor'];
-const catOrder = ['AI', 'Data', 'Security', 'Compute', 'Azure'];
-
-const catGroups = {{}};
-mainNodes.forEach(n => {{
-  const cat = n.category || 'Azure';
-  if (!catGroups[cat]) catGroups[cat] = [];
-  catGroups[cat].push(n);
-}});
-
 // Group box layout parameters
-const GROUP_PAD = 24;         // padding inside group box
-const GROUP_TITLE_H = 28;    // height for group title bar
-const GROUP_GAP = 50;        // gap between group boxes
-const COLS_PER_GROUP = 3;    // max columns in a group grid
-const CELL_W = SVC_W + 70;   // cell width in grid (70px gap — room for edge routing around nodes)
-const CELL_H = SVC_H + 70;   // cell height in grid (70px vertical gap for edge routing)
+const GROUP_PAD = 24;
+const GROUP_TITLE_H = 28;
+const GROUP_GAP = 50;
+const COLS_PER_GROUP = 3;
+const CELL_W = SVC_W + 70;
+const CELL_H = SVC_H + 70;
 
-// Calculate group box dimensions
 function groupDimensions(nodeCount) {{
   const cols = Math.min(nodeCount, COLS_PER_GROUP);
   const rows = Math.ceil(nodeCount / COLS_PER_GROUP);
@@ -520,8 +508,86 @@ function groupDimensions(nodeCount) {{
   return {{ w, h, cols, rows }};
 }}
 
-// Store group box positions for rendering
 const groupBoxes = [];
+
+// ── Layout strategy: RG-based (if HIERARCHY) or Category-based (default) ──
+const useRgLayout = HIERARCHY.length > 0 && NODES.some(n => n.resourceGroup);
+
+if (useRgLayout) {{
+  // ── RG-based layout: group by Subscription > ResourceGroup ──
+  let gx = 60, gy = 140;
+  let subStartX = 60;
+  const SUB_GAP = 80;
+  const RG_GAP = 60;
+
+  HIERARCHY.forEach((sub, subIdx) => {{
+    let rgX = gx;
+    let rgMaxH = 0;
+
+    const subRGs = sub.resourceGroups || [];
+    subRGs.forEach((rgName, rgIdx) => {{
+      const rgNodes = mainNodes.filter(n => n.subscription === sub.subscription && n.resourceGroup === rgName);
+      if (rgNodes.length === 0) return;
+
+      const dim = groupDimensions(rgNodes.length);
+
+      rgNodes.forEach((n, i) => {{
+        const col = i % dim.cols;
+        const row = Math.floor(i / dim.cols);
+        positions[n.id] = {{
+          x: rgX + GROUP_PAD + col * CELL_W + (CELL_W - SVC_W) / 2,
+          y: gy + GROUP_TITLE_H + row * CELL_H + (CELL_H - SVC_H) / 2
+        }};
+      }});
+
+      groupBoxes.push({{
+        cat: rgName, x: rgX, y: gy, w: dim.w, h: dim.h,
+        color: rgNodes[0]?.color || '#0078D4',
+        isRG: true, subscription: sub.subscription
+      }});
+
+      rgX += dim.w + RG_GAP;
+      rgMaxH = Math.max(rgMaxH, dim.h);
+    }});
+
+    // Next subscription row
+    if (subIdx < HIERARCHY.length - 1) {{
+      gy += rgMaxH + SUB_GAP;
+      gx = subStartX;
+    }}
+  }});
+
+  // Place unassigned main nodes (no subscription/RG) in a generic group
+  const unassigned = mainNodes.filter(n => !positions[n.id]);
+  if (unassigned.length > 0) {{
+    const allY = Object.values(positions).map(p => p.y);
+    const bottomY = allY.length > 0 ? Math.max(...allY) + SVC_H + GROUP_GAP : 140;
+    const dim = groupDimensions(unassigned.length);
+    unassigned.forEach((n, i) => {{
+      const col = i % dim.cols;
+      const row = Math.floor(i / dim.cols);
+      positions[n.id] = {{
+        x: 60 + GROUP_PAD + col * CELL_W + (CELL_W - SVC_W) / 2,
+        y: bottomY + GROUP_TITLE_H + row * CELL_H + (CELL_H - SVC_H) / 2
+      }};
+    }});
+    groupBoxes.push({{
+      cat: 'Other', x: 60, y: bottomY, w: dim.w, h: dim.h,
+      color: '#666'
+    }});
+  }}
+
+}} else {{
+  // ── Category-based layout (original) ──
+  const bottomCategories = ['Network', 'External', 'Monitor'];
+  const catOrder = ['AI', 'Data', 'Security', 'Compute', 'Azure'];
+
+  const catGroups = {{}};
+  mainNodes.forEach(n => {{
+    const cat = n.category || 'Azure';
+    if (!catGroups[cat]) catGroups[cat] = [];
+    catGroups[cat].push(n);
+  }});
 
 // ── Place main service groups in a flowing grid ──
 const serviceGroups = catOrder.filter(cat => catGroups[cat] && catGroups[cat].length > 0
@@ -587,6 +653,8 @@ bottomCategories.forEach(cat => {{
 
   bgx += dim.w + GROUP_GAP;
 }});
+
+}} // end of else (category-based layout)
 
 // ── PE nodes: in PE subnet group above service groups ──
 const PE_Y = 40;
