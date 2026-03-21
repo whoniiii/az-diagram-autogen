@@ -154,6 +154,16 @@ SERVICE_ICONS = {
         "icon_svg": '<circle cx="24" cy="24" r="16" fill="#0078D4"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="600">?</text>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "Azure"
     },
+    "document_intelligence": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Doc</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">Intel</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "form_recognizer"
+    },
+    "form_recognizer": {
+        "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="9" fill="white" font-weight="700">Doc</text><text x="24" y="33" text-anchor="middle" font-size="9" fill="white">Intel</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "form_recognizer"
+    },
     "databricks": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="6" fill="#FF3621"/><text x="24" y="30" text-anchor="middle" font-size="16" fill="white" font-weight="700">DB</text>',
         "color": "#FF3621", "bg": "#FFF0EE", "category": "Data",
@@ -1193,15 +1203,28 @@ function renderDiagram() {{
       g.appendChild(det);
     }}
 
-    // Category label below
+    // Service type label below (not category — show actual service type name)
     if (!isPe) {{
+      const TYPE_LABELS = {{
+        'ai_foundry': 'AI Foundry', 'openai': 'Azure OpenAI', 'search': 'AI Search',
+        'storage': 'Storage', 'adls': 'ADLS Gen2', 'keyvault': 'Key Vault', 'kv': 'Key Vault',
+        'fabric': 'Fabric', 'databricks': 'Databricks', 'adf': 'Data Factory',
+        'sql_server': 'SQL Server', 'sql_database': 'SQL Database', 'cosmos_db': 'Cosmos DB',
+        'vm': 'Virtual Machine', 'aks': 'AKS', 'app_service': 'App Service',
+        'function_app': 'Function App', 'synapse': 'Synapse', 'vnet': 'VNet',
+        'nsg': 'NSG', 'bastion': 'Bastion', 'pe': 'Private Endpoint',
+        'log_analytics': 'Log Analytics', 'app_insights': 'App Insights',
+        'monitor': 'Monitor', 'acr': 'Container Registry',
+        'document_intelligence': 'Doc Intelligence', 'form_recognizer': 'Doc Intelligence',
+      }};
+      const typeLabel = TYPE_LABELS[node.type] || node.type;
       const cat = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       cat.setAttribute('x', nw/2); cat.setAttribute('y', nh + 14);
       cat.setAttribute('text-anchor', 'middle');
       cat.setAttribute('font-size', '9'); cat.setAttribute('fill', node.color);
       cat.setAttribute('font-weight', '600');
       cat.setAttribute('font-family', 'Segoe UI, sans-serif');
-      cat.textContent = node.category;
+      cat.textContent = typeLabel;
       g.appendChild(cat);
     }}
 

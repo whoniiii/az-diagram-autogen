@@ -47,50 +47,61 @@ ask_user({
 
 ## Step 2: 리소스 스캔
 
+**🚨 az CLI 출력 원칙:**
+- az CLI 출력은 **항상 파일로 저장** 후 `view`로 읽는다. 터미널에 직접 출력하면 잘릴 수 있다.
+- 한 번의 PowerShell 호출에 **az 명령 3개 이하**만 묶는다. 많이 묶으면 타임아웃 발생.
+- `--query` JMESPath로 필요한 필드만 추출하여 출력 크기를 줄인다.
+
+```powershell
+# ✅ 올바른 방법 — 파일로 저장 후 읽기
+az resource list -g "<RG>" --query "[].{name:name,type:type,kind:kind,location:location}" -o json | Set-Content -Path "$outDir\resources.json"
+
+# ❌ 잘못된 방법 — 터미널에 직접 출력 (잘릴 수 있음)
+az resource list -g "<RG>" -o json
+```
+
 ### 2-A: 리소스 목록 조회
 
 ```powershell
-# 선택된 RG의 모든 리소스 조회
-az resource list --resource-group "<RG_NAME>" --output json
-```
+$outDir = "<session-files>\azure-scan"
+New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 
-여러 RG를 스캔하는 경우 각 RG별로 실행하고 결과를 합친다.
+# 1차: 기본 리소스 목록 (이름, 타입, kind, 위치)
+az resource list -g "<RG>" --query "[].{name:name,type:type,kind:kind,location:location,id:id}" -o json | Set-Content "$outDir\resources.json"
+```
 
 ### 2-B: 리소스 타입별 상세 조회
 
-기본 목록에서 각 리소스의 상세 정보(SKU, 네트워킹, 속성)를 조회한다.
-**모든 리소스 타입에 대해 `az resource show`를 사용하되, 주요 서비스는 전용 명령으로 더 상세한 정보를 가져온다:**
+**명령을 2-3개씩 묶어서 실행한다. 한 번에 전부 돌리지 않는다.**
 
 ```powershell
-# 범용 — 모든 리소스에 사용 가능
-az resource show --ids "<RESOURCE_ID>" --output json
+# 묶음 1: 네트워크 (VNet, PE, NSG)
+az network vnet list -g "<RG>" --query "[].{name:name,addressSpace:addressSpace.addressPrefixes,subnets:subnets[].{name:name,prefix:addressPrefix,pePolicy:privateEndpointNetworkPolicies}}" -o json | Set-Content "$outDir\vnets.json"
+az network private-endpoint list -g "<RG>" --query "[].{name:name,subnetId:subnet.id,targetId:privateLinkServiceConnections[0].privateLinkServiceId,groupIds:privateLinkServiceConnections[0].groupIds,state:provisioningState}" -o json | Set-Content "$outDir\pe.json"
+az network nsg list -g "<RG>" --query "[].{name:name,location:location,subnets:subnets[].id,nics:networkInterfaces[].id}" -o json | Set-Content "$outDir\nsg.json"
 
-# 주요 서비스별 전용 명령 (더 상세한 정보)
-az cognitiveservices account show --name "<NAME>" -g "<RG>" -o json
-az search service show --name "<NAME>" -g "<RG>" -o json
-az storage account show --name "<NAME>" -g "<RG>" -o json
-az keyvault show --name "<NAME>" -g "<RG>" -o json
-az network vnet show --name "<NAME>" -g "<RG>" -o json
-az vm show --name "<NAME>" -g "<RG>" -o json
-az sql server show --name "<NAME>" -g "<RG>" -o json
-az databricks workspace show --name "<NAME>" -g "<RG>" -o json
+# 묶음 2: AI 서비스
+az cognitiveservices account list -g "<RG>" --query "[].{name:name,kind:kind,sku:sku.name,endpoint:properties.endpoint,publicAccess:properties.publicNetworkAccess,location:location}" -o json | Set-Content "$outDir\cognitive.json"
+az search service list -g "<RG>" --query "[].{name:name,sku:sku.name,publicAccess:properties.publicNetworkAccess,semanticSearch:properties.semanticSearch,location:location}" -o json 2>$null | Set-Content "$outDir\search.json"
+
+# 묶음 3: 컴퓨트 + 스토리지
+az vm list -g "<RG>" --query "[].{name:name,size:hardwareProfile.vmSize,os:storageProfile.osDisk.osType,location:location,nicIds:networkProfile.networkInterfaces[].id}" -o json | Set-Content "$outDir\vms.json"
+az storage account list -g "<RG>" --query "[].{name:name,sku:sku.name,kind:kind,hns:properties.isHnsEnabled,publicAccess:properties.publicNetworkAccess,location:location}" -o json | Set-Content "$outDir\storage.json"
+az keyvault list -g "<RG>" --query "[].{name:name,location:location}" -o json 2>$null | Set-Content "$outDir\keyvault.json"
 ```
 
-### 2-C: Private Endpoint 조회
+### 2-C: 모델 배포 조회 (Cognitive Services가 있는 경우)
 
 ```powershell
-az network private-endpoint list --resource-group "<RG_NAME>" --output json
+# 각 Cognitive Services 리소스의 모델 배포 조회
+az cognitiveservices account deployment list --name "<NAME>" -g "<RG>" --query "[].{name:name,model:properties.model.name,version:properties.model.version,sku:sku.name}" -o json | Set-Content "$outDir\<NAME>-deployments.json"
 ```
 
-PE 목록에서 각 PE의:
-- `privateLinkServiceConnections[0].privateLinkServiceId` → 연결된 서비스
-- `subnet.id` → 소속 VNet/Subnet
-- `privateLinkServiceConnections[0].groupIds` → groupId (account, searchService, blob 등)
-
-### 2-D: VNet/Subnet 조회
+### 2-D: NIC + Public IP 조회 (VM이 있는 경우)
 
 ```powershell
-az network vnet list --resource-group "<RG_NAME>" --output json
+az network nic list -g "<RG>" --query "[].{name:name,subnetId:ipConfigurations[0].subnet.id,privateIp:ipConfigurations[0].privateIPAddress,publicIpId:ipConfigurations[0].publicIPAddress.id}" -o json | Set-Content "$outDir\nics.json"
+az network public-ip list -g "<RG>" --query "[].{name:name,ip:ipAddress,sku:sku.name}" -o json | Set-Content "$outDir\public-ips.json"
 ```
 
 VNet에서:
@@ -106,33 +117,61 @@ VNet에서:
 
 ### 관계 추론 규칙
 
+**🚨 연결선이 부족하면 다이어그램이 의미 없다. 최대한 많은 관계를 추론한다.**
+
+#### 확정 추론 (리소스 ID/속성에서 직접 확인 가능)
+
 | 관계 유형 | 추론 방법 | connection type |
 |---|---|---|
 | PE → 서비스 | PE의 `privateLinkServiceId`에서 서비스 ID 추출 | `private` |
 | PE → VNet | PE의 `subnet.id`에서 VNet 추출 | (VNet 경계선으로 표현) |
-| Foundry → Project | `Microsoft.CognitiveServices/accounts/projects`의 부모 | `api` |
-| Foundry → 모델 배포 | `accounts/deployments` 조회 | (details에 포함) |
-| AI Search → Storage | AI Search의 data source 설정 (있을 경우) | `data` |
-| 서비스 → Key Vault | 같은 RG 내 Key Vault가 있으면 secrets 관리 추론 | `security` |
-| Databricks → VNet | Databricks의 `vnetAddressPrefix` 확인 (VNet injection) | (VNet 경계선) |
+| Foundry → Project | `accounts/projects`의 부모 리소스 | `api` |
+| VM → NIC → Subnet | NIC의 `subnet.id`에서 VNet/Subnet 추론 | (VNet 경계선) |
+| NSG → Subnet | NSG의 `subnets[].id`에서 연결된 서브넷 확인 | `network` |
+| NSG → NIC | NSG의 `networkInterfaces[].id`에서 연결된 VM 확인 | `network` |
+| NIC → Public IP | NIC의 `publicIPAddress.id`에서 PIP 확인 | (details에 포함) |
+| Databricks → VNet | workspace의 VNet injection 설정 | (VNet 경계선) |
+
+#### 합리적 추론 (같은 RG 내 서비스 간 일반적 패턴)
+
+| 관계 유형 | 추론 조건 | connection type |
+|---|---|---|
+| Foundry → AI Search | 같은 RG에 둘 다 있으면 RAG 연결 추론 | `api` (label: "RAG Search") |
+| Foundry → Storage | 같은 RG에 둘 다 있으면 데이터 연결 추론 | `data` (label: "Data") |
+| AI Search → Storage | 같은 RG에 둘 다 있으면 인덱싱 연결 추론 | `data` (label: "Indexing") |
+| 서비스 → Key Vault | 같은 RG에 Key Vault가 있으면 시크릿 관리 추론 | `security` (label: "Secrets") |
+| VM → Foundry/Search | 같은 RG에 VM + AI 서비스가 있으면 API 호출 추론 | `api` (label: "API") |
+| DI → Foundry | 같은 RG에 Document Intelligence + Foundry가 있으면 OCR/추출 연결 추론 | `api` (label: "OCR/Extract") |
+| ADF → Storage | 같은 RG에 ADF + Storage가 있으면 데이터 파이프라인 추론 | `data` (label: "Pipeline") |
+| ADF → SQL | 같은 RG에 ADF + SQL이 있으면 데이터 소스 추론 | `data` (label: "Source") |
+| Databricks → Storage | 같은 RG에 둘 다 있으면 데이터 레이크 연결 추론 | `data` (label: "Data Lake") |
+
+#### 추론 후 사용자 확인
+
+추론된 연결 목록을 사용자에게 보여주고 확인받는다:
+```
+> **⏳ 리소스 간 관계를 추론했습니다** — 아래가 맞는지 확인해주세요.
+
+추론된 연결:
+- Foundry → AI Search (RAG Search)
+- Foundry → Storage (Data)
+- VM → Foundry (API 호출)
+- Document Intelligence → Foundry (OCR/Extract)
+
+맞나요? 추가하거나 빼고 싶은 연결이 있으면 말씀해주세요.
+```
+
+#### 추론 불가능한 관계
+
+위 규칙으로 추론되지 않는 연결이 있을 수 있다. 사용자가 추가 연결을 자유 입력할 수 있다.
 
 ### 모델 배포 조회 (Foundry 리소스가 있는 경우)
 
 ```powershell
-az cognitiveservices account deployment list --name "<FOUNDRY_NAME>" -g "<RG>" -o json
+az cognitiveservices account deployment list --name "<FOUNDRY_NAME>" -g "<RG>" --query "[].{name:name,model:properties.model.name,version:properties.model.version,sku:sku.name}" -o json
 ```
 
 각 deployment의 모델명, 버전, SKU를 Foundry 노드의 details에 추가.
-
-### 추론 불가능한 관계
-
-모든 관계를 자동 추론할 수는 없다. 추론되지 않는 연결은 사용자에게 묻는다:
-```
-ask_user({
-  question: "이 서비스들 간의 관계를 알려주세요. 어떤 서비스가 어떤 서비스를 사용하나요?",
-  allow_freeform: true
-})
-```
 
 ---
 
@@ -146,6 +185,8 @@ ask_user({
 |---|---|
 | `Microsoft.CognitiveServices/accounts` (kind: AIServices) | `ai_foundry` |
 | `Microsoft.CognitiveServices/accounts` (kind: OpenAI) | `openai` |
+| `Microsoft.CognitiveServices/accounts` (kind: FormRecognizer) | `document_intelligence` |
+| `Microsoft.CognitiveServices/accounts` (kind: TextAnalytics, etc.) | `ai_foundry` (기본) |
 | `Microsoft.CognitiveServices/accounts/projects` | `ai_foundry` |
 | `Microsoft.Search/searchServices` | `search` |
 | `Microsoft.Storage/storageAccounts` | `storage` |
