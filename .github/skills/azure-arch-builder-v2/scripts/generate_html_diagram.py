@@ -489,8 +489,9 @@ const GAP = 40;
 // PE nodes in a separate PE subnet group.
 
 const positions = {{}};
-const peNodes = NODES.filter(n => n.type === 'pe');
-const mainNodes = NODES.filter(n => n.type !== 'pe');
+const useRgLayout = HIERARCHY.length > 0 && NODES.some(n => n.resourceGroup);
+const peNodes = useRgLayout ? [] : NODES.filter(n => n.type === 'pe');  // RG mode: PE included in mainNodes
+const mainNodes = useRgLayout ? NODES : NODES.filter(n => n.type !== 'pe');
 
 // Group box layout parameters
 const GROUP_PAD = 24;
@@ -511,7 +512,6 @@ function groupDimensions(nodeCount) {{
 const groupBoxes = [];
 
 // ── Layout strategy: RG-based (if HIERARCHY) or Category-based (default) ──
-const useRgLayout = HIERARCHY.length > 0 && NODES.some(n => n.resourceGroup);
 
 if (useRgLayout) {{
   // ── RG-based layout: group by Subscription > ResourceGroup ──
@@ -656,46 +656,74 @@ bottomCategories.forEach(cat => {{
 
 }} // end of else (category-based layout)
 
-// ── PE nodes: in PE subnet group above service groups ──
-const PE_Y = 40;
-if (peNodes.length > 0) {{
-  const peDim = groupDimensions(peNodes.length);
-  // Use wider PE layout (more columns)
-  const peCols = Math.min(peNodes.length, 6);
-  const peRows = Math.ceil(peNodes.length / peCols);
-  const peCellW = PE_W + 50;
-  const peCellH = PE_H + 30;
-  const peBoxW = peCols * peCellW + GROUP_PAD * 2;
-  const peBoxH = peRows * peCellH + GROUP_PAD + GROUP_TITLE_H;
-
-  peNodes.forEach((pe, i) => {{
-    const col = i % peCols;
-    const row = Math.floor(i / peCols);
-    positions[pe.id] = {{
-      x: 60 + GROUP_PAD + col * peCellW + (peCellW - PE_W) / 2,
-      y: PE_Y + GROUP_TITLE_H + row * peCellH + (peCellH - PE_H) / 2
-    }};
-  }});
-
-  groupBoxes.push({{
-    cat: 'Private Endpoints', x: 60, y: PE_Y, w: peBoxW, h: peBoxH,
-    color: '#5C2D91', isPE: true
-  }});
-
-  // Shift service groups down if PE group exists
-  const peBottom = PE_Y + peBoxH + GROUP_GAP;
-  if (peBottom > 140) {{
-    const shift = peBottom - 140;
-    // Shift all non-PE positions down
-    NODES.forEach(n => {{
-      if (n.type !== 'pe' && positions[n.id]) {{
-        positions[n.id].y += shift;
-      }}
+// ── PE nodes placement ──
+if (useRgLayout) {{
+  // RG mode: PE nodes go inside their respective RG boxes
+  // PE positions are already set by the RG layout if they have subscription/resourceGroup
+  // For PEs without RG assignment, place them in a separate group
+  const unplacedPEs = peNodes.filter(pe => !positions[pe.id]);
+  if (unplacedPEs.length > 0) {{
+    // Find the rightmost RG box position
+    const allGbRight = groupBoxes.length > 0 ? Math.max(...groupBoxes.map(gb => gb.x + gb.w)) : 0;
+    const peStartX = allGbRight + GROUP_GAP;
+    const peStartY = 140;
+    const peCols = Math.min(unplacedPEs.length, 4);
+    const peCellW = PE_W + 50;
+    const peCellH = PE_H + 30;
+    const peBoxW = peCols * peCellW + GROUP_PAD * 2;
+    const peRows = Math.ceil(unplacedPEs.length / peCols);
+    const peBoxH = peRows * peCellH + GROUP_PAD + GROUP_TITLE_H;
+    
+    unplacedPEs.forEach((pe, i) => {{
+      const col = i % peCols;
+      const row = Math.floor(i / peCols);
+      positions[pe.id] = {{
+        x: peStartX + GROUP_PAD + col * peCellW + (peCellW - PE_W) / 2,
+        y: peStartY + GROUP_TITLE_H + row * peCellH + (peCellH - PE_H) / 2
+      }};
     }});
-    // Shift group boxes down
-    groupBoxes.forEach(gb => {{
-      if (!gb.isPE) gb.y += shift;
+    groupBoxes.push({{
+      cat: 'Private Endpoints', x: peStartX, y: peStartY, w: peBoxW, h: peBoxH,
+      color: '#5C2D91', isPE: true
     }});
+  }}
+}} else {{
+  // Category mode: PE nodes in separate group above service groups
+  const PE_Y = 40;
+  if (peNodes.length > 0) {{
+    const peCols = Math.min(peNodes.length, 6);
+    const peRows = Math.ceil(peNodes.length / peCols);
+    const peCellW = PE_W + 50;
+    const peCellH = PE_H + 30;
+    const peBoxW = peCols * peCellW + GROUP_PAD * 2;
+    const peBoxH = peRows * peCellH + GROUP_PAD + GROUP_TITLE_H;
+
+    peNodes.forEach((pe, i) => {{
+      const col = i % peCols;
+      const row = Math.floor(i / peCols);
+      positions[pe.id] = {{
+        x: 60 + GROUP_PAD + col * peCellW + (peCellW - PE_W) / 2,
+        y: PE_Y + GROUP_TITLE_H + row * peCellH + (peCellH - PE_H) / 2
+      }};
+    }});
+
+    groupBoxes.push({{
+      cat: 'Private Endpoints', x: 60, y: PE_Y, w: peBoxW, h: peBoxH,
+      color: '#5C2D91', isPE: true
+    }});
+
+    const peBottom = PE_Y + peBoxH + GROUP_GAP;
+    if (peBottom > 140) {{
+      const shift = peBottom - 140;
+      NODES.forEach(n => {{
+        if (n.type !== 'pe' && positions[n.id]) {{
+          positions[n.id].y += shift;
+        }}
+      }});
+      groupBoxes.forEach(gb => {{
+        if (!gb.isPE) gb.y += shift;
+      }});
+    }}
   }}
 }}
 
@@ -720,6 +748,7 @@ const _leftMarginBase = groupBoxes.length > 0 ? Math.min(...groupBoxes.map(g => 
 
 // ── State ──
 let dragging = null, dragOffX = 0, dragOffY = 0;
+let draggingGroup = null, groupDragNodes = [];  // for RG/group box dragging
 let viewTransform = {{ x: 0, y: 0, scale: 1 }};
 let isPanning = false, panSX = 0, panSY = 0, panSTx = 0, panSTy = 0;
 let _routeCounter = 0;
@@ -749,7 +778,8 @@ function renderDiagram() {{
   root.innerHTML = '';
   _routeCounter = 0;  // reset stagger counter each render
 
-  // ── Draw VNet boundary around non-bottom groups ──
+  // ── Draw VNet boundary (only in category-based layout, not RG layout) ──
+  if (!useRgLayout) {{
   const privateGroups = groupBoxes.filter(gb => !gb.isBottom);
   const hasPrivateNodes = NODES.some(n => n.private && n.type !== 'pe');
   const hasVNetInfo = VNET_INFO && VNET_INFO.length > 0;
@@ -786,18 +816,31 @@ function renderDiagram() {{
       vl.addEventListener('click', () => {{ toggleVNetHighlight(); }});
       root.appendChild(vl);
   }}
+  }} // end if(!useRgLayout) for VNet boundary
 
-  // ── Draw category group boxes ──
+  // ── Draw group boxes (category or RG — depends on layout mode) ──
   groupBoxes.forEach(gb => {{
-    const gr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    gr.setAttribute('x', gb.x); gr.setAttribute('y', gb.y);
-    gr.setAttribute('width', gb.w); gr.setAttribute('height', gb.h);
-    gr.setAttribute('rx', '8');
-    gr.setAttribute('fill', gb.isPE ? '#f3eef9' : 'white');
-    gr.setAttribute('stroke', gb.isPE ? '#d4b8ff' : '#e1dfdd');
-    gr.setAttribute('stroke-width', '1');
-    if (gb.isPE) gr.setAttribute('stroke-dasharray', '4,4');
-    root.appendChild(gr);
+    if (gb.isPE) {{
+      // PE group — always draw with dashed style
+      const gr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      gr.setAttribute('x', gb.x); gr.setAttribute('y', gb.y);
+      gr.setAttribute('width', gb.w); gr.setAttribute('height', gb.h);
+      gr.setAttribute('rx', '8'); gr.setAttribute('fill', '#f3eef9');
+      gr.setAttribute('stroke', '#d4b8ff'); gr.setAttribute('stroke-width', '1');
+      gr.setAttribute('stroke-dasharray', '4,4');
+      root.appendChild(gr);
+    }} else {{
+      // Service group (category or RG)
+      const gr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      gr.setAttribute('x', gb.x); gr.setAttribute('y', gb.y);
+      gr.setAttribute('width', gb.w); gr.setAttribute('height', gb.h);
+      gr.setAttribute('rx', '8');
+      gr.setAttribute('fill', gb.isRG ? '#fafafa' : 'white');
+      gr.setAttribute('stroke', gb.isRG ? gb.color : '#e1dfdd');
+      gr.setAttribute('stroke-width', gb.isRG ? '1.5' : '1');
+      if (gb.isRG) gr.setAttribute('stroke-dasharray', '6,3');
+      root.appendChild(gr);
+    }}
 
     // Title bar
     const titleBar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -807,7 +850,6 @@ function renderDiagram() {{
     titleBar.setAttribute('fill', gb.color);
     titleBar.setAttribute('opacity', '0.1');
     root.appendChild(titleBar);
-    // Bottom corners of title bar (square)
     const titleFill = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     titleFill.setAttribute('x', gb.x); titleFill.setAttribute('y', gb.y + GROUP_TITLE_H - 8);
     titleFill.setAttribute('width', gb.w); titleFill.setAttribute('height', '8');
@@ -821,78 +863,61 @@ function renderDiagram() {{
     accent.setAttribute('rx', '8'); accent.setAttribute('fill', gb.color);
     root.appendChild(accent);
 
-    // Group label
+    // Group label — RG uses 📁, PE uses "Private Endpoints", category uses category name
     const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     label.setAttribute('x', gb.x + 12); label.setAttribute('y', gb.y + 18);
     label.setAttribute('font-size', '11'); label.setAttribute('font-weight', '600');
     label.setAttribute('fill', gb.color); label.setAttribute('font-family', 'Segoe UI, sans-serif');
-    label.textContent = gb.cat;
+    label.textContent = gb.isRG ? `📁 ${{gb.cat}}` : gb.cat;
     root.appendChild(label);
+
+    // Make title bar draggable — drags all nodes inside
+    titleBar.style.cursor = 'grab';
+    const gbIdx = groupBoxes.indexOf(gb);
+    titleBar.addEventListener('mousedown', e => {{
+      if (e.button !== 0) return;
+      e.stopPropagation(); e.preventDefault();
+      draggingGroup = gbIdx;
+      const svgPt = getSVGPoint(e);
+      dragOffX = svgPt.x; dragOffY = svgPt.y;
+      // Find all nodes inside this group box
+      groupDragNodes = NODES.filter(n => {{
+        const pos = positions[n.id];
+        if (!pos) return false;
+        const nw = n.type === 'pe' ? PE_W : SVC_W;
+        const nh = n.type === 'pe' ? PE_H : SVC_H;
+        const cx = pos.x + nw/2, cy = pos.y + nh/2;
+        return cx >= gb.x && cx <= gb.x + gb.w && cy >= gb.y && cy <= gb.y + gb.h;
+      }}).map(n => n.id);
+    }});
   }});
 
-  // ── Draw Subscription / Resource Group boundaries (after category boxes so they're visible) ──
-  if (HIERARCHY.length > 0) {{
-    const rgColors = ['#0078D4', '#00BCF2', '#008272', '#E8740C', '#5C2D91', '#D83B01'];
-    let colorIdx = 0;
-    const multiSub = HIERARCHY.length > 1;
-    
+  // ── Draw Subscription boundaries (only if multiple subscriptions, rendered AFTER group boxes) ──
+  if (HIERARCHY.length > 1 && useRgLayout) {{
     HIERARCHY.forEach((sub, subIdx) => {{
-      const subNodesAll = NODES.filter(n => n.subscription === sub.subscription);
-      const subEntries = subNodesAll.map(n => ({{ node: n, pos: positions[n.id] }})).filter(e => e.pos);
-      if (subEntries.length === 0) return;
+      // Find all RG boxes belonging to this subscription
+      const subRgBoxes = groupBoxes.filter(gb => gb.isRG && gb.subscription === sub.subscription);
+      if (subRgBoxes.length === 0) return;
       
-      if (multiSub) {{
-        const sx = Math.min(...subEntries.map(e => e.pos.x)) - 30;
-        const sy = Math.min(...subEntries.map(e => e.pos.y)) - 50;
-        const sRight = Math.max(...subEntries.map(e => e.pos.x + (e.node.type === 'pe' ? PE_W : SVC_W))) + 30;
-        const sBottom = Math.max(...subEntries.map(e => e.pos.y + (e.node.type === 'pe' ? PE_H : SVC_H))) + 30;
-        
-        const sr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        sr.setAttribute('x', sx); sr.setAttribute('y', sy);
-        sr.setAttribute('width', sRight - sx); sr.setAttribute('height', sBottom - sy);
-        sr.setAttribute('fill', 'none'); sr.setAttribute('stroke', '#0078D4');
-        sr.setAttribute('stroke-width', '2.5'); sr.setAttribute('stroke-dasharray', '12,4');
-        sr.setAttribute('rx', '16'); sr.setAttribute('opacity', '0.7');
-        root.appendChild(sr);
-        
-        const sl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        sl.setAttribute('x', sx + 12); sl.setAttribute('y', sy + 18);
-        sl.setAttribute('font-size', '12'); sl.setAttribute('font-weight', '700');
-        sl.setAttribute('fill', '#0078D4'); sl.setAttribute('font-family', 'Segoe UI, sans-serif');
-        sl.textContent = `📦 ${{sub.subscription}}`;
-        root.appendChild(sl);
-      }}
+      const sx = Math.min(...subRgBoxes.map(gb => gb.x)) - 20;
+      const sy = Math.min(...subRgBoxes.map(gb => gb.y)) - 40;
+      const sRight = Math.max(...subRgBoxes.map(gb => gb.x + gb.w)) + 20;
+      const sBottom = Math.max(...subRgBoxes.map(gb => gb.y + gb.h)) + 20;
       
-      const uniqueRGs = [...new Set(subEntries.map(e => e.node.resourceGroup).filter(Boolean))];
-      if (uniqueRGs.length > 1 || (HIERARCHY.length > 1 && uniqueRGs.length >= 1)) {{
-        uniqueRGs.forEach(rgName => {{
-          const rgEntries = subEntries.filter(e => e.node.resourceGroup === rgName);
-          if (rgEntries.length === 0) return;
-          
-          const color = rgColors[colorIdx % rgColors.length];
-          colorIdx++;
-          
-          const rx = Math.min(...rgEntries.map(e => e.pos.x)) - 16;
-          const ry = Math.min(...rgEntries.map(e => e.pos.y)) - 36;
-          const rRight = Math.max(...rgEntries.map(e => e.pos.x + (e.node.type === 'pe' ? PE_W : SVC_W))) + 16;
-          const rBottom = Math.max(...rgEntries.map(e => e.pos.y + (e.node.type === 'pe' ? PE_H : SVC_H))) + 16;
-          
-          const rr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rr.setAttribute('x', rx); rr.setAttribute('y', ry);
-          rr.setAttribute('width', rRight - rx); rr.setAttribute('height', rBottom - ry);
-          rr.setAttribute('fill', 'none'); rr.setAttribute('stroke', color);
-          rr.setAttribute('stroke-width', '2'); rr.setAttribute('stroke-dasharray', '6,3');
-          rr.setAttribute('rx', '8');
-          root.appendChild(rr);
-          
-          const rl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          rl.setAttribute('x', rx + 8); rl.setAttribute('y', ry + 14);
-          rl.setAttribute('font-size', '11'); rl.setAttribute('font-weight', '700');
-          rl.setAttribute('fill', color); rl.setAttribute('font-family', 'Segoe UI, sans-serif');
-          rl.textContent = `📁 ${{rgName}}`;
-          root.appendChild(rl);
-        }});
-      }}
+      const sr = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      sr.setAttribute('x', sx); sr.setAttribute('y', sy);
+      sr.setAttribute('width', sRight - sx); sr.setAttribute('height', sBottom - sy);
+      sr.setAttribute('fill', 'none'); sr.setAttribute('stroke', '#0078D4');
+      sr.setAttribute('stroke-width', '2.5'); sr.setAttribute('stroke-dasharray', '12,4');
+      sr.setAttribute('rx', '16'); sr.setAttribute('opacity', '0.7');
+      root.appendChild(sr);
+      
+      const sl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      sl.setAttribute('x', sx + 12); sl.setAttribute('y', sy + 16);
+      sl.setAttribute('font-size', '12'); sl.setAttribute('font-weight', '700');
+      sl.setAttribute('fill', '#0078D4'); sl.setAttribute('font-family', 'Segoe UI, sans-serif');
+      sl.textContent = `📦 ${{sub.subscription}}`;
+      root.appendChild(sl);
     }});
   }}
 
@@ -1446,13 +1471,30 @@ function getSVGPoint(e) {{
 }}
 
 document.getElementById('canvas').addEventListener('mousemove', e => {{
-  if (!dragging) return;
-  const p = getSVGPoint(e);
-  positions[dragging].x = p.x - dragOffX;
-  positions[dragging].y = p.y - dragOffY;
-  renderDiagram();
+  if (dragging) {{
+    const p = getSVGPoint(e);
+    positions[dragging].x = p.x - dragOffX;
+    positions[dragging].y = p.y - dragOffY;
+    renderDiagram();
+  }} else if (draggingGroup !== null) {{
+    const p = getSVGPoint(e);
+    const dx = p.x - dragOffX;
+    const dy = p.y - dragOffY;
+    dragOffX = p.x; dragOffY = p.y;
+    // Move all nodes in the group
+    groupDragNodes.forEach(nid => {{
+      if (positions[nid]) {{
+        positions[nid].x += dx;
+        positions[nid].y += dy;
+      }}
+    }});
+    // Also move the group box itself
+    const gb = groupBoxes[draggingGroup];
+    if (gb) {{ gb.x += dx; gb.y += dy; }}
+    renderDiagram();
+  }}
 }});
-document.addEventListener('mouseup', () => {{ dragging = null; }});
+document.addEventListener('mouseup', () => {{ dragging = null; draggingGroup = null; groupDragNodes = []; }});
 
 // ── Pan & Zoom ──
 function applyTransform() {{
