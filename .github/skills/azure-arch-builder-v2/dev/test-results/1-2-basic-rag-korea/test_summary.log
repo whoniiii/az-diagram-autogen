@@ -1,0 +1,21 @@
+Test: 1-2-basic-rag-korea (Basic RAG (Korea, Upper SKU))
+Timestamp: 2026-03-22 12:01:46
+User Request: RAG 챗봇 만들고 싶어
+
+[phase1]
+  PASS
+
+[phase2]
+  CRITICAL: main.bicep not found in phase2_bicep/
+  WARN: phase2_compile.log not found (compile not run?)
+  WARN: modules/ directory not found (all-in-one bicep?)
+
+[phase3]
+  WARN: phase3_review.log not found (review not run?)
+
+[phase4]
+  INFO: phase4_validate.log not found (validate not run — needs Azure subscription)
+
+[diagram]
+  PASS
+

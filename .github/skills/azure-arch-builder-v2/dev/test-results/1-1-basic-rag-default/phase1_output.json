@@ -1,0 +1,104 @@
+{
+  "architecture_description": "Basic RAG Chatbot architecture using Azure AI Foundry with GPT-4o and text-embedding-ada-002, Azure AI Search for vector/semantic search, Azure Blob Storage for document storage, and Azure Key Vault for secrets management. Deployed in East US 2 with default SKUs.",
+  "services": [
+    {
+      "id": "ai-foundry-hub",
+      "name": "AI Foundry Hub",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "AI Foundry Hub (workspace)",
+        "Region: East US 2"
+      ]
+    },
+    {
+      "id": "ai-foundry-project",
+      "name": "AI Foundry Project",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Foundry Project: my-rag-chatbot",
+        "GPT-4o (chat completion)",
+        "text-embedding-ada-002 (embedding)"
+      ]
+    },
+    {
+      "id": "ai-search",
+      "name": "Azure AI Search",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": false,
+      "details": [
+        "SKU: Standard S1",
+        "Vector + Semantic search",
+        "Region: East US 2"
+      ]
+    },
+    {
+      "id": "storage-account",
+      "name": "Azure Storage Account",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": false,
+      "details": [
+        "Blob Storage for documents",
+        "SKU: Standard_LRS",
+        "Region: East US 2"
+      ]
+    },
+    {
+      "id": "key-vault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "SKU: Standard",
+        "Secrets & key management",
+        "RBAC authorization"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "ai-foundry-project",
+      "to": "ai-foundry-hub",
+      "label": "Project → Hub",
+      "type": "default"
+    },
+    {
+      "from": "ai-foundry-project",
+      "to": "ai-search",
+      "label": "RAG Query",
+      "type": "api"
+    },
+    {
+      "from": "ai-search",
+      "to": "storage-account",
+      "label": "Indexing",
+      "type": "data"
+    },
+    {
+      "from": "ai-foundry-project",
+      "to": "storage-account",
+      "label": "Document Upload",
+      "type": "data"
+    },
+    {
+      "from": "ai-foundry-hub",
+      "to": "key-vault",
+      "label": "Secrets",
+      "type": "security"
+    },
+    {
+      "from": "ai-search",
+      "to": "key-vault",
+      "label": "Secrets",
+      "type": "security"
+    }
+  ],
+  "vnet_info": "",
+  "hierarchy": []
+}

@@ -18,7 +18,7 @@ ARCHITECTURES = [
         "desc": "Blob static hosting + Azure CDN",
         "services": [
             {"id":"storage","name":"Storage Account","type":"storage","sku":"Standard_LRS","details":["Static Website"]},
-            {"id":"cdn","name":"Azure CDN","type":"default","details":["Global CDN"]},
+            {"id":"cdn","name":"Azure CDN","type":"cdn","details":["Global CDN"]},
         ],
         "connections": [{"from":"cdn","to":"storage","label":"Origin","type":"data"}],
     },
@@ -71,7 +71,7 @@ ARCHITECTURES = [
         "services": [
             {"id":"app","name":"App Service","type":"app_service","sku":"S1","details":["Production"]},
             {"id":"sql","name":"SQL Database","type":"sql_database","sku":"S1","details":["50 DTU"]},
-            {"id":"redis","name":"Azure Redis","type":"default","details":["Cache"]},
+            {"id":"redis","name":"Azure Redis","type":"redis","details":["Cache"]},
             {"id":"ai","name":"App Insights","type":"app_insights","details":["Monitoring"]},
         ],
         "connections": [
@@ -84,7 +84,7 @@ ARCHITECTURES = [
         "id": "07", "name": "Event-Driven Processing", "level": 2,
         "desc": "Event Hub + Function App + Cosmos DB",
         "services": [
-            {"id":"eh","name":"Event Hub","type":"default","sku":"Standard","details":["Stream"]},
+            {"id":"eh","name":"Event Hub","type":"event_hub","sku":"Standard","details":["Stream"]},
             {"id":"func","name":"Function App","type":"function_app","details":["Consumer"]},
             {"id":"cosmos","name":"Cosmos DB","type":"cosmos_db","details":["Store"]},
             {"id":"storage","name":"Storage","type":"storage","details":["Dead Letter"]},
@@ -99,8 +99,8 @@ ARCHITECTURES = [
         "id": "08", "name": "CI/CD Pipeline", "level": 2,
         "desc": "DevOps + ACR + AKS",
         "services": [
-            {"id":"devops","name":"Azure DevOps","type":"default","details":["Pipeline"]},
-            {"id":"acr","name":"Container Registry","type":"default","details":["ACR"]},
+            {"id":"devops","name":"Azure DevOps","type":"devops","details":["Pipeline"]},
+            {"id":"acr","name":"Container Registry","type":"acr","details":["ACR"]},
             {"id":"aks","name":"AKS","type":"aks","sku":"Standard","details":["K8s Cluster"]},
             {"id":"kv","name":"Key Vault","type":"keyvault","details":["Secrets"]},
         ],
@@ -158,11 +158,11 @@ ARCHITECTURES = [
         "id": "11", "name": "Microservices (AKS)", "level": 3,
         "desc": "AKS + ACR + SQL + Redis + App Gateway",
         "services": [
-            {"id":"agw","name":"App Gateway","type":"default","details":["WAF v2"]},
+            {"id":"agw","name":"App Gateway","type":"app_gateway","details":["WAF v2"]},
             {"id":"aks","name":"AKS","type":"aks","sku":"Standard","details":["3 nodes"]},
-            {"id":"acr","name":"ACR","type":"default","details":["Premium"]},
+            {"id":"acr","name":"ACR","type":"acr","details":["Premium"]},
             {"id":"sql","name":"SQL Database","type":"sql_database","sku":"S2","details":["DTU"]},
-            {"id":"redis","name":"Redis","type":"default","details":["Cache"]},
+            {"id":"redis","name":"Redis","type":"redis","details":["Cache"]},
             {"id":"kv","name":"Key Vault","type":"keyvault","details":["Secrets"]},
         ],
         "connections": [
@@ -177,8 +177,8 @@ ARCHITECTURES = [
         "id": "12", "name": "IoT Solution", "level": 3,
         "desc": "IoT Hub + Stream Analytics + Cosmos + Function",
         "services": [
-            {"id":"iot","name":"IoT Hub","type":"default","sku":"S1","details":["Devices"]},
-            {"id":"sa","name":"Stream Analytics","type":"default","details":["Real-time"]},
+            {"id":"iot","name":"IoT Hub","type":"iot_hub","sku":"S1","details":["Devices"]},
+            {"id":"sa","name":"Stream Analytics","type":"stream_analytics","details":["Real-time"]},
             {"id":"cosmos","name":"Cosmos DB","type":"cosmos_db","details":["Hot Store"]},
             {"id":"func","name":"Function App","type":"function_app","details":["Alerts"]},
             {"id":"storage","name":"Storage","type":"storage","details":["Cold Store"]},
@@ -236,9 +236,9 @@ ARCHITECTURES = [
         "id": "15", "name": "Hybrid Network", "level": 4,
         "desc": "VPN + Firewall + Bastion + Hub-Spoke",
         "services": [
-            {"id":"fw","name":"Azure Firewall","type":"nsg","subscription":"hub","resourceGroup":"rg-hub","details":["Central Firewall"]},
+            {"id":"fw","name":"Azure Firewall","type":"firewall","subscription":"hub","resourceGroup":"rg-hub","details":["Central Firewall"]},
             {"id":"bastion","name":"Bastion","type":"bastion","subscription":"hub","resourceGroup":"rg-hub","details":["Admin Access"]},
-            {"id":"vpn","name":"VPN Gateway","type":"default","subscription":"hub","resourceGroup":"rg-hub","details":["On-premises"]},
+            {"id":"vpn","name":"VPN Gateway","type":"vpn_gateway","subscription":"hub","resourceGroup":"rg-hub","details":["On-premises"]},
             {"id":"app","name":"App Service","type":"app_service","subscription":"spoke-1","resourceGroup":"rg-workload","details":["Web App"]},
             {"id":"sql","name":"SQL Database","type":"sql_database","subscription":"spoke-1","resourceGroup":"rg-workload","details":["Data"]},
             {"id":"vm","name":"Jump VM","type":"vm","subscription":"spoke-1","resourceGroup":"rg-workload","details":["Admin"]},
@@ -258,10 +258,10 @@ ARCHITECTURES = [
         "id": "16", "name": "Multi-tier Web App", "level": 4,
         "desc": "App Gateway + App Service + SQL + Redis + CDN",
         "services": [
-            {"id":"cdn","name":"Azure CDN","type":"default","subscription":"prod","resourceGroup":"rg-frontend","details":["Global"]},
-            {"id":"agw","name":"App Gateway","type":"default","subscription":"prod","resourceGroup":"rg-frontend","details":["WAF v2"]},
+            {"id":"cdn","name":"Azure CDN","type":"cdn","subscription":"prod","resourceGroup":"rg-frontend","details":["Global"]},
+            {"id":"agw","name":"App Gateway","type":"app_gateway","subscription":"prod","resourceGroup":"rg-frontend","details":["WAF v2"]},
             {"id":"app","name":"App Service","type":"app_service","sku":"P1v3","subscription":"prod","resourceGroup":"rg-app","details":["Web"]},
-            {"id":"redis","name":"Redis Cache","type":"default","subscription":"prod","resourceGroup":"rg-app","details":["Session"]},
+            {"id":"redis","name":"Redis Cache","type":"redis","subscription":"prod","resourceGroup":"rg-app","details":["Session"]},
             {"id":"sql","name":"SQL Database","type":"sql_database","sku":"S2","subscription":"prod","resourceGroup":"rg-data","details":["Primary"]},
             {"id":"kv","name":"Key Vault","type":"keyvault","subscription":"prod","resourceGroup":"rg-security","details":["RBAC"]},
             {"id":"ai","name":"App Insights","type":"app_insights","subscription":"prod","resourceGroup":"rg-monitor","details":["APM"]},
@@ -281,9 +281,9 @@ ARCHITECTURES = [
         "id": "17", "name": "Azure Landing Zone", "level": 5,
         "desc": "Enterprise governance — Hub + 2 Spokes",
         "services": [
-            {"id":"fw","name":"Azure Firewall","type":"nsg","subscription":"connectivity","resourceGroup":"rg-hub","details":["Premium"]},
+            {"id":"fw","name":"Azure Firewall","type":"firewall","subscription":"connectivity","resourceGroup":"rg-hub","details":["Premium"]},
             {"id":"bastion","name":"Bastion","type":"bastion","subscription":"connectivity","resourceGroup":"rg-hub","details":["Standard"]},
-            {"id":"vpn","name":"VPN Gateway","type":"default","subscription":"connectivity","resourceGroup":"rg-hub","details":["S2S"]},
+            {"id":"vpn","name":"VPN Gateway","type":"vpn_gateway","subscription":"connectivity","resourceGroup":"rg-hub","details":["S2S"]},
             {"id":"log","name":"Log Analytics","type":"log_analytics","subscription":"management","resourceGroup":"rg-management","details":["Central Logs"]},
             {"id":"foundry","name":"MS Foundry","type":"ai_foundry","sku":"S0","subscription":"workload-ai","resourceGroup":"rg-ai-prod","details":["AI"]},
             {"id":"search","name":"AI Search","type":"search","subscription":"workload-ai","resourceGroup":"rg-ai-prod","details":["RAG"]},
@@ -310,11 +310,11 @@ ARCHITECTURES = [
         "id": "18", "name": "Mission-Critical AKS", "level": 5,
         "desc": "Multi-region AKS + Front Door + Cosmos",
         "services": [
-            {"id":"fd","name":"Front Door","type":"default","subscription":"global","resourceGroup":"rg-global","details":["Global LB"]},
+            {"id":"fd","name":"Front Door","type":"front_door","subscription":"global","resourceGroup":"rg-global","details":["Global LB"]},
             {"id":"aks1","name":"AKS (East US)","type":"aks","subscription":"region-east","resourceGroup":"rg-east","details":["Primary"]},
             {"id":"aks2","name":"AKS (West EU)","type":"aks","subscription":"region-west","resourceGroup":"rg-west","details":["Secondary"]},
             {"id":"cosmos","name":"Cosmos DB","type":"cosmos_db","subscription":"global","resourceGroup":"rg-global","details":["Multi-region"]},
-            {"id":"acr","name":"ACR","type":"default","subscription":"global","resourceGroup":"rg-global","details":["Geo-replicated"]},
+            {"id":"acr","name":"ACR","type":"acr","subscription":"global","resourceGroup":"rg-global","details":["Geo-replicated"]},
             {"id":"kv1","name":"KV East","type":"keyvault","subscription":"region-east","resourceGroup":"rg-east","details":["Secrets"]},
             {"id":"kv2","name":"KV West","type":"keyvault","subscription":"region-west","resourceGroup":"rg-west","details":["Secrets"]},
         ],
@@ -339,7 +339,7 @@ ARCHITECTURES = [
         "desc": "Full AI lifecycle — Foundry + AI Hub + AML + Databricks",
         "services": [
             {"id":"foundry","name":"MS Foundry","type":"ai_foundry","sku":"S0","subscription":"ai-platform","resourceGroup":"rg-foundry","details":["GPT-4o"]},
-            {"id":"hub","name":"AI Hub","type":"default","subscription":"ai-platform","resourceGroup":"rg-ml","details":["ML Workspace"]},
+            {"id":"hub","name":"AI Hub","type":"ai_hub","subscription":"ai-platform","resourceGroup":"rg-ml","details":["ML Workspace"]},
             {"id":"search","name":"AI Search","type":"search","sku":"S1","subscription":"ai-platform","resourceGroup":"rg-foundry","details":["RAG"]},
             {"id":"databricks","name":"Databricks","type":"databricks","sku":"Premium","subscription":"ai-platform","resourceGroup":"rg-ml","details":["Feature Eng"]},
             {"id":"adls","name":"ADLS Gen2","type":"storage","subscription":"ai-platform","resourceGroup":"rg-data","details":["Data Lake"]},
@@ -480,3 +480,5 @@ const puppeteer = require('puppeteer');
 
 if __name__ == "__main__":
     main()
+
+

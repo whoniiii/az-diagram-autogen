@@ -1,0 +1,19 @@
+Test: 3-1-webapp-basic (Web App (Basic))
+Timestamp: 2026-03-22 12:01:46
+User Request: App Service로 웹 애플리케이션 만들어줘
+
+[phase1]
+  PASS
+
+[phase2]
+  PASS
+
+[phase3]
+  CRITICAL: Review found critical issues
+
+[phase4]
+  CRITICAL: Deployment validate failed
+
+[diagram]
+  PASS
+

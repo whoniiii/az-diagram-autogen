@@ -1,0 +1,129 @@
+{
+  "architecture_description": "프라이빗 엔드포인트 기반 RAG 챗봇 아키텍처 (Custom VNet). 사용자 지정 CIDR(10.1.0.0/16)로 VNet을 구성하고, Microsoft Foundry, AI Search, Storage, Key Vault를 프라이빗 네트워크로 연결한다.",
+  "services": [
+    {
+      "id": "ai-foundry",
+      "name": "Microsoft Foundry",
+      "type": "ai_foundry",
+      "sku": "S0",
+      "private": true,
+      "details": [
+        "GPT-4o 채팅 모델",
+        "text-embedding-ada-002 임베딩 모델",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "ai-search",
+      "name": "Azure AI Search",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": true,
+      "details": [
+        "벡터 검색 + 시맨틱 랭킹",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "storage",
+      "name": "Azure Storage",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": true,
+      "details": [
+        "Blob 컨테이너 (문서 저장)",
+        "HNS 비활성화",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "keyvault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "API 키 및 연결 문자열 관리",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "pe-foundry",
+      "name": "PE: Microsoft Foundry",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: account"]
+    },
+    {
+      "id": "pe-search",
+      "name": "PE: AI Search",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: searchService"]
+    },
+    {
+      "id": "pe-storage",
+      "name": "PE: Storage",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: blob"]
+    },
+    {
+      "id": "pe-keyvault",
+      "name": "PE: Key Vault",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: vault"]
+    }
+  ],
+  "connections": [
+    {
+      "from": "ai-foundry",
+      "to": "ai-search",
+      "label": "RAG 검색 쿼리",
+      "type": "api"
+    },
+    {
+      "from": "ai-search",
+      "to": "storage",
+      "label": "문서 인덱싱",
+      "type": "data"
+    },
+    {
+      "from": "ai-foundry",
+      "to": "keyvault",
+      "label": "시크릿 참조",
+      "type": "security"
+    },
+    {
+      "from": "ai-foundry",
+      "to": "pe-foundry",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "ai-search",
+      "to": "pe-search",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "storage",
+      "to": "pe-storage",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "keyvault",
+      "to": "pe-keyvault",
+      "label": "",
+      "type": "private"
+    }
+  ],
+  "vnet_info": "10.1.0.0/16 | pe-subnet: 10.1.1.0/24",
+  "hierarchy": []
+}

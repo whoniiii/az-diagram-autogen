@@ -1,0 +1,22 @@
+=== Bicep Review: 1-1-basic-rag-default ===
+Date: 2025-07-15
+
+[CRITICAL] issues (deployment will fail):
+- foundry.bicep: Foundry Project uses wrong resource type `Microsoft.CognitiveServices/accounts@2024-10-01` with `kind: 'AIServices'`. Should be `Microsoft.CognitiveServices/accounts/projects` (child resource under Foundry account). Current code creates two separate standalone AI Services accounts instead of a Foundry Hub + Project hierarchy. The portal will not recognize this as a Foundry Project.
+- foundry.bicep: `projectName = 'my-rag-chatbot'` is a static string without `uniqueString()`. Since `customSubDomainName: projectName` requires global uniqueness, deployment will fail if the subdomain 'my-rag-chatbot' is already taken by any other Azure tenant.
+
+[WARNING] issues (may cause problems):
+- foundry.bicep: Comment on line 11 mentions `allowProjectManagement: true` is required, but this property is not set in the Foundry account's properties block. If using the correct `accounts/projects` child resource type, this property may be needed on the parent account.
+- main.bicep: No role assignments defined — Foundry, Search, Storage, Key Vault have SystemAssigned identities but no RBAC roles are granted between services (e.g., Foundry → Storage Blob Data Contributor, Foundry → Search Index Data Contributor). Services won't be able to access each other without manual RBAC setup.
+
+[INFO] suggestions (nice to have):
+- All resource names (except projectName) correctly use `uniqueString(resourceGroup().id)` for global uniqueness.
+- Storage properly configured: `isHnsEnabled: true` (ADLS Gen2), `allowBlobPublicAccess: false`, `minimumTlsVersion: 'TLS1_2'`.
+- Key Vault: `enablePurgeProtection: true`, `enableRbacAuthorization: true` — good security defaults.
+- Model deployments have sequential dependency via `dependsOn` — prevents race conditions.
+- `.bicepparam` uses correct `using` syntax with no sensitive values.
+- No `@secure()` misuse detected. No hardcoded secrets.
+- API versions are recent and valid (CognitiveServices 2024-10-01, KeyVault 2024-04-01-preview, Search 2024-06-01-preview, Storage 2024-01-01).
+- Module references use correct relative paths and parameter pass-through.
+
+Overall: FAIL

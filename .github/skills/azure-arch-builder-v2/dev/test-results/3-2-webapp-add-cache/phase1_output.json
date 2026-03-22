@@ -1,0 +1,74 @@
+{
+  "architecture_description": "App Service 기반 웹 애플리케이션에 Redis Cache를 추가한 구성. Azure SQL Database를 데이터 저장소로, Redis를 캐시 레이어로, Key Vault를 비밀 관리에 사용.",
+  "services": [
+    {
+      "id": "app-service",
+      "name": "App Service",
+      "type": "app_service",
+      "sku": "B1",
+      "private": false,
+      "details": [
+        "Runtime: .NET 8 / Node.js 등 사용자 선택",
+        "Region: East US 2",
+        "Name: my-webapp-cached"
+      ]
+    },
+    {
+      "id": "sql-database",
+      "name": "Azure SQL Database",
+      "type": "sql_database",
+      "sku": "S0",
+      "private": false,
+      "details": [
+        "DTU 기반 Standard S0",
+        "Region: East US 2",
+        "최대 250GB 스토리지"
+      ]
+    },
+    {
+      "id": "redis-cache",
+      "name": "Azure Cache for Redis",
+      "type": "redis",
+      "sku": "C1 Standard",
+      "private": false,
+      "details": [
+        "1GB 캐시 용량",
+        "Region: East US 2",
+        "세션 캐시 및 데이터 캐싱용"
+      ]
+    },
+    {
+      "id": "keyvault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "SQL 연결 문자열, Redis 키 및 앱 비밀 관리",
+        "Region: East US 2"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "app-service",
+      "to": "sql-database",
+      "label": "Query",
+      "type": "data"
+    },
+    {
+      "from": "app-service",
+      "to": "redis-cache",
+      "label": "Cache",
+      "type": "data"
+    },
+    {
+      "from": "app-service",
+      "to": "keyvault",
+      "label": "Secrets",
+      "type": "security"
+    }
+  ],
+  "vnet_info": "",
+  "hierarchy": []
+}
