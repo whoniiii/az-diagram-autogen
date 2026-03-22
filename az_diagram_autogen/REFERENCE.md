@@ -37,7 +37,6 @@ az-diagram-autogen \
 - `html` (default) — interactive, self-contained HTML
 - `png` — static image (requires `npm i puppeteer`)
 - `both` — generates both HTML and PNG
-- `svg` — saves HTML with embedded SVG
 
 ### Python API
 

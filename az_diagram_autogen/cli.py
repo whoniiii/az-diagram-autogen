@@ -19,8 +19,8 @@ def main():
     parser.add_argument("-c", "--connections", help="Connections JSON (string or file path)")
     parser.add_argument("-t", "--title", default="Azure Architecture", help="Diagram title")
     parser.add_argument("-o", "--output", default="azure-architecture.html", help="Output file path")
-    parser.add_argument("-f", "--format", choices=["html", "png", "svg", "both"], default="html",
-                        help="Output format: html (default), png, svg, or both (html+png)")
+    parser.add_argument("-f", "--format", choices=["html", "png", "both"], default="html",
+                        help="Output format: html (default), png, or both (html+png)")
     parser.add_argument("--vnet-info", default="", help="VNet CIDR info")
     parser.add_argument("--hierarchy", default="", help="Subscription/RG hierarchy JSON")
     parser.add_argument("--reference", action="store_true", help="Print REFERENCE.md (skill integration guide)")
@@ -81,14 +81,6 @@ def main():
             print(f"HTML saved instead: {html_path}")
             if not html_path.exists():
                 html_path.write_text(html, encoding="utf-8")
-
-    if args.format == "svg":
-        html_path.write_text(html, encoding="utf-8")
-        print(f"HTML saved: {html_path} (SVG is embedded inside the HTML)")
-
-    if args.format not in ("html", "png", "svg", "both"):
-        html_path.write_text(html, encoding="utf-8")
-        print(f"HTML saved: {html_path}")
 
 
 def _html_to_png(html_path, png_path, width=1920, height=1080):

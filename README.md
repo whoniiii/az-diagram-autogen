@@ -155,7 +155,7 @@ az-diagram-autogen [OPTIONS]
 | `--connections` | `-c` | *(required)* | Connections JSON — inline string or file path |
 | `--title` | `-t` | `"Azure Architecture"` | Diagram title |
 | `--output` | `-o` | `"azure-architecture.html"` | Output file path |
-| `--format` | `-f` | `html` | Output format: `html`, `png`, `svg`, or `both` (html+png) |
+| `--format` | `-f` | `html` | Output format: `html`, `png`, or `both` (html+png) |
 | `--vnet-info` | | `""` | VNet CIDR label for boundary |
 | `--hierarchy` | | `""` | Subscription/RG hierarchy JSON |
 | `--reference` | | | Print skill integration reference |
@@ -326,7 +326,7 @@ az-diagram-autogen \
   --connections '<connections JSON or file path>' \
   --title '<diagram title>' \
   --output '<output file path>' \
-  --format '<html|png|both>' \
+  -f '<format: html|png|both>' \
   --vnet-info '<VNet CIDR (optional)>' \
   --hierarchy '<subscription/RG hierarchy JSON (optional)>'
 ```
