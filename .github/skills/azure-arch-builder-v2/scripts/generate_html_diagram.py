@@ -85,6 +85,11 @@ SERVICE_ICONS = {
         "icon_svg": '<rect x="6" y="12" width="36" height="24" rx="4" fill="#0078D4"/><path d="M16 24 L28 24 M24 18 L30 24 L24 30" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
     },
+    "data_factory": {
+        "icon_svg": '<rect x="6" y="12" width="36" height="24" rx="4" fill="#0078D4"/><path d="M16 24 L28 24 M24 18 L30 24 L24 30" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "data_factory"
+    },
     "keyvault": {
         "icon_svg": '<rect x="10" y="6" width="28" height="36" rx="4" fill="#E8A000"/><circle cx="24" cy="22" r="6" fill="white"/><rect x="22" y="26" width="4" height="10" rx="1" fill="white"/>',
         "color": "#E8A000", "bg": "#FEF7E0", "category": "Security",
@@ -1446,7 +1451,7 @@ function renderDiagram() {{
       const TYPE_LABELS = {{
         'ai_foundry': 'AI Foundry', 'openai': 'Azure OpenAI', 'search': 'AI Search', 'ai_search': 'AI Search',
         'storage': 'Storage', 'adls': 'ADLS Gen2', 'keyvault': 'Key Vault', 'kv': 'Key Vault',
-        'fabric': 'Fabric', 'databricks': 'Databricks', 'adf': 'Data Factory',
+        'fabric': 'Fabric', 'databricks': 'Databricks', 'adf': 'Data Factory', 'data_factory': 'Data Factory',
         'sql_server': 'SQL Server', 'sql_database': 'SQL Database', 'cosmos_db': 'Cosmos DB',
         'vm': 'Virtual Machine', 'aks': 'AKS', 'app_service': 'App Service',
         'function_app': 'Function App', 'synapse': 'Synapse', 'vnet': 'VNet',
