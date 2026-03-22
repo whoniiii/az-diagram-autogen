@@ -53,6 +53,11 @@ SERVICE_ICONS = {
         "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
         "azure_icon_key": "cognitive_search"
     },
+    "ai_search": {
+        "icon_svg": '<circle cx="20" cy="20" r="12" fill="none" stroke="#0078D4" stroke-width="3.5"/><line x1="29" y1="29" x2="40" y2="40" stroke="#0078D4" stroke-width="3.5" stroke-linecap="round"/><circle cx="20" cy="20" r="5" fill="#0078D4" opacity="0.3"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "cognitive_search"
+    },
     "aml": {
         "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 32 L20 18 L26 26 L32 14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
@@ -1439,7 +1444,7 @@ function renderDiagram() {{
     // Service type label below (not category — show actual service type name)
     if (!isPe) {{
       const TYPE_LABELS = {{
-        'ai_foundry': 'AI Foundry', 'openai': 'Azure OpenAI', 'search': 'AI Search',
+        'ai_foundry': 'AI Foundry', 'openai': 'Azure OpenAI', 'search': 'AI Search', 'ai_search': 'AI Search',
         'storage': 'Storage', 'adls': 'ADLS Gen2', 'keyvault': 'Key Vault', 'kv': 'Key Vault',
         'fabric': 'Fabric', 'databricks': 'Databricks', 'adf': 'Data Factory',
         'sql_server': 'SQL Server', 'sql_database': 'SQL Database', 'cosmos_db': 'Cosmos DB',

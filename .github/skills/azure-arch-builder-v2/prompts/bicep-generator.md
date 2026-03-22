@@ -114,9 +114,27 @@ Phase 1 완료 시 다음 정보가 확정되어 있어야 한다:
   - `identity: { type: 'SystemAssigned' }` 필수
   - `allowProjectManagement: true` 필수
   - 모델 배포 (`Microsoft.CognitiveServices/accounts/deployments`) — Foundry resource 레벨에서 수행
-- **⚠️ Foundry Project** (`Microsoft.CognitiveServices/accounts/projects`) — **Foundry resource를 만들면 반드시 함께 생성. 없으면 포털에서 사용 불가**
+- **⚠️ Foundry Project** (`Microsoft.CognitiveServices/accounts/projects`) — **반드시 child resource로 생성**
+  - 리소스 타입: `Microsoft.CognitiveServices/accounts/projects` (절대 standalone `accounts`로 생성하지 않는다)
+  - Bicep에서 `parent: foundryAccount` 사용
+  - 잘못된 예: Project를 별도의 `kind: 'AIServices'` 계정으로 생성 → 포털에서 인식 안 됨
+  - 올바른 예:
+    ```bicep
+    resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@<apiVersion>' = {
+      parent: foundryAccount
+      name: 'project-${uniqueString(resourceGroup().id)}'
+      location: location
+      kind: 'AIServices'
+      properties: {}
+    }
+    ```
 - **Azure AI Search** — Semantic Ranking, 벡터 검색 설정
 - Hub 기반(`Microsoft.MachineLearningServices/workspaces`)은 사용자가 명시적으로 요구하거나, ML 훈련/오픈소스 모델이 필요한 경우에만 검토. 기본 AI/RAG 워크로드에서는 Foundry (AIServices)를 기본 선택
+
+**⛔ CognitiveServices 금지 속성:**
+- `apiProperties.statisticsEnabled` — 존재하지 않는 속성. 절대 사용하지 않는다. 배포 시 `ApiPropertiesInvalid` 에러 발생
+- `apiProperties.qnaAzureSearchEndpointId` — QnA Maker 전용. Foundry에 사용하지 않는다
+- `properties.apiProperties`에 검증되지 않은 속성을 임의로 추가하지 않는다
 
 ### `storage.bicep`
 - ADLS Gen2: `isHnsEnabled: true` ← **절대 빠트리지 말 것**
@@ -139,6 +157,52 @@ Phase 1 완료 시 다음 정보가 확정되어 있어야 한다:
   3. `Microsoft.Network/privateEndpoints/privateDnsZoneGroups`
 - 서비스별 DNS Zone 매핑은 `references/service-gotchas.md` 참조
 
+**⚠️ Foundry/AIServices PE DNS 규칙:**
+- PE groupId: `account`
+- DNS Zone Group에 반드시 **2개 zone** 포함:
+  1. `privatelink.cognitiveservices.azure.com`
+  2. `privatelink.openai.azure.com`
+- 하나만 넣으면 OpenAI API 호출 시 DNS 해석 실패 → 연결 에러
+
+**⚠️ ADLS Gen2 (isHnsEnabled: true) PE 규칙:**
+- PE 2개 필요:
+  1. `blob` → `privatelink.blob.core.windows.net`
+  2. `dfs` → `privatelink.dfs.core.windows.net`
+- DFS PE 없으면 Data Lake 작업 (파일 시스템 생성, 디렉토리 조작) 실패
+
+### `rbac.bicep` (또는 main.bicep에 인라인)
+- **서비스 간 연결이 있으면 해당 RBAC role assignment도 반드시 Bicep에 포함한다**
+- SystemAssigned identity만 있고 role assignment가 없으면 서비스 간 인증 실패
+- 필수 RBAC 매핑:
+
+| 소스 서비스 | 대상 서비스 | Role | Role Definition ID |
+|------------|-----------|------|-------------------|
+| Foundry | Storage | `Storage Blob Data Contributor` | `ba92f5b4-2d11-453d-a403-e96b0029c9fe` |
+| Foundry | AI Search | `Search Index Data Contributor` | `8ebe5a00-799e-43f5-93ac-243d3dce84a7` |
+| Foundry | AI Search | `Search Service Contributor` | `7ca78c08-252a-4471-8644-bb5ff32d4ba0` |
+| App Service | Key Vault | `Key Vault Secrets User` | `4633458b-17de-408a-b874-0445c86b69e6` |
+
+```bicep
+// RBAC 예시 — Foundry → Storage Blob Data Contributor
+resource foundryStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, foundry.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: foundry.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+```
+
+### SQL Server 관련 규칙
+- **비밀번호 관리**: `@secure() param sqlAdminPassword string`을 main.bicep에서 선언하고 모듈에 전달
+  - 모듈 내부에서 `newGuid()`로 생성하지 않는다 — 재배포 시 비밀번호가 변경됨
+  - Key Vault Secret으로 저장하여 배포 후 조회 가능하게 한다
+- **인증 방식**: `administrators.azureADOnlyAuthentication: true` 기본 설정
+  - 조직 정책(MCAPS 등)에서 SQL 인증 단독 사용을 차단하는 경우가 많음
+  - AAD 전용 인증 + Managed Identity가 가장 안전한 구성
+
 ## 필수 코딩 원칙
 
 ### 이름 규칙
@@ -149,6 +213,9 @@ param searchName string = 'srch-${uniqueString(resourceGroup().id)}'
 param storageName string = 'st${uniqueString(resourceGroup().id)}'  // 특수문자 불가
 param keyVaultName string = 'kv-${uniqueString(resourceGroup().id)}'
 ```
+> **⚠️ `customSubDomainName`이 필요한 리소스 (Foundry, Cognitive Services 등)는 반드시 `uniqueString()` 포함.**
+> 정적 문자열(예: `'my-rag-chatbot'`)은 다른 테넌트에서 이미 사용 중일 수 있어 배포 실패 원인이 된다.
+> Foundry Project 이름도 동일 — `'project-${uniqueString(resourceGroup().id)}'`
 
 ### 네트워크 격리
 ```bicep

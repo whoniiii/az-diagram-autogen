@@ -31,6 +31,7 @@
 | 서비스 | groupId | Private DNS Zone |
 |--------|---------|-----------------|
 | Azure OpenAI / CognitiveServices | `account` | `privatelink.cognitiveservices.azure.com` |
+| ⚠️ (Foundry/AIServices 추가) | `account` | `privatelink.openai.azure.com` ← **DNS Zone Group에 위 zone과 함께 2개 모두 포함 필수. 누락 시 OpenAI API DNS 해석 실패** |
 | Azure AI Search | `searchService` | `privatelink.search.windows.net` |
 | Storage (Blob/ADLS) | `blob` | `privatelink.blob.core.windows.net` |
 | Storage (DFS/ADLS Gen2) | `dfs` | `privatelink.dfs.core.windows.net` |
@@ -45,7 +46,9 @@
 | Service Bus | `namespace` | `privatelink.servicebus.windows.net` |
 | Monitor (AMPLS) | ⚠️ 복합 구성 — 아래 참고 | ⚠️ 다중 DNS Zone 필요 — 아래 참고 |
 
-> **ADLS Gen2 주의**: 용도에 따라 `blob`과 `dfs` 두 PE가 모두 필요할 수 있다.
+> **ADLS Gen2 주의**: `isHnsEnabled: true`인 경우, `blob`과 `dfs` **두 PE가 반드시 필요**하다.
+> - `blob` PE만 있으면 Blob API는 동작하지만, Data Lake 작업 (파일 시스템 생성, 디렉토리 조작, `abfss://` 프로토콜)은 실패한다.
+> - DFS PE: groupId `dfs`, DNS Zone `privatelink.dfs.core.windows.net`
 >
 > **⚠️ Azure Monitor Private Link (AMPLS) 주의**: Azure Monitor는 단일 PE + 단일 DNS Zone으로 구성할 수 없다. Azure Monitor Private Link Scope (AMPLS)를 통해 연결하며, **5개 DNS Zone**이 모두 필요하다:
 > - `privatelink.monitor.azure.com`
