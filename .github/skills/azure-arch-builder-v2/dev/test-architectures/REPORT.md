@@ -1,6 +1,6 @@
 # Azure Architecture Diagram Test Report
 
-20 architectures — all with screenshots ✅
+20 architectures generated — 20 with screenshots
 
 ---
 
@@ -92,7 +92,7 @@
 
 ### 09. RAG Chatbot (Private)
 
-**Full PE isolation**
+**Full PE isolation — Foundry + Search + ADLS + KV + VNet**
 
 ![RAG Chatbot (Private)](09-rag-chatbot-(private).png)
 
@@ -102,7 +102,7 @@
 
 ### 10. Data Lakehouse
 
-**Databricks + ADLS Gen2 + ADF**
+**Databricks + ADLS Gen2 + ADF + Key Vault**
 
 ![Data Lakehouse](10-data-lakehouse.png)
 
@@ -122,7 +122,7 @@
 
 ### 12. IoT Solution
 
-**IoT Hub + Stream Analytics + Cosmos**
+**IoT Hub + Stream Analytics + Cosmos + Function**
 
 ![IoT Solution](12-iot-solution.png)
 
@@ -134,7 +134,7 @@
 
 ### 13. Enterprise RAG
 
-**Enterprise AI with monitoring + bastion**
+**Full enterprise RAG with monitoring + bastion**
 
 ![Enterprise RAG](13-enterprise-rag.png)
 
@@ -144,7 +144,7 @@
 
 ### 14. Data Analytics Platform
 
-**Fabric + Databricks + ADLS + ADF**
+**Fabric + Databricks + ADLS + ADF + SQL**
 
 ![Data Analytics Platform](14-data-analytics-platform.png)
 
@@ -196,7 +196,7 @@
 
 ### 19. AI/ML Platform
 
-**Full AI lifecycle**
+**Full AI lifecycle — Foundry + AI Hub + AML + Databricks**
 
 ![AI/ML Platform](19-ai-ml-platform.png)
 
@@ -206,7 +206,7 @@
 
 ### 20. Data Mesh
 
-**Distributed data governance**
+**Distributed data governance — Fabric + multi-domain**
 
 ![Data Mesh](20-data-mesh.png)
 
