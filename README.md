@@ -19,7 +19,7 @@
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-features">Features</a> •
   <a href="#-examples">Examples</a> •
-  <a href="#-cli-reference">CLI</a> •
+  <a href="#%EF%B8%8F-cli-reference">CLI</a> •
   <a href="#-python-api">Python API</a> •
   <a href="#-supported-types">Service Types</a>
 </p>
@@ -45,7 +45,7 @@
 
 ---
 
-## 🚀 Quick Start
+## ▶️ Quick Start
 
 ```bash
 pip install az-diagram-autogen
@@ -82,24 +82,24 @@ az-diagram-autogen -s my-arch.json -c my-arch.json -o my-arch.html
 
 ---
 
-## ✨ Features
+## ⚡ Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎯 **605 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
-| 🖱️ **Interactive** | Drag-and-drop nodes, pan & zoom, click for details |
-| 🔒 **Private Endpoints** | Visualize PE connections with dedicated group |
-| 🌐 **VNet Boundaries** | Purple dashed boundaries with CIDR labels |
-| 📦 **Multi-Sub/RG** | Nested subscription → resource group hierarchy |
-| 🎨 **Auto-Layout** | Smart category-based or RG-based grouping |
-| 📊 **Sidebar** | Resource details panel with SKU, tags, connection legend |
-| 📄 **Self-Contained** | Single HTML file — share via email, Slack, Teams |
-| 🐍 **Dual Interface** | CLI tool + Python API |
-| 0️⃣ **Zero Dependencies** | Pure Python, no external packages required |
+| **605 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
+| **Interactive** | Drag-and-drop nodes, pan & zoom, click for details |
+| **Private Endpoints** | Visualize PE connections with dedicated group |
+| **VNet Boundaries** | Purple dashed boundaries with CIDR labels |
+| **Multi-Sub/RG** | Nested subscription → resource group hierarchy |
+| **Auto-Layout** | Smart category-based or RG-based grouping |
+| **Sidebar** | Resource details panel with SKU, tags, connection legend |
+| **Self-Contained** | Single HTML file — share via email, Slack, Teams |
+| **Dual Interface** | CLI tool + Python API |
+| **Zero Dependencies** | Pure Python, no external packages required |
 
 ---
 
-## 📋 Examples
+## 📌 Examples
 
 ### 1. Basic — RAG Chatbot
 
@@ -128,7 +128,7 @@ az-diagram-autogen \
 
 ---
 
-## 💻 CLI Reference
+## 🖥️ CLI Reference
 
 ```
 az-diagram-autogen [OPTIONS]
@@ -154,7 +154,7 @@ az-diagram-autogen -s services.json -c connections.json
 
 ---
 
-## 🐍 Python API
+## 📦 Python API
 
 ```python
 from az_diagram_autogen import generate_diagram
@@ -190,7 +190,7 @@ for key, name, category in search_icons("storage"):
 
 ---
 
-## 📐 JSON Schema
+## 📝 JSON Schema
 
 ### Service Object
 
@@ -231,42 +231,42 @@ for key, name, category in search_icons("storage"):
 
 ---
 
-## 🏗️ Supported Types
+## 🧩 Supported Types
 
 <details>
 <summary><strong>30+ Azure service types</strong> (click to expand)</summary>
 
-| Type | Label | Category | Icon |
-|------|-------|----------|------|
-| `ai_foundry` | AI Foundry | AI | ☁️ |
-| `ai_search` / `search` | AI Search | AI | 🔍 |
-| `document_intelligence` | Doc Intelligence | AI | 📄 |
-| `storage` | Storage | Data | 📦 |
-| `cosmos_db` | Cosmos DB | Data | 🌍 |
-| `sql_database` | SQL Database | Data | 🗃️ |
-| `databricks` | Databricks | Data | 🧱 |
-| `data_factory` / `adf` | Data Factory | Data | ➡️ |
-| `fabric` | Fabric | Data | 🔷 |
-| `redis` | Redis Cache | Data | ⚡ |
-| `stream_analytics` | Stream Analytics | Data | 📊 |
-| `keyvault` | Key Vault | Security | 🔑 |
-| `app_service` | App Service | Compute | 🌐 |
-| `function_app` | Function App | Compute | ⚡ |
-| `aks` | AKS | Compute | ☸️ |
-| `acr` | Container Registry | Compute | 📦 |
-| `vm` | Virtual Machine | Compute | 🖥️ |
-| `firewall` | Firewall | Network | 🔥 |
-| `bastion` | Bastion | Network | 🏰 |
-| `vpn_gateway` | VPN Gateway | Network | 🔗 |
-| `app_gateway` | App Gateway | Network | 🚪 |
-| `front_door` | Front Door | Network | 🚀 |
-| `cdn` | CDN | Network | 🌍 |
-| `nsg` | NSG | Network | 🛡️ |
-| `iot_hub` | IoT Hub | IoT | 📡 |
-| `event_hub` | Event Hub | Integration | ⚡ |
-| `log_analytics` | Log Analytics | Monitor | 📈 |
-| `app_insights` | App Insights | Monitor | 📊 |
-| `devops` | Azure DevOps | DevOps | 🔄 |
+| Type | Label | Category |
+|------|-------|----------|
+| `ai_foundry` | AI Foundry | AI |
+| `ai_search` / `search` | AI Search | AI |
+| `document_intelligence` | Doc Intelligence | AI |
+| `storage` | Storage | Data |
+| `cosmos_db` | Cosmos DB | Data |
+| `sql_database` | SQL Database | Data |
+| `databricks` | Databricks | Data |
+| `data_factory` / `adf` | Data Factory | Data |
+| `fabric` | Fabric | Data |
+| `redis` | Redis Cache | Data |
+| `stream_analytics` | Stream Analytics | Data |
+| `keyvault` | Key Vault | Security |
+| `app_service` | App Service | Compute |
+| `function_app` | Function App | Compute |
+| `aks` | AKS | Compute |
+| `acr` | Container Registry | Compute |
+| `vm` | Virtual Machine | Compute |
+| `firewall` | Firewall | Network |
+| `bastion` | Bastion | Network |
+| `vpn_gateway` | VPN Gateway | Network |
+| `app_gateway` | App Gateway | Network |
+| `front_door` | Front Door | Network |
+| `cdn` | CDN | Network |
+| `nsg` | NSG | Network |
+| `iot_hub` | IoT Hub | IoT |
+| `event_hub` | Event Hub | Integration |
+| `log_analytics` | Log Analytics | Monitor |
+| `app_insights` | App Insights | Monitor |
+| `devops` | Azure DevOps | DevOps |
 
 > Unrecognized types render with a default "?" icon — all Azure services work.
 
@@ -276,41 +276,55 @@ for key, name, category in search_icons("storage"):
 
 ## 🔧 For GHCP Skill Developers
 
-This package is designed as a **rendering engine for GitHub Copilot CLI skills**. When building a skill that designs Azure architectures, add the following to your `SKILL.md` to integrate diagram generation.
+This package is designed as a **rendering engine for GitHub Copilot CLI skills**.
 
-### Step 1: Add to SKILL.md
+### 📋 Copy the block below into your SKILL.md:
 
-Copy this block into your skill's diagram generation instructions:
+> **Required**: You must include the following block in your skill's `SKILL.md`. Without this, the skill cannot generate diagrams.
 
 ````markdown
-### 다이어그램 생성
+## Diagram Generation
 
-아키텍처 설계가 확정되면 아래 명령으로 인터랙티브 다이어그램을 생성한다.
+Use the `az-diagram-autogen` package to generate architecture diagrams.
 
-```powershell
-# Python 경로 탐색 (Windows Store alias 방지 — Get-Command python 사용 금지)
-$pyPath = Get-ChildItem "$env:LOCALAPPDATA\Programs\Python" -Filter "python.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-if (-not $pyPath) { $pyPath = "python" }
-
-# 다이어그램 생성
-& $pyPath -m az_diagram_autogen.cli `
-  --services '<services JSON>' `
-  --connections '<connections JSON>' `
-  --title '<프로젝트명> Architecture' `
-  --output '<project-folder>/01_arch_diagram_draft.html' `
-  --vnet-info '<VNet CIDR 정보 (선택)>' `
-  --hierarchy '<구독/RG 계층 JSON (선택)>'
+### Install
+```
+pip install az-diagram-autogen
 ```
 
-**패키지 미설치 시**: `pip install az-diagram-autogen` 실행 후 재시도.
+### Read Reference
+```
+az-diagram-autogen --reference
+```
+This command prints the full service type list, JSON schema, and usage.
+**You must read this reference before generating diagrams and follow the exact type values and JSON format.**
+
+### Generate
+```
+az-diagram-autogen \
+  --services '<services JSON or file path>' \
+  --connections '<connections JSON or file path>' \
+  --title '<diagram title>' \
+  --output '<output>.html' \
+  --vnet-info '<VNet CIDR (optional)>' \
+  --hierarchy '<subscription/RG hierarchy JSON (optional)>'
+```
+
+### Or via Python API
+```python
+from az_diagram_autogen import generate_diagram
+html = generate_diagram(services=[...], connections=[...], title="Title")
+with open("output.html", "w", encoding="utf-8") as f:
+    f.write(html)
+```
 ````
 
-### Step 2: Generate Services & Connections JSON
+---
 
-Your skill's Phase 1 (Architecture Design) should produce JSON matching this schema:
+### JSON Schema for Services & Connections
 
 ```jsonc
-// services — 각 Azure 리소스
+// services
 [
   {
     "id": "foundry-hub",              // Required: unique kebab-case ID
@@ -324,7 +338,7 @@ Your skill's Phase 1 (Architecture Design) should produce JSON matching this sch
   }
 ]
 
-// connections — 서비스 간 연결
+// connections
 [
   {
     "from": "foundry-hub",            // Required: source service ID
@@ -335,35 +349,22 @@ Your skill's Phase 1 (Architecture Design) should produce JSON matching this sch
 ]
 ```
 
-### Step 3: Diagram File Naming Convention
+### Step 3: Hierarchy Parameter (Multi-Sub/RG)
 
-| File | When | Description |
-|------|------|-------------|
-| `00_arch_current.html` | Phase 0 (Path B) | Scanned existing architecture |
-| `01_arch_diagram_draft.html` | Phase 1 | Initial design draft |
-| `02_arch_diagram_preview.html` | Phase 4 (pre-deploy) | What-if preview |
-| `03_arch_diagram_result.html` | Phase 4 (post-deploy) | Final deployed architecture |
-| `04_arch_diagram_update_draft.html` | Delta update | Post-deployment modification |
-
-### Step 4: Hierarchy Parameter (Multi-Sub/RG)
-
-For multi-subscription or multi-resource-group architectures, pass the `--hierarchy` parameter:
+For multi-subscription or multi-resource-group architectures, pass `--hierarchy`:
 
 ```json
 [
   {"subscription": "connectivity-sub", "resourceGroups": ["rg-hub"]},
-  {"subscription": "workload-sub", "resourceGroups": ["rg-ai", "rg-data", "rg-security"]}
+  {"subscription": "workload-sub", "resourceGroups": ["rg-ai", "rg-data"]}
 ]
 ```
 
 When hierarchy is provided:
 - Each service **must** have `subscription` and `resourceGroup` fields
 - Layout switches from category-based to **RG-based grouping**
-- Subscription boundaries render as labeled boxes containing RG boxes
 
 ### Supported Service Types (Complete List)
-
-Your skill must use these exact `type` values:
 
 | Type | Label | Category | Type | Label | Category |
 |------|-------|----------|------|-------|----------|
@@ -385,10 +386,6 @@ Your skill must use these exact `type` values:
 | `function_app` | Function App | Compute | *(any other)* | *(fallback)* | Azure |
 
 > ⚠️ Unrecognized types render with a "?" icon. Always use the exact type strings above.
-
-### Real-World Integration Example
-
-See the [azure-arch-builder-v2](https://github.com/whoniiii/GHCP001/.github/skills/azure-arch-builder-v2) skill for a production reference implementation.
 
 ---
 

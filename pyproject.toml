@@ -30,5 +30,8 @@ classifiers = [
 az-diagram-autogen = "az_diagram_autogen.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/jeonghoonlee/az-diagram-autogen"
-Issues = "https://github.com/jeonghoonlee/az-diagram-autogen/issues"
+Homepage = "https://github.com/whoniiii/az-diagram-autogen"
+Issues = "https://github.com/whoniiii/az-diagram-autogen/issues"
+
+[tool.setuptools.package-data]
+az_diagram_autogen = ["REFERENCE.md"]

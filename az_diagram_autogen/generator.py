@@ -10,9 +10,9 @@ from datetime import datetime
 from .icons import get_icon_data_uri
 
 _HAS_OFFICIAL_ICONS = True
-# Azure 서비스별 아이콘 SVG, 색상 + 공식 아이콘 매핑 키
-# icon: 48x48 viewBox 기준 SVG path (fallback)
-# azure_icon_key: icons_azure.py의 키 (공식 아이콘)
+# Azure service icons: SVG, colors + official icon key mapping
+# icon: 48x48 viewBox SVG path (fallback)
+# azure_icon_key: key in icons.py (official Azure icon)
 SERVICE_ICONS = {
     "openai": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="30" text-anchor="middle" font-size="18" fill="white" font-weight="700">AI</text>',
@@ -283,7 +283,7 @@ CONNECTION_STYLES = {
 def get_service_info(svc_type: str) -> dict:
     t = svc_type.lower().replace("-", "_").replace(" ", "_")
     info = SERVICE_ICONS.get(t, SERVICE_ICONS["default"]).copy()
-    # Azure 공식 아이콘 data URI 추가 (있으면)
+    # Add official Azure icon data URI if available
     azure_key = info.get("azure_icon_key", t)
     icon_uri = get_icon_data_uri(azure_key)
     info["icon_data_uri"] = icon_uri
@@ -1374,19 +1374,19 @@ function renderDiagram() {{
     accent.setAttribute('opacity', '0.7');
     g.appendChild(accent);
 
-    // Icon — Azure 공식 아이콘 (data URI) 우선, 없으면 SVG fallback
+    // Icon — official Azure icon (data URI) preferred, fallback to SVG
     const iconSize = isPe ? 28 : 36;
     const iconX = (nw - iconSize) / 2;
     const iconY = isPe ? 10 : 12;
     if (node.icon_data_uri) {{
-      // Azure 공식 아이콘 (Base64 이미지)
+      // Official Azure icon (Base64 image)
       const iconImg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
       iconImg.setAttribute('x', iconX); iconImg.setAttribute('y', iconY);
       iconImg.setAttribute('width', iconSize); iconImg.setAttribute('height', iconSize);
       iconImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', node.icon_data_uri);
       g.appendChild(iconImg);
     }} else {{
-      // Fallback: 기존 SVG 텍스트 아이콘
+      // Fallback: built-in SVG text icon
       const iconG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       iconG.setAttribute('x', iconX); iconG.setAttribute('y', iconY);
       iconG.setAttribute('width', iconSize); iconG.setAttribute('height', iconSize);
