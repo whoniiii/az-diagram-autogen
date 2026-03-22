@@ -274,6 +274,124 @@ for key, name, category in search_icons("storage"):
 
 ---
 
+## 🔧 For GHCP Skill Developers
+
+This package is designed as a **rendering engine for GitHub Copilot CLI skills**. When building a skill that designs Azure architectures, add the following to your `SKILL.md` to integrate diagram generation.
+
+### Step 1: Add to SKILL.md
+
+Copy this block into your skill's diagram generation instructions:
+
+````markdown
+### 다이어그램 생성
+
+아키텍처 설계가 확정되면 아래 명령으로 인터랙티브 다이어그램을 생성한다.
+
+```powershell
+# Python 경로 탐색 (Windows Store alias 방지 — Get-Command python 사용 금지)
+$pyPath = Get-ChildItem "$env:LOCALAPPDATA\Programs\Python" -Filter "python.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+if (-not $pyPath) { $pyPath = "python" }
+
+# 다이어그램 생성
+& $pyPath -m az_diagram_autogen.cli `
+  --services '<services JSON>' `
+  --connections '<connections JSON>' `
+  --title '<프로젝트명> Architecture' `
+  --output '<project-folder>/01_arch_diagram_draft.html' `
+  --vnet-info '<VNet CIDR 정보 (선택)>' `
+  --hierarchy '<구독/RG 계층 JSON (선택)>'
+```
+
+**패키지 미설치 시**: `pip install az-diagram-autogen` 실행 후 재시도.
+````
+
+### Step 2: Generate Services & Connections JSON
+
+Your skill's Phase 1 (Architecture Design) should produce JSON matching this schema:
+
+```jsonc
+// services — 각 Azure 리소스
+[
+  {
+    "id": "foundry-hub",              // Required: unique kebab-case ID
+    "name": "AI Foundry Hub",         // Required: display name
+    "type": "ai_foundry",             // Required: must match a supported type (see table below)
+    "sku": "S0",                      // Optional: shown in sidebar
+    "private": true,                  // Optional: marks as PE-connected (default: false)
+    "details": ["GPT-4o", "..."],     // Optional: extra info in sidebar
+    "subscription": "prod-sub",       // Optional: for multi-subscription diagrams
+    "resourceGroup": "rg-ai"          // Optional: for multi-RG diagrams
+  }
+]
+
+// connections — 서비스 간 연결
+[
+  {
+    "from": "foundry-hub",            // Required: source service ID
+    "to": "search",                   // Required: target service ID
+    "label": "RAG Query",             // Optional: line label
+    "type": "api"                     // Optional: api|data|security|private|network|default
+  }
+]
+```
+
+### Step 3: Diagram File Naming Convention
+
+| File | When | Description |
+|------|------|-------------|
+| `00_arch_current.html` | Phase 0 (Path B) | Scanned existing architecture |
+| `01_arch_diagram_draft.html` | Phase 1 | Initial design draft |
+| `02_arch_diagram_preview.html` | Phase 4 (pre-deploy) | What-if preview |
+| `03_arch_diagram_result.html` | Phase 4 (post-deploy) | Final deployed architecture |
+| `04_arch_diagram_update_draft.html` | Delta update | Post-deployment modification |
+
+### Step 4: Hierarchy Parameter (Multi-Sub/RG)
+
+For multi-subscription or multi-resource-group architectures, pass the `--hierarchy` parameter:
+
+```json
+[
+  {"subscription": "connectivity-sub", "resourceGroups": ["rg-hub"]},
+  {"subscription": "workload-sub", "resourceGroups": ["rg-ai", "rg-data", "rg-security"]}
+]
+```
+
+When hierarchy is provided:
+- Each service **must** have `subscription` and `resourceGroup` fields
+- Layout switches from category-based to **RG-based grouping**
+- Subscription boundaries render as labeled boxes containing RG boxes
+
+### Supported Service Types (Complete List)
+
+Your skill must use these exact `type` values:
+
+| Type | Label | Category | Type | Label | Category |
+|------|-------|----------|------|-------|----------|
+| `ai_foundry` | AI Foundry | AI | `aks` | AKS | Compute |
+| `ai_search` | AI Search | AI | `acr` | Container Registry | Compute |
+| `search` | AI Search | AI | `vm` | Virtual Machine | Compute |
+| `document_intelligence` | Doc Intelligence | AI | `firewall` | Firewall | Network |
+| `storage` | Storage | Data | `bastion` | Bastion | Network |
+| `cosmos_db` | Cosmos DB | Data | `vpn_gateway` | VPN Gateway | Network |
+| `sql_database` | SQL Database | Data | `app_gateway` | App Gateway | Network |
+| `databricks` | Databricks | Data | `front_door` | Front Door | Network |
+| `data_factory` | Data Factory | Data | `cdn` | CDN | Network |
+| `adf` | Data Factory | Data | `nsg` | NSG | Network |
+| `fabric` | Fabric | Data | `iot_hub` | IoT Hub | IoT |
+| `redis` | Redis Cache | Data | `event_hub` | Event Hub | Integration |
+| `stream_analytics` | Stream Analytics | Data | `log_analytics` | Log Analytics | Monitor |
+| `keyvault` | Key Vault | Security | `app_insights` | App Insights | Monitor |
+| `app_service` | App Service | Compute | `devops` | Azure DevOps | DevOps |
+| `function_app` | Function App | Compute | *(any other)* | *(fallback)* | Azure |
+
+> ⚠️ Unrecognized types render with a "?" icon. Always use the exact type strings above.
+
+### Real-World Integration Example
+
+See the [azure-arch-builder-v2](https://github.com/whoniiii/GHCP001/.github/skills/azure-arch-builder-v2) skill for a production reference implementation.
+
+---
+
 ## 🤝 Contributing
 
 Contributions welcome! Feel free to open issues or submit PRs.
