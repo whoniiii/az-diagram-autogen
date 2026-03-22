@@ -1,6 +1,6 @@
 # Azure Architecture Diagram Test Report
 
-20 architectures generated — 15 with screenshots
+20 architectures — all with screenshots ✅
 
 ---
 
@@ -52,6 +52,8 @@
 
 **Foundry + AI Search + Storage + Key Vault**
 
+![Basic RAG Chatbot](05-basic-rag-chatbot.png)
+
 📄 [05-basic-rag-chatbot.html](05-basic-rag-chatbot.html)
 
 ---
@@ -90,7 +92,7 @@
 
 ### 09. RAG Chatbot (Private)
 
-**Full PE isolation — Foundry + Search + ADLS + KV + VNet**
+**Full PE isolation**
 
 ![RAG Chatbot (Private)](09-rag-chatbot-(private).png)
 
@@ -100,7 +102,7 @@
 
 ### 10. Data Lakehouse
 
-**Databricks + ADLS Gen2 + ADF + Key Vault**
+**Databricks + ADLS Gen2 + ADF**
 
 ![Data Lakehouse](10-data-lakehouse.png)
 
@@ -112,13 +114,17 @@
 
 **AKS + ACR + SQL + Redis + App Gateway**
 
+![Microservices (AKS)](11-microservices-(aks).png)
+
 📄 [11-microservices-(aks).html](11-microservices-(aks).html)
 
 ---
 
 ### 12. IoT Solution
 
-**IoT Hub + Stream Analytics + Cosmos + Function**
+**IoT Hub + Stream Analytics + Cosmos**
+
+![IoT Solution](12-iot-solution.png)
 
 📄 [12-iot-solution.html](12-iot-solution.html)
 
@@ -128,7 +134,7 @@
 
 ### 13. Enterprise RAG
 
-**Full enterprise RAG with monitoring + bastion**
+**Enterprise AI with monitoring + bastion**
 
 ![Enterprise RAG](13-enterprise-rag.png)
 
@@ -138,7 +144,9 @@
 
 ### 14. Data Analytics Platform
 
-**Fabric + Databricks + ADLS + ADF + SQL**
+**Fabric + Databricks + ADLS + ADF**
+
+![Data Analytics Platform](14-data-analytics-platform.png)
 
 📄 [14-data-analytics-platform.html](14-data-analytics-platform.html)
 
@@ -188,7 +196,9 @@
 
 ### 19. AI/ML Platform
 
-**Full AI lifecycle — Foundry + AI Hub + AML + Databricks**
+**Full AI lifecycle**
+
+![AI/ML Platform](19-ai-ml-platform.png)
 
 📄 [19-ai-ml-platform.html](19-ai-ml-platform.html)
 
@@ -196,7 +206,7 @@
 
 ### 20. Data Mesh
 
-**Distributed data governance — Fabric + multi-domain**
+**Distributed data governance**
 
 ![Data Mesh](20-data-mesh.png)
 
