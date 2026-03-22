@@ -1,40 +1,160 @@
-# az-diagram-autogen
+<p align="center">
+  <img src="https://raw.githubusercontent.com/whoniiii/az-diagram-autogen/main/docs/images/logo.svg" width="120" alt="az-diagram-autogen logo">
+</p>
 
-Interactive Azure architecture diagram generator with **605 official Azure icons**.
+<h1 align="center">az-diagram-autogen</h1>
 
-Generate self-contained HTML diagrams from JSON — with drag-and-drop, zoom, VNet boundaries, multi-subscription hierarchy, and private endpoint visualization.
+<p align="center">
+  <strong>Interactive Azure architecture diagrams from JSON — with 605 official Azure icons</strong>
+</p>
 
-## Install
+<p align="center">
+  <a href="https://pypi.org/project/az-diagram-autogen/"><img src="https://img.shields.io/pypi/v/az-diagram-autogen?color=blue&label=PyPI" alt="PyPI"></a>
+  <a href="https://pypi.org/project/az-diagram-autogen/"><img src="https://img.shields.io/pypi/pyversions/az-diagram-autogen" alt="Python"></a>
+  <a href="https://github.com/whoniiii/az-diagram-autogen/blob/main/LICENSE"><img src="https://img.shields.io/github/license/whoniiii/az-diagram-autogen" alt="License"></a>
+  <a href="https://pypi.org/project/az-diagram-autogen/"><img src="https://img.shields.io/pypi/dm/az-diagram-autogen?color=green" alt="Downloads"></a>
+</p>
+
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="#-examples">Examples</a> •
+  <a href="#-cli-reference">CLI</a> •
+  <a href="#-python-api">Python API</a> •
+  <a href="#-supported-types">Service Types</a>
+</p>
+
+---
+
+## 🎨 What It Looks Like
+
+### Basic RAG Chatbot
+<p align="center">
+  <img src="https://raw.githubusercontent.com/whoniiii/az-diagram-autogen/main/docs/images/basic_rag.png" width="100%" alt="Basic RAG Chatbot Architecture">
+</p>
+
+### Multi-Subscription Landing Zone
+<p align="center">
+  <img src="https://raw.githubusercontent.com/whoniiii/az-diagram-autogen/main/docs/images/landing_zone.png" width="100%" alt="Azure Landing Zone Architecture">
+</p>
+
+### Private RAG with VNet & PE
+<p align="center">
+  <img src="https://raw.githubusercontent.com/whoniiii/az-diagram-autogen/main/docs/images/private_rag.png" width="100%" alt="Private RAG Architecture">
+</p>
+
+---
+
+## 🚀 Quick Start
 
 ```bash
 pip install az-diagram-autogen
 ```
 
-Or install from source:
+**Generate your first diagram in 10 seconds:**
 
 ```bash
-git clone https://github.com/user/az-diagram-autogen.git
-cd az-diagram-autogen
-pip install -e .
+# Create a simple JSON file
+cat > my-arch.json << 'EOF'
+{
+  "title": "My RAG App",
+  "services": [
+    {"id": "foundry", "name": "AI Foundry", "type": "ai_foundry", "sku": "S0"},
+    {"id": "search", "name": "AI Search", "type": "ai_search", "sku": "S1"},
+    {"id": "storage", "name": "ADLS Gen2", "type": "storage"},
+    {"id": "kv", "name": "Key Vault", "type": "keyvault"}
+  ],
+  "connections": [
+    {"from": "foundry", "to": "search", "label": "RAG Query", "type": "api"},
+    {"from": "search", "to": "storage", "label": "Indexing", "type": "data"},
+    {"from": "foundry", "to": "kv", "label": "Secrets", "type": "security"}
+  ]
+}
+EOF
+
+# Generate the diagram
+az-diagram-autogen -s my-arch.json -c my-arch.json -o my-arch.html
+
+# Open in browser 🎉
 ```
 
-## Quick Start
+> **Output is a single self-contained HTML file** — no server, no dependencies, just open it.
 
-### CLI
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🎯 **605 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
+| 🖱️ **Interactive** | Drag-and-drop nodes, pan & zoom, click for details |
+| 🔒 **Private Endpoints** | Visualize PE connections with dedicated group |
+| 🌐 **VNet Boundaries** | Purple dashed boundaries with CIDR labels |
+| 📦 **Multi-Sub/RG** | Nested subscription → resource group hierarchy |
+| 🎨 **Auto-Layout** | Smart category-based or RG-based grouping |
+| 📊 **Sidebar** | Resource details panel with SKU, tags, connection legend |
+| 📄 **Self-Contained** | Single HTML file — share via email, Slack, Teams |
+| 🐍 **Dual Interface** | CLI tool + Python API |
+| 0️⃣ **Zero Dependencies** | Pure Python, no external packages required |
+
+---
+
+## 📋 Examples
+
+### 1. Basic — RAG Chatbot
 
 ```bash
-# From JSON files
-az-diagram-autogen -s services.json -c connections.json -o architecture.html
+az-diagram-autogen -s examples/basic_rag.json -o rag.html
+```
 
-# Inline JSON
+### 2. With VNet & Private Endpoints
+
+```bash
 az-diagram-autogen \
-  -s '[{"id":"foundry","name":"AI Foundry","type":"ai_foundry"},{"id":"search","name":"AI Search","type":"ai_search"}]' \
-  -c '[{"from":"foundry","to":"search","label":"RAG Query","type":"api"}]' \
-  -t "My RAG Architecture" \
-  -o my-arch.html
+  -s examples/private_rag.json \
+  --vnet-info "10.0.0.0/16 | pe-subnet: 10.0.1.0/24" \
+  -o private-rag.html
 ```
 
-### Python API
+### 3. Multi-Subscription Landing Zone
+
+```bash
+az-diagram-autogen \
+  -s examples/landing_zone.json \
+  -o landing-zone.html
+```
+
+> See the [`examples/`](examples/) directory for ready-to-use JSON files.
+
+---
+
+## 💻 CLI Reference
+
+```
+az-diagram-autogen [OPTIONS]
+```
+
+| Option | Short | Default | Description |
+|--------|-------|---------|-------------|
+| `--services` | `-s` | *(required)* | Services JSON — inline string or file path |
+| `--connections` | `-c` | *(required)* | Connections JSON — inline string or file path |
+| `--title` | `-t` | `"Azure Architecture"` | Diagram title |
+| `--output` | `-o` | `"azure-architecture.html"` | Output HTML file path |
+| `--vnet-info` | | `""` | VNet CIDR label for boundary |
+| `--hierarchy` | | `""` | Subscription/RG hierarchy JSON |
+
+**Supports both inline JSON and file paths:**
+```bash
+# Inline JSON
+az-diagram-autogen -s '[{"id":"s1",...}]' -c '[...]'
+
+# File path (auto-detected)
+az-diagram-autogen -s services.json -c connections.json
+```
+
+---
+
+## 🐍 Python API
 
 ```python
 from az_diagram_autogen import generate_diagram
@@ -43,18 +163,16 @@ html = generate_diagram(
     services=[
         {"id": "foundry", "name": "AI Foundry", "type": "ai_foundry", "sku": "S0"},
         {"id": "search", "name": "AI Search", "type": "ai_search", "sku": "S1"},
-        {"id": "storage", "name": "ADLS Gen2", "type": "storage"},
-        {"id": "keyvault", "name": "Key Vault", "type": "keyvault"},
     ],
     connections=[
         {"from": "foundry", "to": "search", "label": "RAG Query", "type": "api"},
-        {"from": "search", "to": "storage", "label": "Indexing", "type": "data"},
-        {"from": "foundry", "to": "keyvault", "label": "Secrets", "type": "security"},
     ],
-    title="RAG Chatbot Architecture",
+    title="My Architecture",
+    vnet_info="10.0.0.0/16 | pe-subnet: 10.0.1.0/24",
+    hierarchy=[{"subscription": "prod-sub", "resourceGroups": ["rg-ai", "rg-data"]}],
 )
 
-with open("rag-architecture.html", "w") as f:
+with open("output.html", "w") as f:
     f.write(html)
 ```
 
@@ -63,114 +181,112 @@ with open("rag-architecture.html", "w") as f:
 ```python
 from az_diagram_autogen import search_icons
 
-results = search_icons("storage")
-for key, name, category in results:
-    print(f"{key}: {name} ({category})")
+for key, name, category in search_icons("storage"):
+    print(f"  {key}: {name} ({category})")
+# storage_accounts: Storage Accounts (Storage)
+# storage_accounts_classic: Storage Accounts (Classic) (Storage)
+# ...
 ```
 
-## CLI Options
+---
 
-| Option | Short | Default | Description |
-|--------|-------|---------|-------------|
-| `--services` | `-s` | (required) | Services JSON string or file path |
-| `--connections` | `-c` | (required) | Connections JSON string or file path |
-| `--title` | `-t` | `"Azure Architecture"` | Diagram title |
-| `--output` | `-o` | `"azure-architecture.html"` | Output HTML file |
-| `--vnet-info` | | `""` | VNet boundary label (e.g., `"10.0.0.0/16 \| pe-subnet: 10.0.1.0/24"`) |
-| `--hierarchy` | | `""` | Subscription/RG hierarchy JSON |
+## 📐 JSON Schema
 
-## Service JSON Schema
+### Service Object
 
-```json
+```jsonc
 {
-  "id": "unique-kebab-case",
-  "name": "Display Name",
-  "type": "ai_foundry",
-  "sku": "S0 (optional)",
-  "private": false,
-  "details": ["optional detail 1", "optional detail 2"],
-  "subscription": "sub-name (for multi-sub diagrams)",
-  "resourceGroup": "rg-name (for multi-RG diagrams)"
+  "id": "unique-kebab-case",       // Required — unique identifier
+  "name": "Display Name",          // Required — shown on node
+  "type": "ai_foundry",            // Required — determines icon & category
+  "sku": "S0",                     // Optional — shown under name
+  "private": false,                // Optional — marks as PE-connected
+  "details": ["GPT-4o", "..."],    // Optional — shown in sidebar
+  "subscription": "sub-name",      // Optional — for multi-sub diagrams
+  "resourceGroup": "rg-name"       // Optional — for multi-RG diagrams
 }
 ```
 
-## Connection JSON Schema
+### Connection Object
 
-```json
+```jsonc
 {
-  "from": "service-id",
-  "to": "service-id",
-  "label": "Connection Label",
-  "type": "api|data|security|private|network|default"
+  "from": "service-id",            // Required — source service ID
+  "to": "service-id",              // Required — target service ID
+  "label": "RAG Query",            // Optional — shown on line
+  "type": "api"                    // Optional — api|data|security|private|network|default
 }
 ```
 
-## Supported Service Types
+### Connection Types & Colors
 
-| Type | Label | Category |
-|------|-------|----------|
-| `ai_foundry` | AI Foundry | AI |
-| `ai_search` / `search` | AI Search | AI |
-| `storage` | Storage | Data |
-| `keyvault` | Key Vault | Security |
-| `app_service` | App Service | Compute |
-| `sql_database` | SQL Database | Data |
-| `cosmos_db` | Cosmos DB | Data |
-| `redis` | Redis Cache | Data |
-| `aks` | AKS | Compute |
-| `acr` | Container Registry | Compute |
-| `function_app` | Function App | Compute |
-| `databricks` | Databricks | Data |
-| `data_factory` / `adf` | Data Factory | Data |
-| `fabric` | Fabric | Data |
-| `vm` | Virtual Machine | Compute |
-| `firewall` | Firewall | Network |
-| `bastion` | Bastion | Network |
-| `vpn_gateway` | VPN Gateway | Network |
-| `app_gateway` | App Gateway | Network |
-| `front_door` | Front Door | Network |
-| `cdn` | CDN | Network |
-| `iot_hub` | IoT Hub | IoT |
-| `event_hub` | Event Hub | Integration |
-| `stream_analytics` | Stream Analytics | Data |
-| `log_analytics` | Log Analytics | Monitor |
-| `app_insights` | App Insights | Monitor |
-| `nsg` | NSG | Network |
-| `devops` | Azure DevOps | DevOps |
-| `document_intelligence` | Doc Intelligence | AI |
+| Type | Color | Style | Use For |
+|------|-------|-------|---------|
+| `api` | 🔵 Blue | Solid | API calls, queries |
+| `data` | 🟢 Green | Solid | Data flow, indexing |
+| `security` | 🟡 Orange | Dashed | Secrets, auth |
+| `private` | 🟣 Purple | Dashed | Private endpoint |
+| `network` | ⚫ Gray | Solid | Network routing |
+| `default` | ⚫ Gray | Solid | Other |
 
-Any unrecognized type renders with a default "?" icon.
+---
 
-## Features
+## 🏗️ Supported Types
 
-- **605 Azure Official Icons** — Base64-encoded SVG, no network required
-- **Interactive** — Drag-and-drop nodes, pan & zoom, tooltips
-- **VNet Boundaries** — Purple dashed boundary with CIDR labels
-- **Private Endpoints** — Dedicated PE group with connection lines
-- **Multi-Subscription/RG** — Nested hierarchy boundaries
-- **Self-Contained** — Single HTML file, no dependencies
-- **Category Layout** — Auto-grouped by AI, Data, Security, Compute, Network
-- **RG Layout** — Resource Group-based layout when hierarchy provided
-- **Sidebar** — Resource details panel with service info
+<details>
+<summary><strong>30+ Azure service types</strong> (click to expand)</summary>
 
-## Examples
+| Type | Label | Category | Icon |
+|------|-------|----------|------|
+| `ai_foundry` | AI Foundry | AI | ☁️ |
+| `ai_search` / `search` | AI Search | AI | 🔍 |
+| `document_intelligence` | Doc Intelligence | AI | 📄 |
+| `storage` | Storage | Data | 📦 |
+| `cosmos_db` | Cosmos DB | Data | 🌍 |
+| `sql_database` | SQL Database | Data | 🗃️ |
+| `databricks` | Databricks | Data | 🧱 |
+| `data_factory` / `adf` | Data Factory | Data | ➡️ |
+| `fabric` | Fabric | Data | 🔷 |
+| `redis` | Redis Cache | Data | ⚡ |
+| `stream_analytics` | Stream Analytics | Data | 📊 |
+| `keyvault` | Key Vault | Security | 🔑 |
+| `app_service` | App Service | Compute | 🌐 |
+| `function_app` | Function App | Compute | ⚡ |
+| `aks` | AKS | Compute | ☸️ |
+| `acr` | Container Registry | Compute | 📦 |
+| `vm` | Virtual Machine | Compute | 🖥️ |
+| `firewall` | Firewall | Network | 🔥 |
+| `bastion` | Bastion | Network | 🏰 |
+| `vpn_gateway` | VPN Gateway | Network | 🔗 |
+| `app_gateway` | App Gateway | Network | 🚪 |
+| `front_door` | Front Door | Network | 🚀 |
+| `cdn` | CDN | Network | 🌍 |
+| `nsg` | NSG | Network | 🛡️ |
+| `iot_hub` | IoT Hub | IoT | 📡 |
+| `event_hub` | Event Hub | Integration | ⚡ |
+| `log_analytics` | Log Analytics | Monitor | 📈 |
+| `app_insights` | App Insights | Monitor | 📊 |
+| `devops` | Azure DevOps | DevOps | 🔄 |
 
-See the `examples/` directory for ready-to-use JSON files:
+> Unrecognized types render with a default "?" icon — all Azure services work.
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Feel free to open issues or submit PRs.
 
 ```bash
-# Basic RAG chatbot
-az-diagram-autogen -s examples/basic_rag.json -c examples/basic_rag.json -o rag.html
-
-# From combined JSON (services + connections in one file)
-python -c "
-import json
-from az_diagram_autogen import generate_diagram
-data = json.load(open('examples/landing_zone.json'))
-html = generate_diagram(**data)
-open('landing_zone.html','w').write(html)
-"
+git clone https://github.com/whoniiii/az-diagram-autogen.git
+cd az-diagram-autogen
+pip install -e .
+python -m unittest discover -s tests
 ```
 
-## License
+---
 
-MIT
+## 📄 License
+
+MIT © [Jeonghoon Lee](https://github.com/whoniiii)
