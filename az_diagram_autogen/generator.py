@@ -489,6 +489,9 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
       <button class="tool-btn" onclick="zoomOut()">&minus;</button>
       <div class="tool-sep"></div>
       <button class="tool-btn" onclick="resetZoom()">Reset</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" onclick="downloadHTML()" title="Download HTML">&#128196; HTML</button>
+      <button class="tool-btn" onclick="downloadPNG()" title="Download PNG">&#128247; PNG</button>
     </div>
     <div class="zoom-indicator" id="zoom-level">100%</div>
     <svg id="canvas">
@@ -1584,6 +1587,72 @@ function fitToScreen() {{
 function zoomIn() {{ viewTransform.scale *= 1.25; applyTransform(); }}
 function zoomOut() {{ viewTransform.scale *= 0.8; applyTransform(); }}
 function resetZoom() {{ viewTransform = {{x:0,y:0,scale:1}}; applyTransform(); }}
+
+function downloadHTML() {{
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob(['<!DOCTYPE html>' + html], {{type: 'text/html'}});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title || 'azure-architecture') + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}}
+
+function downloadPNG() {{
+  const svg = document.getElementById('canvas');
+  const bbox = svg.getBBox();
+  const pad = 40;
+  const w = Math.ceil(bbox.width + bbox.x + pad * 2);
+  const h = Math.ceil(bbox.height + bbox.y + pad * 2);
+
+  const clone = svg.cloneNode(true);
+  clone.setAttribute('width', w);
+  clone.setAttribute('height', h);
+  clone.setAttribute('viewBox', `${{-pad}} ${{-pad}} ${{w}} ${{h}}`);
+  clone.querySelector('#viewport')?.removeAttribute('transform');
+
+  // Inline all computed styles
+  const allEls = clone.querySelectorAll('*');
+  const origEls = svg.querySelectorAll('*');
+  allEls.forEach((el, i) => {{
+    if (origEls[i]) {{
+      const cs = window.getComputedStyle(origEls[i]);
+      ['fill','stroke','stroke-width','font-size','font-family','font-weight',
+       'text-anchor','opacity','fill-opacity','stroke-opacity','stroke-dasharray'].forEach(p => {{
+        const v = cs.getPropertyValue(p);
+        if (v) el.style.setProperty(p, v);
+      }});
+    }}
+  }});
+
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(clone);
+  const svgBlob = new Blob([svgStr], {{type: 'image/svg+xml;charset=utf-8'}});
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {{
+    const canvas = document.createElement('canvas');
+    const scale = 2;
+    canvas.width = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+
+    canvas.toBlob(blob => {{
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (document.title || 'azure-architecture') + '.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }}, 'image/png');
+  }};
+  img.src = url;
+}}
 
 document.getElementById('canvas').addEventListener('wheel', e => {{
   e.preventDefault();
