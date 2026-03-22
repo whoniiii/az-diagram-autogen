@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "az-diagram-autogen"
-version = "0.1.0"
+version = "0.1.1"
 description = "Interactive Azure architecture diagram generator with 605 official Azure icons"
 readme = "README.md"
 license = {text = "MIT"}
@@ -30,5 +30,8 @@ classifiers = [
 az-diagram-autogen = "az_diagram_autogen.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/jeonghoonlee/az-diagram-autogen"
-Issues = "https://github.com/jeonghoonlee/az-diagram-autogen/issues"
+Homepage = "https://github.com/whoniiii/az-diagram-autogen"
+Issues = "https://github.com/whoniiii/az-diagram-autogen/issues"
+
+[tool.setuptools.package-data]
+az_diagram_autogen = ["REFERENCE.md"]
