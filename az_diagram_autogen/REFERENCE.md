@@ -1,6 +1,6 @@
 # az-diagram-autogen — Skill Reference
 
-> **This file is a reference for GHCP Skills.**
+> **This file is a reference for AI coding agent skills (GitHub Copilot, Claude Code, and [Agent Skills](https://agentskills.io)-compatible tools).**
 > After `pip install az-diagram-autogen`, refer to this document to generate diagrams.
 
 ---

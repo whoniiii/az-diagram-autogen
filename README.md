@@ -9,6 +9,20 @@
 </p>
 
 <p align="center">
+Generate self-contained, interactive HTML diagrams of Azure architectures from simple JSON input.<br>
+Designed as a diagram rendering engine for AI coding agent skills<br>
+(GitHub Copilot, Claude Code, and <a href="https://agentskills.io">Agent Skills</a>-compatible tools) —<br>
+but also works standalone via CLI or Python API.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows-0078D6?logo=windows&logoColor=white" alt="Windows">
+  <img src="https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white" alt="macOS">
+  <img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/WSL-4D4D4D?logo=windows-terminal&logoColor=white" alt="WSL">
+</p>
+
+<p align="center">
   <a href="https://pypi.org/project/az-diagram-autogen/"><img src="https://img.shields.io/pypi/v/az-diagram-autogen?color=blue&label=PyPI" alt="PyPI"></a>
   <a href="https://pypi.org/project/az-diagram-autogen/"><img src="https://img.shields.io/pypi/pyversions/az-diagram-autogen" alt="Python"></a>
   <a href="https://github.com/whoniiii/az-diagram-autogen/blob/main/LICENSE"><img src="https://img.shields.io/github/license/whoniiii/az-diagram-autogen" alt="License"></a>
@@ -96,6 +110,7 @@ az-diagram-autogen -s my-arch.json -c my-arch.json -o my-arch.html
 | **Self-Contained** | Single HTML file — share via email, Slack, Teams |
 | **Dual Interface** | CLI tool + Python API |
 | **Zero Dependencies** | Pure Python, no external packages required |
+| **Cross-Platform** | Windows, macOS, Linux, WSL — anywhere Python runs |
 
 ---
 
@@ -274,9 +289,9 @@ for key, name, category in search_icons("storage"):
 
 ---
 
-## 🔧 For GHCP Skill Developers
+## 🔧 For Skill Developers (GitHub Copilot, Claude Code & Agent Skills)
 
-This package is designed as a **rendering engine for GitHub Copilot CLI skills**.
+This package is designed as a **rendering engine for AI coding agent skills** — works with GitHub Copilot, Claude Code, and any [Agent Skills](https://agentskills.io)-compatible tool.
 
 ### 📋 Copy the block below into your SKILL.md:
 
