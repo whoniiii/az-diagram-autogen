@@ -27,10 +27,17 @@ az-diagram-autogen \
   -s '<services JSON or file path>' \
   -c '<connections JSON or file path>' \
   -t '<diagram title>' \
-  -o '<output>.html' \
+  -o '<output file path>' \
+  -f '<format: html|png|both>' \
   --vnet-info '<VNet CIDR (optional)>' \
   --hierarchy '<subscription/RG hierarchy JSON (optional)>'
 ```
+
+**Output formats:**
+- `html` (default) — interactive, self-contained HTML
+- `png` — static image (requires `npm i puppeteer`)
+- `both` — generates both HTML and PNG
+- `svg` — saves HTML with embedded SVG
 
 ### Python API
 

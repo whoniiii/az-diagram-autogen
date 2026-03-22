@@ -154,17 +154,22 @@ az-diagram-autogen [OPTIONS]
 | `--services` | `-s` | *(required)* | Services JSON — inline string or file path |
 | `--connections` | `-c` | *(required)* | Connections JSON — inline string or file path |
 | `--title` | `-t` | `"Azure Architecture"` | Diagram title |
-| `--output` | `-o` | `"azure-architecture.html"` | Output HTML file path |
+| `--output` | `-o` | `"azure-architecture.html"` | Output file path |
+| `--format` | `-f` | `html` | Output format: `html`, `png`, `svg`, or `both` (html+png) |
 | `--vnet-info` | | `""` | VNet CIDR label for boundary |
 | `--hierarchy` | | `""` | Subscription/RG hierarchy JSON |
+| `--reference` | | | Print skill integration reference |
 
-**Supports both inline JSON and file paths:**
+**Output formats:**
 ```bash
-# Inline JSON
-az-diagram-autogen -s '[{"id":"s1",...}]' -c '[...]'
+# HTML only (default) — interactive, self-contained
+az-diagram-autogen -s svc.json -c conn.json -o arch.html
 
-# File path (auto-detected)
-az-diagram-autogen -s services.json -c connections.json
+# PNG only — static image (requires puppeteer: npm i puppeteer)
+az-diagram-autogen -s svc.json -c conn.json -o arch -f png
+
+# Both HTML + PNG
+az-diagram-autogen -s svc.json -c conn.json -o arch -f both
 ```
 
 ---
@@ -320,7 +325,8 @@ az-diagram-autogen \
   --services '<services JSON or file path>' \
   --connections '<connections JSON or file path>' \
   --title '<diagram title>' \
-  --output '<output>.html' \
+  --output '<output file path>' \
+  --format '<html|png|both>' \
   --vnet-info '<VNet CIDR (optional)>' \
   --hierarchy '<subscription/RG hierarchy JSON (optional)>'
 ```

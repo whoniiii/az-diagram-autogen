@@ -490,7 +490,6 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
       <div class="tool-sep"></div>
       <button class="tool-btn" onclick="resetZoom()">Reset</button>
       <div class="tool-sep"></div>
-      <button class="tool-btn" onclick="downloadHTML()" title="Download HTML">&#128196; HTML</button>
       <button class="tool-btn" onclick="downloadPNG()" title="Download PNG">&#128247; PNG</button>
     </div>
     <div class="zoom-indicator" id="zoom-level">100%</div>
@@ -1587,16 +1586,6 @@ function fitToScreen() {{
 function zoomIn() {{ viewTransform.scale *= 1.25; applyTransform(); }}
 function zoomOut() {{ viewTransform.scale *= 0.8; applyTransform(); }}
 function resetZoom() {{ viewTransform = {{x:0,y:0,scale:1}}; applyTransform(); }}
-
-function downloadHTML() {{
-  const html = document.documentElement.outerHTML;
-  const blob = new Blob(['<!DOCTYPE html>' + html], {{type: 'text/html'}});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (document.title || 'azure-architecture') + '.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}}
 
 function downloadPNG() {{
   const svg = document.getElementById('canvas');
