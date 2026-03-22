@@ -1,0 +1,208 @@
+{
+  "architecture_description": "미션크리티컬 AKS 멀티리전 아키텍처. Azure Front Door로 글로벌 로드 밸런싱, East US와 West Europe에 각각 AKS 클러스터 배포. Cosmos DB 멀티리전(Session consistency)으로 글로벌 데이터 계층 구성. ACR은 글로벌 공유. 리전별 Key Vault와 Application Insights로 시크릿 및 모니터링 분리.",
+  "services": [
+    {
+      "id": "front-door",
+      "name": "Azure Front Door",
+      "type": "front_door",
+      "sku": "Premium",
+      "private": false,
+      "details": [
+        "글로벌 로드 밸런서",
+        "Health probe + 자동 failover",
+        "WAF policy 포함"
+      ],
+      "subscription": "global-sub",
+      "resourceGroup": "rg-global"
+    },
+    {
+      "id": "cosmos-db",
+      "name": "Azure Cosmos DB",
+      "type": "cosmos_db",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "멀티리전 분산 DB",
+        "Consistency: Session",
+        "Regions: East US, West Europe"
+      ],
+      "subscription": "global-sub",
+      "resourceGroup": "rg-global"
+    },
+    {
+      "id": "acr",
+      "name": "Azure Container Registry",
+      "type": "acr",
+      "sku": "Premium",
+      "private": false,
+      "details": [
+        "글로벌 공유 컨테이너 레지스트리",
+        "Geo-replication enabled",
+        "SKU: Premium"
+      ],
+      "subscription": "global-sub",
+      "resourceGroup": "rg-global"
+    },
+    {
+      "id": "aks-east",
+      "name": "AKS Cluster (East US)",
+      "type": "aks",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Region: East US",
+        "Kubernetes managed cluster",
+        "Availability Zones enabled"
+      ],
+      "subscription": "region-east-sub",
+      "resourceGroup": "rg-workload"
+    },
+    {
+      "id": "kv-east",
+      "name": "Key Vault (East US)",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "East US 리전 시크릿 관리",
+        "RBAC authorization",
+        "Region: East US"
+      ],
+      "subscription": "region-east-sub",
+      "resourceGroup": "rg-security"
+    },
+    {
+      "id": "app-insights-east",
+      "name": "Application Insights (East US)",
+      "type": "app_insights",
+      "sku": "Per-GB",
+      "private": false,
+      "details": [
+        "East US 리전 모니터링",
+        "AKS 워크로드 APM",
+        "Region: East US"
+      ],
+      "subscription": "region-east-sub",
+      "resourceGroup": "rg-monitor"
+    },
+    {
+      "id": "aks-west",
+      "name": "AKS Cluster (West Europe)",
+      "type": "aks",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Region: West Europe",
+        "Kubernetes managed cluster",
+        "Availability Zones enabled"
+      ],
+      "subscription": "region-west-sub",
+      "resourceGroup": "rg-workload"
+    },
+    {
+      "id": "kv-west",
+      "name": "Key Vault (West Europe)",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "West Europe 리전 시크릿 관리",
+        "RBAC authorization",
+        "Region: West Europe"
+      ],
+      "subscription": "region-west-sub",
+      "resourceGroup": "rg-security"
+    },
+    {
+      "id": "app-insights-west",
+      "name": "Application Insights (West Europe)",
+      "type": "app_insights",
+      "sku": "Per-GB",
+      "private": false,
+      "details": [
+        "West Europe 리전 모니터링",
+        "AKS 워크로드 APM",
+        "Region: West Europe"
+      ],
+      "subscription": "region-west-sub",
+      "resourceGroup": "rg-monitor"
+    }
+  ],
+  "connections": [
+    {
+      "from": "front-door",
+      "to": "aks-east",
+      "label": "트래픽 라우팅 (East US)",
+      "type": "api"
+    },
+    {
+      "from": "front-door",
+      "to": "aks-west",
+      "label": "트래픽 라우팅 (West Europe)",
+      "type": "api"
+    },
+    {
+      "from": "aks-east",
+      "to": "cosmos-db",
+      "label": "데이터 읽기/쓰기",
+      "type": "data"
+    },
+    {
+      "from": "aks-west",
+      "to": "cosmos-db",
+      "label": "데이터 읽기/쓰기",
+      "type": "data"
+    },
+    {
+      "from": "aks-east",
+      "to": "acr",
+      "label": "컨테이너 이미지 Pull",
+      "type": "data"
+    },
+    {
+      "from": "aks-west",
+      "to": "acr",
+      "label": "컨테이너 이미지 Pull",
+      "type": "data"
+    },
+    {
+      "from": "aks-east",
+      "to": "kv-east",
+      "label": "Secrets",
+      "type": "security"
+    },
+    {
+      "from": "aks-west",
+      "to": "kv-west",
+      "label": "Secrets",
+      "type": "security"
+    },
+    {
+      "from": "aks-east",
+      "to": "app-insights-east",
+      "label": "텔레메트리",
+      "type": "data"
+    },
+    {
+      "from": "aks-west",
+      "to": "app-insights-west",
+      "label": "텔레메트리",
+      "type": "data"
+    }
+  ],
+  "vnet_info": "",
+  "hierarchy": [
+    {
+      "subscription": "global-sub",
+      "resourceGroups": ["rg-global"]
+    },
+    {
+      "subscription": "region-east-sub",
+      "resourceGroups": ["rg-workload", "rg-security", "rg-monitor"]
+    },
+    {
+      "subscription": "region-west-sub",
+      "resourceGroups": ["rg-workload", "rg-security", "rg-monitor"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+WARNING: C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C15-enterprise-data-platform\phase2_bicep\modules\private-endpoints.bicep(16,27) : Warning no-hardcoded-env-urls: Environment URLs should not be hardcoded. Use the environment() function to ensure compatibility across clouds. Found this disallowed host: "core.windows.net" [https://aka.ms/bicep/linter-diagnostics#no-hardcoded-env-urls]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C15-enterprise-data-platform\phase2_bicep\modules\private-endpoints.bicep(68,26) : Warning no-hardcoded-env-urls: Environment URLs should not be hardcoded. Use the environment() function to ensure compatibility across clouds. Found this disallowed host: "core.windows.net" [https://aka.ms/bicep/linter-diagnostics#no-hardcoded-env-urls]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C15-enterprise-data-platform\phase2_bicep\modules\private-endpoints.bicep(172,22) : Warning no-hardcoded-env-urls: Environment URLs should not be hardcoded. Use the environment() function to ensure compatibility across clouds. Found this disallowed host: "database.windows.net" [https://aka.ms/bicep/linter-diagnostics#no-hardcoded-env-urls]
+
+

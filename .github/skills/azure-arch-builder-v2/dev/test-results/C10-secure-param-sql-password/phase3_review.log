@@ -1,0 +1,30 @@
+=== Bicep Review: C10-secure-param-sql-password ===
+Date: 2026-03-22 12:40:42
+
+[CRITICAL] issues (deployment will fail):
+- None
+
+[WARNING] issues (may cause problems):
+- main.bicep line 12: `@secure() param sqlAdminPassword string = newGuid()` — newGuid() generates a new value on every deployment, so redeployment rotates the SQL admin password. The KV secret will update but any existing connections using the old password will break.
+
+[INFO] suggestions:
+- modules/sql.bicep: publicNetworkAccess not set — defaults to 'Enabled'. Consider setting 'Disabled' with PE or firewall rules for production.
+- modules/keyvault.bicep: publicNetworkAccess not set — defaults to 'Enabled'. Consider restricting for production.
+- Scenario is focused on @secure() parameter pattern. Network isolation is out of scope but should be added for production use.
+
+Checklist Results:
+  [N/A]  Foundry Project: No Foundry in this scenario
+  [N/A]  CognitiveServices: No CognitiveServices in this scenario
+  [N/A]  PE DNS (Foundry): No Foundry in this scenario
+  [N/A]  ADLS Gen2: No ADLS in this scenario
+  [PASS] Key Vault: enableRbacAuthorization: true, enablePurgeProtection: true ✅
+  [PASS] SQL: azureADOnlyAuthentication: true ✅
+  [PASS] SQL: No newGuid() in sql.bicep module — password received via @secure() param from main.bicep ✅
+  [PASS] RBAC: App Service → Key Vault Secrets User (4633458b-17de-408a-b874-0445c86b69e6) ✅
+  [PASS] Names: uniqueString(resourceGroup().id) used throughout ✅
+  [PASS] .bicepparam: correct 'using' syntax, no plaintext secrets ✅
+  [N/A]  Network: No PE/VNet in this scenario (secure-param focus)
+  [PASS] App Service: SystemAssigned managed identity, httpsOnly: true, minTlsVersion: 1.2 ✅
+  [PASS] KV Secret: SQL password stored as KV secret via parent: keyVault pattern ✅
+
+Overall: PASS_WITH_WARNINGS

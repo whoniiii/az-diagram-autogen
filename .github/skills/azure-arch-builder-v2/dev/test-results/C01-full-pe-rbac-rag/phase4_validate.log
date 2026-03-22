@@ -1,0 +1,413 @@
+WARNING: C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\foundry.bicep(8,7) : Warning no-unused-params: Parameter "storageAccountId" is declared but never used. [https://aka.ms/bicep/linter-diagnostics#no-unused-params]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\foundry.bicep(9,7) : Warning no-unused-params: Parameter "keyVaultId" is declared but never used. [https://aka.ms/bicep/linter-diagnostics#no-unused-params]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\foundry.bicep(10,7) : Warning no-unused-params: Parameter "searchId" is declared but never used. [https://aka.ms/bicep/linter-diagnostics#no-unused-params]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\foundry.bicep(26,5) : Warning BCP037: The property "allowProjectManagement" is not allowed on objects of type "AccountProperties". Permissible properties include "allowedFqdnList", "amlWorkspace", "apiProperties", "disableLocalAuth", "dynamicThrottlingEnabled", "encryption", "locations", "migrationToken", "raiMonitorConfig", "restore", "restrictOutboundNetworkAccess", "userOwnedStorage". If this is a resource type definition inaccuracy, report it using https://aka.ms/bicep-type-issues. [https://aka.ms/bicep/core-diagnostics#BCP037]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\foundry.bicep(37,25) : Warning BCP081: Resource type "Microsoft.CognitiveServices/accounts/projects@2024-10-01" does not have types available. Bicep is unable to validate resource properties prior to deployment, but this will not block the resource from being deployed. [https://aka.ms/bicep/core-diagnostics#BCP081]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\private-endpoints.bicep(134,27) : Warning no-hardcoded-env-urls: Environment URLs should not be hardcoded. Use the environment() function to ensure compatibility across clouds. Found this disallowed host: "core.windows.net" [https://aka.ms/bicep/linter-diagnostics#no-hardcoded-env-urls]
+
+C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C01-full-pe-rbac-rag\phase2_bicep\modules\private-endpoints.bicep(182,26) : Warning no-hardcoded-env-urls: Environment URLs should not be hardcoded. Use the environment() function to ensure compatibility across clouds. Found this disallowed host: "core.windows.net" [https://aka.ms/bicep/linter-diagnostics#no-hardcoded-env-urls]
+
+
+{
+  "error": null,
+  "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/main",
+  "name": "main",
+  "properties": {
+    "correlationId": "4868008c-2e56-40f8-becb-e78ed7b5e685",
+    "debugSetting": null,
+    "dependencies": [
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-keyvault",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-keyvault",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-keyvault",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-keyvault",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          }
+        ],
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceName": "deploy-foundry",
+        "resourceType": "Microsoft.Resources/deployments"
+      },
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-foundry",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-keyvault",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-keyvault",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-network",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-network",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-network",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-network",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-foundry",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-keyvault",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-keyvault",
+            "resourceType": "Microsoft.Resources/deployments"
+          }
+        ],
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-private-endpoints",
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceName": "deploy-private-endpoints",
+        "resourceType": "Microsoft.Resources/deployments"
+      },
+      {
+        "dependsOn": [
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-foundry",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-foundry",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-storage",
+            "resourceType": "Microsoft.Resources/deployments"
+          },
+          {
+            "apiVersion": "2025-04-01",
+            "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+            "resourceGroup": "rg-skill-test-temp",
+            "resourceName": "deploy-search",
+            "resourceType": "Microsoft.Resources/deployments"
+          }
+        ],
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-rbac",
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceName": "deploy-rbac",
+        "resourceType": "Microsoft.Resources/deployments"
+      }
+    ],
+    "diagnostics": [
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry"
+      },
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-private-endpoints"
+      },
+      {
+        "additionalInfo": null,
+        "code": "NestedDeploymentShortCircuited",
+        "level": "Warning",
+        "message": "A nested deployment got short-circuited and all its resources got skipped from validation. This is due to a nested template having a parameter that was not fully evaluated (e.g. contains a reference() function). Please see https://aka.ms/WhatIfEvalStopped for more guidance.",
+        "target": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-rbac"
+      }
+    ],
+    "duration": "PT0S",
+    "error": null,
+    "extensions": [],
+    "mode": "Incremental",
+    "onErrorDeployment": null,
+    "outputResources": null,
+    "outputs": null,
+    "parameters": {
+      "location": {
+        "type": "String",
+        "value": "eastus2"
+      },
+      "peSubnetPrefix": {
+        "type": "String",
+        "value": "10.0.1.0/24"
+      },
+      "projectPrefix": {
+        "type": "String",
+        "value": "enterprise-rag"
+      },
+      "vnetAddressPrefix": {
+        "type": "String",
+        "value": "10.0.0.0/16"
+      }
+    },
+    "parametersLink": null,
+    "providers": [
+      {
+        "id": null,
+        "namespace": "Microsoft.Resources",
+        "providerAuthorizationConsentState": null,
+        "registrationPolicy": null,
+        "registrationState": null,
+        "resourceTypes": [
+          {
+            "aliases": null,
+            "apiProfiles": null,
+            "apiVersions": null,
+            "capabilities": null,
+            "defaultApiVersion": null,
+            "locationMappings": null,
+            "locations": [
+              null
+            ],
+            "properties": null,
+            "resourceType": "deployments",
+            "zoneMappings": null
+          }
+        ]
+      }
+    ],
+    "provisioningState": "Succeeded",
+    "templateHash": "2936853463137881819",
+    "templateLink": null,
+    "timestamp": "2026-03-22T03:38:36.728792+00:00",
+    "validatedResources": [
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Insights/components/appi-enterprise-rag-7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.KeyVault/vaults/kv-7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Network/virtualNetworks/vnet-enterprise-rag-7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.OperationalInsights/workspaces/law-enterprise-rag-7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-foundry",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-keyvault",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-monitoring",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-network",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-private-endpoints",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-rbac",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-search",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Resources/deployments/deploy-storage",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Search/searchServices/srch-7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Storage/storageAccounts/st7fdobprd67c3c",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Storage/storageAccounts/st7fdobprd67c3c/blobServices/default/containers/curated",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Storage/storageAccounts/st7fdobprd67c3c/blobServices/default/containers/processed",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      },
+      {
+        "apiVersion": null,
+        "extension": null,
+        "id": "/subscriptions/13c99754-0f7b-499b-bcc6-be265d9e65ef/resourceGroups/rg-skill-test-temp/providers/Microsoft.Storage/storageAccounts/st7fdobprd67c3c/blobServices/default/containers/raw",
+        "identifiers": null,
+        "resourceGroup": "rg-skill-test-temp",
+        "resourceType": null
+      }
+    ],
+    "validationLevel": null
+  },
+  "resourceGroup": "rg-skill-test-temp",
+  "type": "Microsoft.Resources/deployments"
+}
+

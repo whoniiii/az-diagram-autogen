@@ -1,0 +1,113 @@
+{
+  "architecture_description": "멀티 리전 DR(Disaster Recovery) RAG 아키텍처. East US에 메인 RAG 시스템, West Europe에 Active-Passive DR 복제본을 구성한다. GPT-4o 모델을 양쪽 리전에 배포하고, GRS Storage로 데이터를 자동 복제한다.",
+  "services": [
+    {
+      "id": "foundry-east",
+      "name": "AI Foundry (East US)",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Primary 리전: East US",
+        "GPT-4o (chat completion)",
+        "text-embedding-ada-002 (embedding)",
+        "Active 역할 (주 트래픽 처리)"
+      ]
+    },
+    {
+      "id": "foundry-west",
+      "name": "AI Foundry (West Europe)",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "DR 리전: West Europe",
+        "GPT-4o (chat completion)",
+        "text-embedding-ada-002 (embedding)",
+        "Passive 역할 (장애 시 페일오버)"
+      ]
+    },
+    {
+      "id": "search-east",
+      "name": "AI Search (East US)",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": false,
+      "details": [
+        "Primary 리전: East US",
+        "SKU: Standard S1",
+        "벡터 검색 + 시맨틱 랭킹",
+        "Active 역할"
+      ]
+    },
+    {
+      "id": "search-west",
+      "name": "AI Search (West Europe)",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": false,
+      "details": [
+        "DR 리전: West Europe",
+        "SKU: Standard S1",
+        "벡터 검색 + 시맨틱 랭킹",
+        "Passive 역할 (인덱스 동기화 필요)"
+      ]
+    },
+    {
+      "id": "storage-grs",
+      "name": "Azure Storage (GRS)",
+      "type": "storage",
+      "sku": "Standard_GRS",
+      "private": false,
+      "details": [
+        "ADLS Gen2 (isHnsEnabled: true)",
+        "SKU: Standard_GRS (Geo-Redundant Storage)",
+        "Primary: East US → Secondary: West Europe 자동 복제",
+        "RA-GRS로 DR 리전에서 읽기 가능"
+      ]
+    },
+    {
+      "id": "keyvault-east",
+      "name": "Key Vault (East US)",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Primary 리전: East US",
+        "SKU: Standard",
+        "RBAC 인증 모드",
+        "시크릿 및 키 관리"
+      ]
+    },
+    {
+      "id": "keyvault-west",
+      "name": "Key Vault (West Europe)",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "DR 리전: West Europe",
+        "SKU: Standard",
+        "RBAC 인증 모드",
+        "시크릿 수동 동기화 필요"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "foundry-east", "to": "search-east", "label": "RAG 검색 쿼리 (Primary)", "type": "api"},
+    {"from": "foundry-west", "to": "search-west", "label": "RAG 검색 쿼리 (DR)", "type": "api"},
+    {"from": "search-east", "to": "storage-grs", "label": "문서 인덱싱 (Primary)", "type": "data"},
+    {"from": "search-west", "to": "storage-grs", "label": "문서 인덱싱 (DR, RA-GRS 읽기)", "type": "data"},
+    {"from": "foundry-east", "to": "keyvault-east", "label": "시크릿 참조", "type": "security"},
+    {"from": "foundry-west", "to": "keyvault-west", "label": "시크릿 참조", "type": "security"},
+    {"from": "foundry-east", "to": "foundry-west", "label": "Active-Passive 페일오버", "type": "network"},
+    {"from": "search-east", "to": "search-west", "label": "인덱스 동기화", "type": "data"}
+  ],
+  "vnet_info": "",
+  "hierarchy": [
+    {
+      "subscription": "global-subscription",
+      "resourceGroups": ["rg-global-rag-dr-eastus", "rg-global-rag-dr-westeurope"]
+    }
+  ]
+}

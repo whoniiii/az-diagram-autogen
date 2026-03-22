@@ -1,0 +1,21 @@
+Test: C17-mission-critical-aks-multi-region (Mission-Critical AKS Multi-Region)
+Timestamp: 2026-03-22 12:25:54
+User Request: 미션 크리티컬 AKS를 만들어줘. East US + West Europe 2개 리전, Front Door로 글로벌 로드밸런싱, Cosmos DB 멀티리전.
+
+[phase1]
+  PASS
+
+[phase2]
+  CRITICAL: main.bicep not found in phase2_bicep/
+  WARN: phase2_compile.log not found (compile not run?)
+  WARN: modules/ directory not found (all-in-one bicep?)
+
+[phase3]
+  WARN: phase3_review.log not found (review not run?)
+
+[phase4]
+  INFO: phase4_validate.log not found (validate not run — needs Azure subscription)
+
+[diagram]
+  WARN: diagram.html not found
+

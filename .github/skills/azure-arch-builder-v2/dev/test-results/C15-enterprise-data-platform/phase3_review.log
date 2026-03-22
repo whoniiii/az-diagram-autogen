@@ -1,0 +1,34 @@
+=== Bicep Review: C15-enterprise-data-platform ===
+Date: 2026-03-22 12:40:42
+
+[CRITICAL] issues (deployment will fail):
+- main.bicep line 82: Syntax error — `name: 'name: 'deploy-datafactory'` has malformed string literal (double 'name:'). Bicep compilation will fail. Fix: `name: 'deploy-datafactory'`
+
+[WARNING] issues (may cause problems):
+- No RBAC module: Data Factory (SystemAssigned identity) needs Storage Blob Data Contributor on ADLS Gen2 to read/write data. Databricks also needs storage access. Without RBAC, data pipelines will fail at runtime.
+- main.bicep line 15: `@secure() param sqlAdminPassword string = newGuid()` — redeployment generates new password each time.
+
+[INFO] suggestions:
+- Consider adding RBAC role assignments: Data Factory → Storage (Blob Data Contributor), Data Factory → SQL (if needed), Data Factory → Key Vault (Secrets User).
+- Fabric Capacity (F64) is a high-cost SKU. Ensure this is intentional.
+- Databricks PE uses groupId 'databricks_ui_api' — correct for browser/API access.
+
+Checklist Results:
+  [N/A]  Foundry Project: No Foundry in this scenario
+  [N/A]  CognitiveServices: No CognitiveServices in this scenario
+  [N/A]  PE DNS (Foundry): No Foundry in this scenario
+  [PASS] ADLS Gen2: isHnsEnabled: true, kind: StorageV2 ✅
+  [PASS] ADLS Gen2 PE: Both blob + dfs PEs with DNS Zone Groups ✅
+  [PASS] Key Vault: enableRbacAuthorization: true, enablePurgeProtection: true ✅
+  [PASS] SQL: azureADOnlyAuthentication: true, no newGuid() in sql.bicep module ✅
+  [FAIL] RBAC: No role assignments — Data Factory and Databricks need storage access ✗
+  [PASS] Names: uniqueString(resourceGroup().id) used throughout ✅
+  [PASS] .bicepparam: correct 'using' syntax, no plaintext secrets ✅
+  [PASS] Network: PE subnet privateEndpointNetworkPolicies: 'Disabled' ✅
+  [PASS] Storage: allowBlobPublicAccess: false, minimumTlsVersion: TLS1_2 ✅
+  [PASS] DNS Zone VNet Links: registrationEnabled: false on all links ✅
+  [PASS] All PE DNS Zone Groups present for every PE ✅
+  [PASS] Fabric: administration.members set with adminEmail param ✅
+  [FAIL] Compilation: Syntax error in main.bicep line 82 ✗
+
+Overall: FAIL

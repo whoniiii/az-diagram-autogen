@@ -1,0 +1,68 @@
+{
+  "architecture_description": "App Service + SQL Database + Key Vault 구성의 보안 웹 애플리케이션. SQL 관리자 비밀번호는 Bicep @secure() 파라미터로 배포 시 입력받아 Key Vault에 저장하며, AAD 전용 인증을 사용한다. Region: East US 2.",
+  "services": [
+    {
+      "id": "app-service",
+      "name": "App Service",
+      "type": "app_service",
+      "sku": "B1",
+      "private": false,
+      "details": [
+        "Region: East US 2",
+        "Managed Identity 활성화",
+        "Key Vault 참조로 SQL 연결 문자열 로드",
+        "System-assigned Managed Identity 사용"
+      ]
+    },
+    {
+      "id": "sql-database",
+      "name": "Azure SQL Database",
+      "type": "sql_database",
+      "sku": "S0 Standard",
+      "private": false,
+      "details": [
+        "Region: East US 2",
+        "AAD-only 인증 활성화 (SQL 인증 비활성화 권장)",
+        "관리자 비밀번호: Bicep @secure() 파라미터로 배포 시 입력",
+        "비밀번호는 Key Vault에 시크릿으로 자동 저장",
+        "DTU 기반 Standard S0"
+      ]
+    },
+    {
+      "id": "keyvault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "Region: East US 2",
+        "SQL 관리자 비밀번호를 시크릿으로 저장",
+        "App Service Managed Identity에 Get 권한 부여",
+        "RBAC 기반 접근 제어 (Key Vault Secrets User 역할)",
+        "@secure() 파라미터 → Key Vault Secret 저장 흐름"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "app-service",
+      "to": "sql-database",
+      "label": "데이터 쿼리 (AAD 인증)",
+      "type": "data"
+    },
+    {
+      "from": "app-service",
+      "to": "keyvault",
+      "label": "시크릿 참조 (Managed Identity)",
+      "type": "security"
+    },
+    {
+      "from": "keyvault",
+      "to": "sql-database",
+      "label": "SQL 비밀번호 저장",
+      "type": "security"
+    }
+  ],
+  "vnet_info": "",
+  "hierarchy": []
+}

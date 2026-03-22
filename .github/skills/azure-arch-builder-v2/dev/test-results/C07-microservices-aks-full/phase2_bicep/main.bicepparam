@@ -1,0 +1,11 @@
+using './main.bicep'
+
+param location = 'eastus2'
+param projectPrefix = 'microservices'
+param vnetAddressPrefix = '10.0.0.0/16'
+param aksSubnetPrefix = '10.0.0.0/22'
+param appGwSubnetPrefix = '10.0.4.0/24'
+param peSubnetPrefix = '10.0.5.0/24'
+param sqlAdminLogin = 'sqladmin'
+param aadAdminLogin = 'aad-admin'
+param aadAdminObjectId = '<AAD_ADMIN_OBJECT_ID>'

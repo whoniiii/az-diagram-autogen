@@ -1,0 +1,183 @@
+{
+  "architecture_description": "엔터프라이즈 RAG 챗봇 아키텍처. 모든 서비스에 Private Endpoint를 적용하고, RBAC 기반 인증으로 보안을 강화한다. AI Foundry(Hub+Project), AI Search, ADLS Gen2 Storage, Key Vault, Log Analytics, Application Insights를 포함하며, East US 2 리전에 프로덕션 SKU로 배포한다.",
+  "services": [
+    {
+      "id": "foundry-hub",
+      "name": "AI Foundry Hub",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "AI Foundry Hub (workspace)",
+        "Region: East US 2",
+        "RBAC: Managed Identity 기반 인증",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "foundry-project",
+      "name": "AI Foundry Project",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "Foundry Project: enterprise-rag",
+        "GPT-4o (chat completion)",
+        "text-embedding-ada-002 (embedding)",
+        "RBAC: Cognitive Services OpenAI User 역할 할당"
+      ]
+    },
+    {
+      "id": "ai-search",
+      "name": "Azure AI Search",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": true,
+      "details": [
+        "SKU: Standard S1",
+        "벡터 검색 + 시맨틱 랭킹",
+        "Region: East US 2",
+        "RBAC: Search Index Data Reader/Contributor 역할",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "storage-account",
+      "name": "Azure Storage (ADLS Gen2)",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": true,
+      "details": [
+        "ADLS Gen2 (isHnsEnabled: true)",
+        "문서 저장 및 인덱서 데이터 소스",
+        "SKU: Standard_LRS",
+        "RBAC: Storage Blob Data Contributor 역할",
+        "프라이빗 엔드포인트로 접근 제한 (blob + dfs)"
+      ]
+    },
+    {
+      "id": "key-vault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "SKU: Standard",
+        "RBAC 인증 모드 (enableRbacAuthorization: true)",
+        "RBAC: Key Vault Secrets User 역할",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "log-analytics",
+      "name": "Log Analytics Workspace",
+      "type": "log_analytics",
+      "sku": "PerGB2018",
+      "private": true,
+      "details": [
+        "SKU: PerGB2018",
+        "전체 서비스 진단 로그 수집",
+        "보존 기간: 30일",
+        "프라이빗 엔드포인트로 접근 제한 (AMPLS 경유)"
+      ]
+    },
+    {
+      "id": "app-insights",
+      "name": "Application Insights",
+      "type": "app_insights",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "Workspace-based (Log Analytics 연결)",
+        "Foundry 프로젝트 성능 모니터링",
+        "프라이빗 엔드포인트로 접근 제한 (AMPLS 경유)"
+      ]
+    },
+    {
+      "id": "pe-foundry",
+      "name": "PE: AI Foundry",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": [
+        "groupId: account",
+        "DNS: privatelink.cognitiveservices.azure.com",
+        "DNS: privatelink.openai.azure.com"
+      ]
+    },
+    {
+      "id": "pe-search",
+      "name": "PE: AI Search",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: searchService", "DNS: privatelink.search.windows.net"]
+    },
+    {
+      "id": "pe-storage-blob",
+      "name": "PE: Storage (Blob)",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: blob", "DNS: privatelink.blob.core.windows.net"]
+    },
+    {
+      "id": "pe-storage-dfs",
+      "name": "PE: Storage (DFS)",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: dfs", "DNS: privatelink.dfs.core.windows.net"]
+    },
+    {
+      "id": "pe-keyvault",
+      "name": "PE: Key Vault",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: vault", "DNS: privatelink.vaultcore.azure.net"]
+    },
+    {
+      "id": "pe-monitor",
+      "name": "PE: AMPLS (Monitor)",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": [
+        "Azure Monitor Private Link Scope (AMPLS)",
+        "5개 DNS Zone 필요:",
+        "privatelink.monitor.azure.com",
+        "privatelink.oms.opinsights.azure.com",
+        "privatelink.ods.opinsights.azure.com",
+        "privatelink.agentsvc.azure-automation.net",
+        "privatelink.blob.core.windows.net"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "foundry-project", "to": "foundry-hub", "label": "Project → Hub", "type": "default"},
+    {"from": "foundry-project", "to": "ai-search", "label": "RAG 검색 쿼리", "type": "api"},
+    {"from": "ai-search", "to": "storage-account", "label": "문서 인덱싱", "type": "data"},
+    {"from": "foundry-project", "to": "storage-account", "label": "문서 업로드", "type": "data"},
+    {"from": "foundry-hub", "to": "key-vault", "label": "시크릿 참조", "type": "security"},
+    {"from": "ai-search", "to": "key-vault", "label": "시크릿 참조", "type": "security"},
+    {"from": "foundry-hub", "to": "log-analytics", "label": "진단 로그", "type": "data"},
+    {"from": "ai-search", "to": "log-analytics", "label": "진단 로그", "type": "data"},
+    {"from": "app-insights", "to": "log-analytics", "label": "Workspace 연결", "type": "data"},
+    {"from": "foundry-project", "to": "app-insights", "label": "성능 모니터링", "type": "data"},
+    {"from": "foundry-hub", "to": "pe-foundry", "label": "", "type": "private"},
+    {"from": "ai-search", "to": "pe-search", "label": "", "type": "private"},
+    {"from": "storage-account", "to": "pe-storage-blob", "label": "", "type": "private"},
+    {"from": "storage-account", "to": "pe-storage-dfs", "label": "", "type": "private"},
+    {"from": "key-vault", "to": "pe-keyvault", "label": "", "type": "private"},
+    {"from": "log-analytics", "to": "pe-monitor", "label": "", "type": "private"},
+    {"from": "app-insights", "to": "pe-monitor", "label": "", "type": "private"}
+  ],
+  "vnet_info": "10.0.0.0/16 | pe-subnet: 10.0.1.0/24",
+  "hierarchy": [
+    {
+      "subscription": "enterprise-subscription",
+      "resourceGroups": ["rg-enterprise-rag"]
+    }
+  ]
+}

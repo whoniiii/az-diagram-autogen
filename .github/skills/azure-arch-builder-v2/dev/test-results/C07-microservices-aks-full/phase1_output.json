@@ -1,0 +1,114 @@
+{
+  "architecture_description": "AKS 기반 마이크로서비스 플랫폼. ACR, Redis, SQL Database, Key Vault, Application Gateway(AGIC)를 전부 프라이빗 엔드포인트로 연결한 엔터프라이즈급 컨테이너 아키텍처. Region: East US 2.",
+  "services": [
+    {
+      "id": "aks",
+      "name": "Azure Kubernetes Service",
+      "type": "aks",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "Node Pool: 3 노드 (Standard_D4s_v5)",
+        "Private Cluster 활성화",
+        "Azure CNI 네트워킹",
+        "AGIC 인그레스 컨트롤러",
+        "Region: East US 2"
+      ]
+    },
+    {
+      "id": "acr",
+      "name": "Azure Container Registry",
+      "type": "acr",
+      "sku": "Premium",
+      "private": true,
+      "details": [
+        "지역 복제 지원 (Premium SKU)",
+        "프라이빗 엔드포인트로 AKS에서만 접근",
+        "컨테이너 이미지 저장소"
+      ]
+    },
+    {
+      "id": "redis",
+      "name": "Azure Cache for Redis",
+      "type": "redis",
+      "sku": "C1 Standard",
+      "private": true,
+      "details": [
+        "1GB 캐시 용량",
+        "세션 캐시 및 분산 캐싱",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "sql-database",
+      "name": "Azure SQL Database",
+      "type": "sql_database",
+      "sku": "S1 Standard",
+      "private": true,
+      "details": [
+        "DTU 기반 Standard S1",
+        "마이크로서비스 영속 데이터 저장소",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "keyvault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "DB 연결 문자열, Redis 키, TLS 인증서 관리",
+        "CSI Secret Store Driver로 AKS Pod에 마운트",
+        "프라이빗 엔드포인트로 접근 제한"
+      ]
+    },
+    {
+      "id": "app-gateway",
+      "name": "Application Gateway",
+      "type": "app_gateway",
+      "sku": "WAF_v2",
+      "private": true,
+      "details": [
+        "AGIC로 AKS 인그레스 제어",
+        "WAF v2 정책 적용",
+        "SSL 오프로딩",
+        "전용 서브넷 배치"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "app-gateway",
+      "to": "aks",
+      "label": "Ingress",
+      "type": "network"
+    },
+    {
+      "from": "aks",
+      "to": "acr",
+      "label": "Images",
+      "type": "data"
+    },
+    {
+      "from": "aks",
+      "to": "redis",
+      "label": "Cache",
+      "type": "data"
+    },
+    {
+      "from": "aks",
+      "to": "sql-database",
+      "label": "Data",
+      "type": "data"
+    },
+    {
+      "from": "aks",
+      "to": "keyvault",
+      "label": "Secrets",
+      "type": "security"
+    }
+  ],
+  "vnet_info": "10.0.0.0/16 | aks-subnet: 10.0.0.0/22 | appgw-subnet: 10.0.4.0/24 | pe-subnet: 10.0.5.0/24",
+  "hierarchy": []
+}

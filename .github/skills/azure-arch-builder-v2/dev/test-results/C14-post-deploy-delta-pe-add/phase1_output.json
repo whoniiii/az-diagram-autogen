@@ -1,0 +1,152 @@
+{
+  "architecture_description": "기존 배포된 RAG 아키텍처에 Private Endpoint를 추가한 델타 수정 (Post-Deploy Delta). AI Foundry, AI Search, Storage, Key Vault 모든 서비스에 프라이빗 엔드포인트를 적용하여 퍼블릭 네트워크 접근을 차단한다.",
+  "services": [
+    {
+      "id": "ai-foundry-hub",
+      "name": "AI Foundry Hub",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "AI Foundry Hub (workspace)",
+        "프라이빗 엔드포인트 적용 (델타 추가)",
+        "publicNetworkAccess: Disabled"
+      ]
+    },
+    {
+      "id": "ai-foundry-project",
+      "name": "AI Foundry Project",
+      "type": "ai_foundry",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "Foundry Project",
+        "GPT-4o (chat completion)",
+        "text-embedding-ada-002 (embedding)",
+        "프라이빗 엔드포인트 적용 (델타 추가)"
+      ]
+    },
+    {
+      "id": "ai-search",
+      "name": "Azure AI Search",
+      "type": "ai_search",
+      "sku": "Standard S1",
+      "private": true,
+      "details": [
+        "SKU: Standard S1",
+        "벡터 검색 + 시맨틱 랭킹",
+        "프라이빗 엔드포인트 적용 (델타 추가)",
+        "publicNetworkAccess: Disabled"
+      ]
+    },
+    {
+      "id": "storage",
+      "name": "Azure Storage Account",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": true,
+      "details": [
+        "Blob Storage (문서 저장)",
+        "프라이빗 엔드포인트 적용 (델타 추가)",
+        "publicNetworkAccess: Disabled"
+      ]
+    },
+    {
+      "id": "keyvault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": true,
+      "details": [
+        "SKU: Standard",
+        "Secrets & key management",
+        "프라이빗 엔드포인트 적용 (델타 추가)",
+        "publicNetworkAccess: Disabled"
+      ]
+    },
+    {
+      "id": "pe-foundry",
+      "name": "PE: AI Foundry",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: account"]
+    },
+    {
+      "id": "pe-search",
+      "name": "PE: AI Search",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: searchService"]
+    },
+    {
+      "id": "pe-storage",
+      "name": "PE: Storage",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: blob"]
+    },
+    {
+      "id": "pe-keyvault",
+      "name": "PE: Key Vault",
+      "type": "pe",
+      "sku": "",
+      "private": true,
+      "details": ["groupId: vault"]
+    }
+  ],
+  "connections": [
+    {
+      "from": "ai-foundry-project",
+      "to": "ai-foundry-hub",
+      "label": "Project → Hub",
+      "type": "default"
+    },
+    {
+      "from": "ai-foundry-project",
+      "to": "ai-search",
+      "label": "RAG 검색 쿼리",
+      "type": "api"
+    },
+    {
+      "from": "ai-search",
+      "to": "storage",
+      "label": "문서 인덱싱",
+      "type": "data"
+    },
+    {
+      "from": "ai-foundry-hub",
+      "to": "keyvault",
+      "label": "시크릿 참조",
+      "type": "security"
+    },
+    {
+      "from": "ai-foundry-hub",
+      "to": "pe-foundry",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "ai-search",
+      "to": "pe-search",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "storage",
+      "to": "pe-storage",
+      "label": "",
+      "type": "private"
+    },
+    {
+      "from": "keyvault",
+      "to": "pe-keyvault",
+      "label": "",
+      "type": "private"
+    }
+  ],
+  "vnet_info": "10.0.0.0/16 | pe-subnet: 10.0.1.0/24",
+  "hierarchy": []
+}

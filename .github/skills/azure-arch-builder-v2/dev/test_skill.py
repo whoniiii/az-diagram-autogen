@@ -25,9 +25,9 @@ RESULTS_DIR = DEV_DIR / "test-results"
 SCRIPTS_DIR = SKILL_ROOT / "scripts"
 
 # ────────────────────────────────────────────────
-# 7 Sub-Scenarios
+# 7 Sub-Scenarios (Round 1 — Basic)
 # ────────────────────────────────────────────────
-SCENARIOS = {
+SCENARIOS_R1 = {
     "1-1-basic-rag-default": {
         "name": "Basic RAG (Default)",
         "group": 1,
@@ -168,6 +168,489 @@ SCENARIOS = {
         },
     },
 }
+
+# ────────────────────────────────────────────────
+# 20 Complex Scenarios (Round 2 — Stress Test)
+# ────────────────────────────────────────────────
+SCENARIOS_R2 = {
+    # ── Level 3: Complex (7 scenarios) ──
+    "C01-full-pe-rbac-rag": {
+        "name": "Full PE + RBAC Chain RAG",
+        "group": "complex",
+        "level": 3,
+        "user_request": "RAG 챗봇을 만들건데, 모든 서비스에 PE 적용하고 RBAC도 자동으로 설정해줘. Log Analytics도 붙여줘.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "enterprise-rag"},
+            {"question_pattern": "SKU|티어", "answer": "운영 환경 수준으로"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16, PE 서브넷 10.0.1.0/24"},
+            {"question_pattern": "모니터링|로그", "answer": "Log Analytics + App Insights 둘 다"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "ai_search", "storage", "keyvault", "log_analytics"],
+            "min_count": 6,
+            "max_count": 18,
+            "must_have_private": True,
+        },
+        "expected_connections": {
+            "min_count": 5,
+            "must_have_type": "private",
+        },
+        "expected_vnet": True,
+        "test_focus": ["PE dual DNS (Foundry=2 zones)", "ADLS dual PE (blob+dfs)", "RBAC chain", "Log Analytics"],
+    },
+    "C02-fabric-capacity-multi-workspace": {
+        "name": "Fabric Capacity + Multi-Workspace",
+        "group": "complex",
+        "level": 3,
+        "user_request": "Microsoft Fabric을 만들어줘. 워크스페이스 2개 (dev, prod) 필요하고, ADLS Gen2 연결해줘.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "fabric-analytics"},
+            {"question_pattern": "SKU|용량", "answer": "F64"},
+            {"question_pattern": "관리자|admin|이메일", "answer": "admin@contoso.com"},
+            {"question_pattern": "워크스페이스|workspace", "answer": "dev-workspace, prod-workspace"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["fabric", "storage"],
+            "min_count": 3,
+            "max_count": 8,
+        },
+        "expected_connections": {
+            "min_count": 2,
+        },
+        "test_focus": ["Fabric admin email required", "Capacity SKU region check", "Workspace dependency"],
+    },
+    "C03-multi-region-dr": {
+        "name": "Multi-Region DR Architecture",
+        "group": "complex",
+        "level": 3,
+        "user_request": "East US에 메인 RAG 시스템 만들고, West Europe에 DR replica도 구성해줘.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "global-rag-dr"},
+            {"question_pattern": "모델|GPT", "answer": "GPT-4o 양쪽 리전 모두"},
+            {"question_pattern": "장애 복구|failover", "answer": "Active-Passive 구성으로"},
+            {"question_pattern": "스토리지|복제", "answer": "GRS 스토리지로 자동 복제"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "ai_search", "storage", "keyvault"],
+            "min_count": 8,
+            "max_count": 20,
+        },
+        "expected_connections": {
+            "min_count": 6,
+        },
+        "test_focus": ["Cross-region model availability", "GRS storage", "Multi-region diagram", "Failover connections"],
+    },
+    "C04-ampls-monitor-5zone": {
+        "name": "AMPLS + Monitor PE (5-Zone DNS)",
+        "group": "complex",
+        "level": 3,
+        "user_request": "Foundry + Storage + Log Analytics를 만들되, 전부 Private Endpoint으로 보호해줘. 모니터링도 PE로.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "secure-monitoring"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16"},
+            {"question_pattern": "AMPLS|모니터.*PE", "answer": "네, Azure Monitor Private Link Scope 포함"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "storage", "keyvault", "log_analytics"],
+            "min_count": 5,
+            "max_count": 18,
+            "must_have_private": True,
+        },
+        "expected_connections": {
+            "min_count": 4,
+            "must_have_type": "private",
+        },
+        "expected_vnet": True,
+        "test_focus": ["AMPLS 5 DNS zones", "Monitor PE complexity", "Foundry dual DNS", "ADLS dual PE"],
+    },
+    "C05-databricks-vnet-injection": {
+        "name": "Databricks VNet Injection + PE",
+        "group": "complex",
+        "level": 3,
+        "user_request": "Databricks를 VNet에 주입하고, ADLS Gen2와 Key Vault도 PE로 연결해줘. ETL 파이프라인 구성.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "data-engineering"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16, Databricks 서브넷 2개 포함"},
+            {"question_pattern": "ETL|파이프라인", "answer": "Data Factory도 추가해줘"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["databricks", "storage", "keyvault", "data_factory"],
+            "min_count": 4,
+            "max_count": 12,
+        },
+        "expected_connections": {
+            "min_count": 3,
+        },
+        "expected_vnet": True,
+        "test_focus": ["Databricks managed RG", "VNet injection subnets", "ADLS dual PE", "Data Factory PE"],
+    },
+    "C06-multi-sub-landing-zone": {
+        "name": "Multi-Subscription Landing Zone",
+        "group": "complex",
+        "level": 3,
+        "user_request": "Azure Landing Zone 구조로 만들어줘. connectivity 구독에 Hub VNet + Firewall, workload 구독에 AI 서비스.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "enterprise-landing-zone"},
+            {"question_pattern": "구독|subscription", "answer": "connectivity-sub, workload-ai-sub"},
+            {"question_pattern": "Hub.*VNet|CIDR", "answer": "Hub: 10.0.0.0/16, Spoke: 10.1.0.0/16"},
+            {"question_pattern": "방화벽|Firewall", "answer": "Azure Firewall Premium"},
+            {"question_pattern": "AI.*서비스", "answer": "Foundry + AI Search + Storage"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["firewall", "ai_foundry"],
+            "min_count": 6,
+            "max_count": 20,
+        },
+        "expected_connections": {
+            "min_count": 4,
+        },
+        "expected_vnet": True,
+        "expected_hierarchy": True,
+        "test_focus": ["Multi-subscription hierarchy", "Hub-Spoke VNet", "Cross-sub peering", "Firewall routing"],
+    },
+    "C07-microservices-aks-full": {
+        "name": "Full AKS Microservices",
+        "group": "complex",
+        "level": 3,
+        "user_request": "AKS 기반 마이크로서비스 아키텍처 만들어줘. ACR, Redis, SQL, Key Vault, App Gateway 전부 포함.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "microservices-platform"},
+            {"question_pattern": "노드.*수|node.*count", "answer": "3개 노드"},
+            {"question_pattern": "네트워크|ingress", "answer": "App Gateway Ingress Controller 사용"},
+            {"question_pattern": "PE|프라이빗", "answer": "전부 PE 적용"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["aks", "acr", "redis", "sql_database", "keyvault", "app_gateway"],
+            "min_count": 6,
+            "max_count": 15,
+        },
+        "expected_connections": {
+            "min_count": 5,
+        },
+        "expected_vnet": True,
+        "test_focus": ["AKS + ACR integration", "AGIC ingress", "Multi-service PE", "Redis PE"],
+    },
+
+    # ── Level 4: Edge Cases (7 scenarios) ──
+    "C08-unknown-service-eventgrid": {
+        "name": "Unknown Service Fallback (Event Grid)",
+        "group": "edge",
+        "level": 4,
+        "user_request": "Foundry + Event Grid + Cosmos DB를 만들어줘. Event Grid로 이벤트 처리하고 싶어.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "event-driven-ai"},
+            {"question_pattern": "Event Grid.*토픽|topic", "answer": "시스템 토픽으로"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "cosmos_db"],
+            "min_count": 3,
+            "max_count": 10,
+        },
+        "expected_connections": {
+            "min_count": 2,
+        },
+        "test_focus": ["Unknown service fallback workflow", "Event Grid PE mapping", "MS Docs fetch for unknown"],
+    },
+    "C09-vm-sku-unavailable": {
+        "name": "VM SKU Region Unavailable",
+        "group": "edge",
+        "level": 4,
+        "user_request": "Korea Central에 Standard_D4s_v5 VM으로 점프박스 만들어줘. Bastion도 붙여줘.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "jump-server"},
+            {"question_pattern": "SKU|대안|alternative", "answer": "그럼 추천해주는 걸로"},
+            {"question_pattern": "Bastion|접속", "answer": "Azure Bastion Basic"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["vm", "bastion"],
+            "min_count": 2,
+            "max_count": 8,
+        },
+        "expected_connections": {
+            "min_count": 1,
+        },
+        "expected_vnet": True,
+        "test_focus": ["VM SKU region availability check", "Alternative suggestion", "Bastion subnet requirement"],
+    },
+    "C10-secure-param-sql-password": {
+        "name": "@secure() SQL Password + KV Storage",
+        "group": "edge",
+        "level": 4,
+        "user_request": "SQL Server + App Service + Key Vault 만들어줘. SQL 비밀번호는 Key Vault에 저장해줘.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "secure-webapp"},
+            {"question_pattern": "인증|auth", "answer": "Azure AD 전용 인증 사용"},
+            {"question_pattern": "비밀번호|password", "answer": "배포 시 입력할게"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["sql_database", "app_service", "keyvault"],
+            "min_count": 3,
+            "max_count": 7,
+        },
+        "expected_connections": {
+            "min_count": 2,
+        },
+        "test_focus": ["@secure() param handling", "No newGuid() in module", "KV secret storage", "AAD-only auth"],
+    },
+    "C11-adls-hns-impossible-change": {
+        "name": "ADLS Gen2 HNS Retroactive (Impossible)",
+        "group": "edge",
+        "level": 4,
+        "user_request": "기존에 있는 Storage Account에 Data Lake 기능 (HNS) 을 활성화하고 싶어.",
+        "user_choices": [
+            {"question_pattern": "스토리지|storage.*이름", "answer": "mystorageaccount"},
+            {"question_pattern": "새로.*만들|recreate", "answer": "새 계정 만들어줘"},
+            {"question_pattern": "이름|프로젝트", "answer": "data-lake-migration"},
+        ],
+        "expected_path": "B",
+        "expected_services": {
+            "required_types": ["storage"],
+            "min_count": 1,
+            "max_count": 5,
+        },
+        "expected_connections": {
+            "min_count": 0,
+        },
+        "test_focus": ["HNS cannot be changed post-creation", "Must create new account", "Data migration warning"],
+    },
+    "C12-naming-collision-detection": {
+        "name": "Naming Collision (customSubDomainName)",
+        "group": "edge",
+        "level": 4,
+        "user_request": "Foundry 만들어줘. 이름은 'my-ai-service'로 해줘.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름.*고유|unique|충돌", "answer": "그럼 알아서 고유한 이름으로"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "keyvault"],
+            "min_count": 2,
+            "max_count": 6,
+        },
+        "expected_connections": {
+            "min_count": 1,
+        },
+        "test_focus": ["customSubDomainName uniqueness", "uniqueString() enforcement", "Static name rejection"],
+    },
+    "C13-service-ambiguity-cognitive": {
+        "name": "Service Ambiguity (코그니티브 서비스)",
+        "group": "edge",
+        "level": 4,
+        "user_request": "코그니티브 서비스로 AI 만들 거야. 문서 분석이랑 챗봇 둘 다 필요해.",
+        "user_choices": [
+            {"question_pattern": "서비스.*종류|Foundry|OpenAI|Search", "answer": "Foundry로 챗봇, Document Intelligence로 문서 분석"},
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "ai-document-chat"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry"],
+            "min_count": 3,
+            "max_count": 10,
+        },
+        "expected_connections": {
+            "min_count": 2,
+        },
+        "test_focus": ["Service disambiguation", "Document Intelligence type", "Multi-AI service coordination"],
+    },
+    "C14-post-deploy-delta-pe-add": {
+        "name": "Post-Deploy Delta (Add PE)",
+        "group": "edge",
+        "level": 4,
+        "user_request": "방금 배포한 RAG 아키텍처에 Private Endpoint를 추가하고 싶어.",
+        "user_choices": [
+            {"question_pattern": "서비스|어떤.*PE", "answer": "Foundry, Search, Storage, Key Vault 전부"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16"},
+            {"question_pattern": "확인|proceed", "answer": "진행해줘"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "ai_search", "storage", "keyvault"],
+            "min_count": 5,
+            "max_count": 18,
+            "must_have_private": True,
+        },
+        "expected_connections": {
+            "min_count": 4,
+            "must_have_type": "private",
+        },
+        "expected_vnet": True,
+        "test_focus": ["Delta Confirmation Rule (Phase 1, not Phase 0)", "publicNetworkAccess: Disabled", "PE addition to existing"],
+    },
+
+    # ── Level 5: Maximum Complexity (6 scenarios) ──
+    "C15-enterprise-data-platform": {
+        "name": "Enterprise Data Platform (Full Stack)",
+        "group": "max",
+        "level": 5,
+        "user_request": "엔터프라이즈 데이터 플랫폼 만들어줘. Fabric + Databricks + ADLS + ADF + SQL + Key Vault + PE 전부. 3개 RG로 나눠줘.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "data-platform-enterprise"},
+            {"question_pattern": "RG.*분리|리소스.*그룹", "answer": "rg-data (Fabric, Databricks, ADLS), rg-etl (ADF, SQL), rg-security (KV)"},
+            {"question_pattern": "Fabric.*SKU|용량", "answer": "F64"},
+            {"question_pattern": "관리자|admin", "answer": "admin@contoso.com"},
+            {"question_pattern": "PE|프라이빗", "answer": "전부 PE 적용"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["fabric", "databricks", "storage", "data_factory", "sql_database", "keyvault"],
+            "min_count": 6,
+            "max_count": 20,
+        },
+        "expected_connections": {
+            "min_count": 5,
+        },
+        "expected_vnet": True,
+        "expected_hierarchy": True,
+        "test_focus": ["Multi-RG hierarchy", "Fabric admin email", "Databricks VNet", "6+ service PE", "ADLS dual PE"],
+    },
+    "C16-multi-sub-ai-data-mesh": {
+        "name": "Multi-Subscription AI Data Mesh",
+        "group": "max",
+        "level": 5,
+        "user_request": "데이터 메시 아키텍처를 만들어줘. 플랫폼 구독에 Foundry + Fabric, 도메인별 구독 2개에 각각 ADLS + ADF + SQL.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "data-mesh"},
+            {"question_pattern": "구독|subscription", "answer": "platform-sub, domain-sales-sub, domain-finance-sub"},
+            {"question_pattern": "RG", "answer": "각 구독마다 rg-data, rg-security"},
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "PE|프라이빗", "answer": "플랫폼 구독만 PE 적용"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "fabric", "storage", "data_factory", "sql_database", "keyvault"],
+            "min_count": 10,
+            "max_count": 30,
+        },
+        "expected_connections": {
+            "min_count": 8,
+        },
+        "expected_hierarchy": True,
+        "test_focus": ["3-subscription hierarchy", "Cross-sub data flow", "Selective PE", "Domain isolation"],
+    },
+    "C17-mission-critical-aks-multi-region": {
+        "name": "Mission-Critical AKS Multi-Region",
+        "group": "max",
+        "level": 5,
+        "user_request": "미션 크리티컬 AKS를 만들어줘. East US + West Europe 2개 리전, Front Door로 글로벌 로드밸런싱, Cosmos DB 멀티리전.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "mission-critical"},
+            {"question_pattern": "구독|subscription", "answer": "global-sub, region-east-sub, region-west-sub"},
+            {"question_pattern": "ACR", "answer": "글로벌 ACR 하나로 공유"},
+            {"question_pattern": "Cosmos.*일관성|consistency", "answer": "Session consistency"},
+            {"question_pattern": "모니터링", "answer": "App Insights + Log Analytics 양쪽 리전"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["aks", "front_door", "cosmos_db", "acr", "keyvault"],
+            "min_count": 8,
+            "max_count": 25,
+        },
+        "expected_connections": {
+            "min_count": 6,
+        },
+        "expected_hierarchy": True,
+        "test_focus": ["Multi-region AKS", "Front Door routing", "Cosmos DB multi-region", "Global ACR", "3-sub hierarchy"],
+    },
+    "C18-iot-streaming-analytics": {
+        "name": "IoT + Streaming Analytics Full Stack",
+        "group": "max",
+        "level": 5,
+        "user_request": "IoT 솔루션 만들어줘. IoT Hub → Stream Analytics → Cosmos DB + ADLS, Function App으로 알람, App Insights 모니터링.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "iot-analytics"},
+            {"question_pattern": "디바이스.*수|scale", "answer": "S1 허브, 10만 디바이스"},
+            {"question_pattern": "알람|alert", "answer": "Function App에서 Event Hub로 알림"},
+            {"question_pattern": "PE|프라이빗", "answer": "IoT Hub, Cosmos DB, Storage만 PE"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["iot_hub", "stream_analytics", "cosmos_db", "storage", "function_app"],
+            "min_count": 6,
+            "max_count": 15,
+        },
+        "expected_connections": {
+            "min_count": 5,
+        },
+        "test_focus": ["IoT Hub PE", "Stream Analytics job", "Event-driven Function", "Selective PE", "Hot+Cold path"],
+    },
+    "C19-hybrid-network-vpn-expressroute": {
+        "name": "Hybrid Network (VPN + ExpressRoute)",
+        "group": "max",
+        "level": 5,
+        "user_request": "하이브리드 네트워크 구성해줘. Hub VNet에 VPN Gateway + Firewall + Bastion. Spoke VNet에 App Service + SQL.",
+        "user_choices": [
+            {"question_pattern": "이름|프로젝트", "answer": "hybrid-network"},
+            {"question_pattern": "Hub.*CIDR", "answer": "10.0.0.0/16"},
+            {"question_pattern": "Spoke.*CIDR", "answer": "10.1.0.0/16"},
+            {"question_pattern": "VPN|온프레미스", "answer": "S2S VPN, 온프레미스 CIDR 192.168.0.0/16"},
+            {"question_pattern": "Firewall.*SKU", "answer": "Azure Firewall Premium"},
+            {"question_pattern": "RG", "answer": "rg-hub, rg-workload"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["vpn_gateway", "firewall", "bastion", "app_service", "sql_database"],
+            "min_count": 5,
+            "max_count": 15,
+        },
+        "expected_connections": {
+            "min_count": 4,
+        },
+        "expected_vnet": True,
+        "expected_hierarchy": True,
+        "test_focus": ["Hub-Spoke topology", "VPN Gateway config", "Firewall rules", "Bastion subnet", "VNet peering"],
+    },
+    "C20-ai-ml-full-lifecycle": {
+        "name": "AI/ML Full Lifecycle Platform",
+        "group": "max",
+        "level": 5,
+        "user_request": "AI/ML 전체 라이프사이클 플랫폼 만들어줘. Foundry + AI Hub + Databricks + ADLS + AI Search + Key Vault + Log Analytics + App Insights. 5개 RG로. PE 전부.",
+        "user_choices": [
+            {"question_pattern": "지역|region", "answer": "East US 2"},
+            {"question_pattern": "이름|프로젝트", "answer": "ai-ml-platform"},
+            {"question_pattern": "RG.*분리", "answer": "rg-foundry (Foundry+Search), rg-ml (AI Hub+Databricks), rg-data (ADLS), rg-security (KV), rg-monitor (Log Analytics+App Insights)"},
+            {"question_pattern": "VNet|CIDR", "answer": "10.0.0.0/16"},
+            {"question_pattern": "PE|프라이빗", "answer": "전부 PE 적용"},
+            {"question_pattern": "모델|deployment", "answer": "GPT-4o + text-embedding-3-small"},
+        ],
+        "expected_path": "A",
+        "expected_services": {
+            "required_types": ["ai_foundry", "ai_search", "databricks", "storage", "keyvault", "log_analytics", "app_insights"],
+            "min_count": 8,
+            "max_count": 25,
+        },
+        "expected_connections": {
+            "min_count": 7,
+        },
+        "expected_vnet": True,
+        "expected_hierarchy": True,
+        "test_focus": ["5-RG hierarchy", "Foundry vs AI Hub distinction", "8+ service PE", "ADLS dual PE", "AMPLS potential", "Full RBAC chain"],
+    },
+}
+
+# Merge all scenarios
+SCENARIOS = {**SCENARIOS_R1, **SCENARIOS_R2}
 
 
 # ────────────────────────────────────────────────

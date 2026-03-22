@@ -1,0 +1,42 @@
+{
+  "architecture_description": "ADLS Gen2 HNS 마이그레이션 아키텍처 (Path B). 기존 Storage Account(mystorageaccount)는 HNS가 비활성화된 상태이며, HNS는 생성 후 활성화할 수 없다. 새로운 Data Lake Storage Account(data-lake-migration)를 HNS 활성화 상태로 생성하고 데이터를 마이그레이션하는 구성.",
+  "services": [
+    {
+      "id": "storage-existing",
+      "name": "Storage Account (기존)",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": false,
+      "details": [
+        "기존 계정: mystorageaccount",
+        "isHnsEnabled: false",
+        "⚠️ HNS는 생성 후 활성화 불가 (Azure 제약)",
+        "마이그레이션 소스로 사용"
+      ]
+    },
+    {
+      "id": "storage-new-datalake",
+      "name": "ADLS Gen2 (신규)",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": false,
+      "details": [
+        "신규 계정: data-lake-migration",
+        "isHnsEnabled: true",
+        "Data Lake Storage Gen2 기능 활성화",
+        "⚠️ HNS cannot be enabled post-creation. New account required.",
+        "기존 데이터를 AzCopy 등으로 마이그레이션 필요"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "storage-existing",
+      "to": "storage-new-datalake",
+      "label": "데이터 마이그레이션 (AzCopy)",
+      "type": "data"
+    }
+  ],
+  "vnet_info": "",
+  "hierarchy": []
+}

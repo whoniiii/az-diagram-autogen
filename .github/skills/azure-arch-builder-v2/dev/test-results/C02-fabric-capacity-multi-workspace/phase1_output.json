@@ -1,0 +1,82 @@
+{
+  "architecture_description": "Microsoft Fabric 분석 플랫폼. F64 SKU Capacity에 dev/prod 2개 워크스페이스를 구성하고, ADLS Gen2 Storage와 연결하여 데이터 레이크하우스 기반 분석 환경을 제공한다. Key Vault로 시크릿을 관리한다.",
+  "services": [
+    {
+      "id": "fabric-capacity",
+      "name": "Microsoft Fabric Capacity",
+      "type": "fabric",
+      "sku": "F64",
+      "private": false,
+      "details": [
+        "SKU: F64",
+        "Region: East US 2",
+        "Admin: admin@contoso.com",
+        "워크스페이스 2개: fabric-analytics-dev, fabric-analytics-prod",
+        "Capacity 기반 과금 모델"
+      ]
+    },
+    {
+      "id": "fabric-ws-dev",
+      "name": "Fabric Workspace (Dev)",
+      "type": "fabric",
+      "sku": "F64 (shared)",
+      "private": false,
+      "details": [
+        "워크스페이스: fabric-analytics-dev",
+        "개발/테스트 환경",
+        "Capacity: fabric-capacity에 할당"
+      ]
+    },
+    {
+      "id": "fabric-ws-prod",
+      "name": "Fabric Workspace (Prod)",
+      "type": "fabric",
+      "sku": "F64 (shared)",
+      "private": false,
+      "details": [
+        "워크스페이스: fabric-analytics-prod",
+        "운영 환경",
+        "Capacity: fabric-capacity에 할당"
+      ]
+    },
+    {
+      "id": "storage-adls",
+      "name": "Azure Storage (ADLS Gen2)",
+      "type": "storage",
+      "sku": "Standard_LRS",
+      "private": false,
+      "details": [
+        "ADLS Gen2 (isHnsEnabled: true)",
+        "Fabric OneLake 외부 데이터 소스",
+        "SKU: Standard_LRS",
+        "Region: East US 2"
+      ]
+    },
+    {
+      "id": "key-vault",
+      "name": "Azure Key Vault",
+      "type": "keyvault",
+      "sku": "Standard",
+      "private": false,
+      "details": [
+        "SKU: Standard",
+        "RBAC 인증 모드",
+        "연결 문자열 및 시크릿 관리"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "fabric-ws-dev", "to": "fabric-capacity", "label": "Capacity 할당", "type": "default"},
+    {"from": "fabric-ws-prod", "to": "fabric-capacity", "label": "Capacity 할당", "type": "default"},
+    {"from": "fabric-ws-dev", "to": "storage-adls", "label": "ADLS Gen2 Shortcut", "type": "data"},
+    {"from": "fabric-ws-prod", "to": "storage-adls", "label": "ADLS Gen2 Shortcut", "type": "data"},
+    {"from": "fabric-capacity", "to": "key-vault", "label": "시크릿 참조", "type": "security"}
+  ],
+  "vnet_info": "",
+  "hierarchy": [
+    {
+      "subscription": "analytics-subscription",
+      "resourceGroups": ["rg-fabric-analytics"]
+    }
+  ]
+}
