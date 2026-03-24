@@ -33,7 +33,7 @@ Bicep 코드에 API 버전을 하드코딩하지 않는다.
 ### 서비스별 MS Docs URL
 
 `references/azure-dynamic-sources.md`에 전체 URL 레지스트리가 있다. 이 파일을 참조하여 fetch.
-참조 파일은 `.github/skills/azure-arch-builder-v3/` 경로에서 찾는다.
+참조 파일은 `.github/skills/az-autopilot-agent/` 경로에서 찾는다.
 
 > **중요**: URL에서 web_fetch로 직접 조회하여 최신 stable apiVersion을 확인한다. 레퍼런스 파일이나 이전 대화에 있던 하드코딩된 버전을 그냥 쓰지 말 것.
 

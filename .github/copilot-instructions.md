@@ -10,8 +10,8 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 | 컴포넌트 | 경로 | 역할 |
 |---|---|---|
 | **az-diagram-autogen** | `az-diagram-autogen/` | 다이어그램 생성 엔진 (핵심 Python 패키지). PyPI 배포용. |
-| **azure-arch-builder-v3** | `.github/skills/azure-arch-builder-v3/` | **외부 사용자용** 스킬. `pip install az-diagram-autogen`으로 설치하여 사용. |
-| **azure-arch-builder-v4** | `.github/skills/azure-arch-builder-v4/` | **내부 사용자용** 스킬. az-diagram-autogen을 내장(embedded)하여 pip 없이 사용. |
+| **az-autopilot-agent** | `.github/skills/az-autopilot-agent/` | **외부 사용자용** 스킬. `pip install az-diagram-autogen`으로 설치하여 사용. |
+| **az-autopilot-agent-core** | `.github/skills/az-autopilot-agent-core/` | **내부 사용자용** 스킬. az-diagram-autogen을 내장(embedded)하여 pip 없이 사용. |
 
 ## ⚠️ 수정 시 반드시 3곳 동시 반영
 
@@ -20,21 +20,21 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 ### 1. 다이어그램 엔진 수정 (`generator.py`, `icons.py` 등)
 ```
 az-diagram-autogen/az_diagram_autogen/generator.py          ← 소스 원본 (PyPI 배포 + v3용)
-.github/skills/azure-arch-builder-v4/az_diagram_autogen/generator.py  ← v4 내장 복사본
+.github/skills/az-autopilot-agent-core/az_diagram_autogen/generator.py  ← v4 내장 복사본
 ```
 → 소스 원본을 수정한 뒤 v4에 복사 (`Copy-Item`)
 
 ### 2. 스킬 프롬프트 수정 (`phase1-advisor.md`, `bicep-generator.md` 등)
 ```
-.github/skills/azure-arch-builder-v3/prompts/   ← v3 (외부용)
-.github/skills/azure-arch-builder-v4/prompts/   ← v4 (내부용)
+.github/skills/az-autopilot-agent/prompts/   ← v3 (외부용)
+.github/skills/az-autopilot-agent-core/prompts/   ← v4 (내부용)
 ```
 → 두 곳 모두 동일하게 수정 (v3는 pip install 방식, v4는 PYTHONPATH 방식 — Section 1-2만 다름)
 
 ### 3. 참조 문서 수정 (`references/`)
 ```
-.github/skills/azure-arch-builder-v3/references/
-.github/skills/azure-arch-builder-v4/references/
+.github/skills/az-autopilot-agent/references/
+.github/skills/az-autopilot-agent-core/references/
 ```
 → 두 곳 모두 동일하게 수정
 
@@ -74,11 +74,11 @@ GHCP001/
 ├── .github/
 │   ├── copilot-instructions.md      ← 이 파일
 │   └── skills/
-│       ├── azure-arch-builder-v3/   ← 외부용 스킬 (pip)
+│       ├── az-autopilot-agent/   ← 외부용 스킬 (pip)
 │       │   ├── SKILL.md
 │       │   ├── prompts/
 │       │   └── references/
-│       ├── azure-arch-builder-v4/   ← 내부용 스킬 (embedded)
+│       ├── az-autopilot-agent-core/   ← 내부용 스킬 (embedded)
 │       │   ├── SKILL.md
 │       │   ├── az_diagram_autogen/  ← 내장 복사본
 │       │   ├── prompts/

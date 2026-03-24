@@ -1,11 +1,11 @@
-# Contributing to azure-arch-builder v3
+# Contributing to az-autopilot-agent
 
 Thank you for your interest in contributing! This guide will help you understand the project structure and how to make changes.
 
 ## 📁 Project Structure
 
 ```
-azure-arch-builder-v3/
+az-autopilot-agent/
 ├── SKILL.md                    # Main orchestration — 4-phase pipeline
 ├── prompts/
 │   ├── phase0-scanner.md      # Phase 0: Existing resource scan

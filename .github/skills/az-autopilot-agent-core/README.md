@@ -1,4 +1,4 @@
-# azure-arch-builder v3
+# az-autopilot-agent-core
 
 > Design Azure infrastructure in natural language — or scan existing resources, visualize the architecture, and modify it through conversation.
 
@@ -6,16 +6,17 @@
 
 ---
 
-## 🆕 What's New in v3
+## 🆕 What's New in v4
 
-**v3 uses [`az-diagram-autogen`](https://pypi.org/project/az-diagram-autogen/) PyPI package** for diagram generation instead of embedded scripts.
+**v4 embeds `az_diagram_autogen` directly** — no `pip install` needed. Zero external dependencies.
 
-| | v2 | v3 |
-|---|---|---|
-| Diagram engine | Embedded `generate_html_diagram.py` + `icons_azure.py` (~1.9MB) | `pip install az-diagram-autogen` |
-| Icon count | Bundled in skill folder | 605+ Azure icons (auto-installed) |
-| Updates | Manual copy | `pip install --upgrade az-diagram-autogen` |
-| Skill size | ~2MB | ~50KB (no scripts folder) |
+| | v2 | v3 | v4 |
+|---|---|---|---|
+| Diagram engine | `generate_html_diagram.py` + `icons_azure.py` | `pip install az-diagram-autogen` | **Embedded `az_diagram_autogen/`** |
+| External deps | None | pip install required | **None** |
+| Icon count | Bundled | Auto-installed | **Bundled (605+)** |
+| Updates | Manual copy | `pip install --upgrade` | Manual copy / git pull |
+| Offline use | ✅ | ❌ (needs PyPI) | **✅** |
 
 ---
 
@@ -50,7 +51,7 @@ Path B: "Analyze my current Azure resources"
 | **GitHub Copilot CLI** | ✅ | [Install guide](https://docs.github.com/copilot/concepts/agents/about-copilot-cli) |
 | **Azure CLI** | ✅ | `winget install Microsoft.AzureCLI` |
 | **Python 3** | ✅ | `winget install Python.Python.3.12` |
-| **az-diagram-autogen** | ✅ (auto-installed) | `pip install az-diagram-autogen` |
+| **az-diagram-autogen** | ✅ (embedded) | Pre-bundled, no install needed |
 
 ### 🤖 Recommended Models
 
@@ -66,14 +67,13 @@ Path B: "Analyze my current Azure resources"
 
 ```powershell
 # Project skill
-git clone <repo-url> .github/skills/azure-arch-builder-v3
+git clone <repo-url> .github/skills/az-autopilot-agent-core
 
 # Personal skill (all projects)
 New-Item -ItemType Directory -Path "$env:USERPROFILE\.copilot\skills" -Force
-git clone <repo-url> "$env:USERPROFILE\.copilot\skills\azure-arch-builder-v3"
+git clone <repo-url> "$env:USERPROFILE\.copilot\skills\az-autopilot-agent-core"
 
-# Diagram package (auto-installed by skill, but you can pre-install)
-pip install az-diagram-autogen
+# No pip install needed — diagram engine is embedded!
 ```
 
 Verify: `copilot /skills`
@@ -130,8 +130,8 @@ Auto-detects your language. All output adapts — English, Korean, or any langua
 
 ## ✨ Key Features
 
-- 📦 **PyPI-powered diagrams** — `az-diagram-autogen` with 605+ Azure icons, auto-installed
-- 🔍 **Resource scanning** — Analyze existing Azure resources and auto-generate architecture diagrams
+- 📦 **Zero-dependency diagrams** — `az_diagram_autogen` embedded with 605+ Azure icons, no pip install
+- 🔍 **Resource scanning**— Analyze existing Azure resources and auto-generate architecture diagrams
 - 💬 **Natural language modification** — "It's slow", "reduce costs", "add security" → guided resolution
 - 📊 **Live MS Docs verification** — API versions, SKUs, model availability fetched in real-time
 - 🔒 **Security by default** — Private Endpoint, RBAC, no secrets in files
@@ -144,6 +144,11 @@ Auto-detects your language. All output adapts — English, Korean, or any langua
 
 ```
 SKILL.md (Router ~160 lines)
+├── az_diagram_autogen/            ← Embedded diagram engine (605+ icons)
+│   ├── generator.py               ← Main diagram generator
+│   ├── icons.py                   ← Azure official icons (Base64 SVG)
+│   ├── cli.py                     ← CLI entry point
+│   └── REFERENCE.md               ← Service type reference
 ├── prompts/phase0-scanner.md      ← Existing resource scan
 ├── prompts/phase1-advisor.md      ← Architecture design/modify
 ├── prompts/bicep-generator.md     ← Bicep generation
@@ -154,7 +159,7 @@ SKILL.md (Router ~160 lines)
 
 SKILL.md is a lightweight router. All phase logic lives in `prompts/`.
 
-**No `scripts/` folder** — diagrams are generated via `az-diagram-autogen` PyPI package.
+**Self-contained** — no `pip install` needed. Diagram engine is embedded in `az_diagram_autogen/`.
 
 ---
 

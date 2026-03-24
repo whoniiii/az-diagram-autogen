@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Arch Builder — 자연어 기반 Azure 인프라 설계·배포 도구</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --r-background-color: #0d1117;
+            --r-main-color: #e6edf3;
+            --r-heading-color: #58a6ff;
+            --r-link-color: #58a6ff;
+            --r-link-color-hover: #79c0ff;
+            --r-selection-background-color: #264f78;
+            --r-heading-font: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            --r-main-font: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            --r-code-font: 'Cascadia Code', 'D2Coding', 'Consolas', monospace;
+            --r-heading-text-transform: none;
+        }
+
+        .reveal { font-size: 28px; }
+
+        .reveal h1 { font-size: 2.0em; color: #58a6ff; text-shadow: 0 0 20px rgba(88, 166, 255, 0.3); }
+        .reveal h2 { font-size: 1.6em; color: #58a6ff; }
+        .reveal h3 { font-size: 1.2em; color: #79c0ff; }
+        .reveal h4 { font-size: 1.0em; color: #79c0ff; }
+
+        .reveal .subtitle { color: #8b949e; font-size: 0.85em; margin-top: 0.5em; }
+        .reveal .highlight-text { color: #f0883e; font-weight: bold; }
+        .reveal .accent { color: #3fb950; }
+        .reveal .warn { color: #f85149; }
+        .reveal .small { font-size: 0.65em; color: #8b949e; }
+        .reveal .medium { font-size: 0.8em; }
+        .reveal .emoji { font-size: 1.2em; }
+
+        .reveal table { margin: 0.5em auto; border-collapse: collapse; font-size: 0.7em; width: 90%; }
+        .reveal table th { background-color: #161b22; color: #58a6ff; padding: 10px 14px; border: 1px solid #30363d; font-weight: 600; }
+        .reveal table td { padding: 8px 14px; border: 1px solid #30363d; color: #c9d1d9; vertical-align: top; }
+        .reveal table tr:nth-child(even) { background-color: rgba(22, 27, 34, 0.5); }
+        .reveal table tr:hover { background-color: rgba(48, 54, 61, 0.5); }
+
+        .reveal pre { width: 95%; font-size: 0.55em; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); border: 1px solid #30363d; border-radius: 8px; }
+        .reveal code { font-family: var(--r-code-font); }
+        .reveal pre code { max-height: 480px; padding: 16px; }
+        .reveal .code-inline { background-color: rgba(110, 118, 129, 0.2); color: #f0883e; padding: 2px 6px; border-radius: 4px; font-family: var(--r-code-font); font-size: 0.9em; }
+
+        .reveal ul, .reveal ol { display: block; text-align: left; margin-left: 1em; }
+        .reveal li { margin-bottom: 0.4em; line-height: 1.5; }
+
+        .reveal .box { background-color: rgba(22, 27, 34, 0.8); border: 1px solid #30363d; border-radius: 10px; padding: 20px 28px; margin: 12px auto; text-align: left; width: 90%; }
+        .reveal .box-blue { border-left: 4px solid #58a6ff; }
+        .reveal .box-green { border-left: 4px solid #3fb950; }
+        .reveal .box-orange { border-left: 4px solid #f0883e; }
+        .reveal .box-red { border-left: 4px solid #f85149; }
+
+        .reveal .columns { display: flex; gap: 20px; width: 95%; margin: 0 auto; }
+        .reveal .col { flex: 1; text-align: left; }
+
+        .reveal .tag { display: inline-block; background-color: rgba(56, 139, 253, 0.15); color: #58a6ff; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; margin: 2px; border: 1px solid rgba(56, 139, 253, 0.3); }
+        .reveal .tag-green { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border-color: rgba(63, 185, 80, 0.3); }
+        .reveal .tag-orange { background-color: rgba(240, 136, 62, 0.15); color: #f0883e; border-color: rgba(240, 136, 62, 0.3); }
+
+        .reveal .time-badge { display: inline-block; background: linear-gradient(135deg, #238636, #2ea043); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: 0.7em; margin-left: 8px; }
+
+        .reveal .step-num { display: inline-block; background-color: #58a6ff; color: #0d1117; width: 28px; height: 28px; line-height: 28px; border-radius: 50%; text-align: center; font-weight: bold; font-size: 0.8em; margin-right: 6px; }
+
+        .reveal .checklist { list-style: none; padding-left: 0; }
+        .reveal .checklist li::before { content: "☐ "; color: #58a6ff; }
+
+        .reveal .github-link { font-size: 0.65em; color: #8b949e; }
+        .reveal .github-link a { color: #58a6ff; }
+
+        .reveal img { max-height: 480px; border: 1px solid #30363d; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+
+        .reveal .mermaid { font-size: 0.65em; }
+        .reveal .mermaid svg { max-width: 95% !important; max-height: 500px !important; }
+
+        .reveal .slide-number { color: #8b949e; font-size: 14px; }
+
+        .progress span { background: linear-gradient(90deg, #58a6ff, #3fb950) !important; }
+
+        /* Terminal mockup */
+        .terminal {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: left;
+            font-family: var(--r-code-font);
+            font-size: 0.55em;
+            line-height: 1.6;
+            width: 90%;
+            margin: 0.5em auto;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .terminal .prompt { color: #3fb950; }
+        .terminal .ai { color: #58a6ff; }
+        .terminal .user-input { color: #f0883e; }
+        .terminal .info { color: #8b949e; }
+        .terminal .success { color: #3fb950; }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: 오프닝 -->
+            <section data-background="linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%)">
+                <h1>Azure Arch Builder</h1>
+                <h2 style="font-size:1.1em; color:#79c0ff;">자연어 기반 Azure 인프라 설계·배포 도구</h2>
+                <p class="subtitle" style="font-size:0.8em; margin-top:1em;">GitHub Copilot CLI Agent Skill</p>
+                <p style="margin-top:1.5em;">
+                    <span class="tag">Infrastructure as Code</span>
+                    <span class="tag">Architecture Diagram</span>
+                    <span class="tag">Azure Bicep</span>
+                    <span class="tag-green">Agent Skill</span>
+                </p>
+            </section>
+
+            <!-- Slide 2: 목차 -->
+            <section>
+                <h2>목차</h2>
+                <table>
+                    <thead>
+                        <tr><th>파트</th><th>내용</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Part 1</td><td>Azure Arch Builder란?</td></tr>
+                        <tr><td>Part 2</td><td>Agent Skill과 동작 원리</td></tr>
+                        <tr><td>Part 3</td><td>Phase별 워크플로</td></tr>
+                        <tr><td>Part 4</td><td>유스케이스 실전 — 실제 대화 흐름</td></tr>
+                        <tr><td>Part 5</td><td>설치·시작하기</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Slide 3: Azure 인프라 운영의 일상적 고충 -->
+            <section>
+                <h2>Azure 인프라 운영의 일상적 고충</h2>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    🖱️ 포탈에서 리소스 하나 만들려면 클릭 수십 번, 설정 항목은 끝이 없음
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.8em;">
+                    🤔 "이 리소스 그룹에 뭐가 있더라?" — 기존 인프라 구조 파악이 어려움
+                </div>
+                <div class="box box-green fragment" style="font-size:0.8em;">
+                    📝 인프라 구성을 다이어그램으로 문서화하기 번거로움 (금방 outdated)
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    📚 IaC(코드로 인프라 관리)를 쓰고 싶지만 학습 곡선이 높음
+                </div>
+                <div class="box box-red fragment" style="font-size:0.8em;">
+                    ⚠️ 서비스 간 연결·보안·네트워크 설정에서 실수가 나기 쉬움
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.8em;">
+                    🔍 인프라 변경할 때 뭐가 바뀌는지 미리 확인하기 어려움
+                </div>
+            </section>
+
+            <!-- Slide 4: Azure Arch Builder가 하는 일 -->
+            <section>
+                <h2>Azure Arch Builder가 하는 일</h2>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">1</span> <strong>자연어로 요청</strong> — "RAG 챗봇 인프라 만들어줘"
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">2</span> <strong>대화형 설계</strong> — 서비스, SKU, 리전, 네트워크 등을 질의응답으로 결정
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">3</span> <strong>아키텍처 다이어그램 자동 생성</strong> — 605+ Azure 아이콘 기반 인터랙티브 HTML
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">4</span> <strong>Bicep IaC 코드 자동 생성 &amp; 배포</strong> — 모듈별 코드 + 컴파일 검증 + 안전한 배포
+                </div>
+            </section>
+
+            <!-- Slide 5: 주요 기능 4가지 -->
+            <section>
+                <h2>주요 기능 4가지</h2>
+                <div class="columns">
+                    <div class="col">
+                        <div class="box box-blue" style="font-size:0.75em;">
+                            <strong>🗣️ 대화형 인프라 설계</strong><br>
+                            자연어로 요청하면 필요한 정보를 역질문하며 설계를 진행. MS Docs에서 실시간으로 서비스 가용성, SKU, API 버전을 확인
+                        </div>
+                        <div class="box box-green" style="font-size:0.75em;">
+                            <strong>🔍 기존 리소스 스캔</strong><br>
+                            az CLI로 기존 리소스를 자동 수집하고, 서비스 간 관계(PE→서비스, VNet→Subnet 등)를 추론하여 현상태 다이어그램 생성
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="box box-orange" style="font-size:0.75em;">
+                            <strong>📊 인터랙티브 다이어그램</strong><br>
+                            605+ Azure 공식 아이콘, 드래그·줌·클릭 가능한 HTML 다이어그램. 설계→배포 과정에서 총 3단계 다이어그램 생성 (Draft → Preview → Result)
+                        </div>
+                        <div class="box box-blue" style="font-size:0.75em;">
+                            <strong>⚙️ Bicep 자동 생성</strong><br>
+                            모듈별 구조(network, ai, storage, PE), 보안 기본값 적용, az bicep build 컴파일 검증 후 What-if 시뮬레이션으로 안전 배포
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: 기존 방식 vs Azure Arch Builder -->
+            <section>
+                <h2>기존 방식 vs Azure Arch Builder</h2>
+                <table>
+                    <thead>
+                        <tr><th>항목</th><th>기존 방식</th><th>Azure Arch Builder</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>인프라 설계</td><td>문서 정리 + 수동 다이어그램</td><td>대화로 설계 → 자동 다이어그램</td></tr>
+                        <tr><td>IaC 작성</td><td>Bicep/ARM 직접 작성</td><td>자동 생성 + 컴파일 검증</td></tr>
+                        <tr><td>서비스 설정</td><td>문서 찾아가며 하나씩</td><td>MS Docs 실시간 검증 자동</td></tr>
+                        <tr><td>보안 설정</td><td>항목별 수동 확인</td><td>PE, RBAC, 네트워크 격리 기본 적용</td></tr>
+                        <tr><td>인프라 문서화</td><td>별도 작업 (Visio, draw.io 등)</td><td>설계와 동시에 다이어그램 생성</td></tr>
+                        <tr><td>배포 전 확인</td><td>직접 검토 또는 빠뜨림</td><td>What-if 시뮬레이션 + Preview 다이어그램</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Slide 7: Agent Skill 소개 -->
+            <section>
+                <h2>"이 도구는 Agent Skill로 만들었습니다"</h2>
+                <div class="box box-blue" style="font-size:0.85em;">
+                    <strong>Agent Skill</strong> = AI 에이전트에 특정 도메인의 지식과 워크플로를 패키징하여 제공하는 방식<br><br>
+                    범용 AI가 아닌, <span class="highlight-text">Azure 인프라 설계 전문가</span>로 동작하도록 만든 것
+                </div>
+                <div class="box box-green fragment" style="font-size:0.8em;">
+                    Skill은 SKILL.md 파일과 프롬프트, 참조 데이터로 구성됩니다
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.8em;">
+                    GitHub Copilot CLI, VS Code Copilot 등에서 사용할 수 있습니다
+                </div>
+                <div style="margin-top:1em;">
+                    <p class="small">📎 공식 문서: <a href="https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills" target="_blank">https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills</a></p>
+                    <p class="small">📎 VS Code Skills: <a href="https://code.visualstudio.com/docs/copilot/customization/agent-skills" target="_blank">https://code.visualstudio.com/docs/copilot/customization/agent-skills</a></p>
+                </div>
+            </section>
+
+            <!-- Slide 8: Skill 동작 원리 개요 -->
+            <section>
+                <h2>Skill 동작 원리 개요</h2>
+                <div class="mermaid">
+graph LR
+    A["🗣️ 사용자 입력<br/>'RAG 아키텍처 구성해줘'"] --> B["🔍 Skill 매칭<br/>description 기반"]
+    B --> C["📋 SKILL.md<br/>라우터"]
+    C --> D["📄 Phase 프롬프트<br/>phase1-advisor.md"]
+    D --> E["🔧 도구 실행<br/>az CLI, Python, web_fetch"]
+    E --> F["📊 결과 생성<br/>다이어그램 + Bicep"]
+
+    style A fill:#1f6feb,color:#fff
+    style B fill:#238636,color:#fff
+    style C fill:#f0883e,color:#fff
+    style D fill:#8b949e,color:#fff
+    style E fill:#1f6feb,color:#fff
+    style F fill:#238636,color:#fff
+                </div>
+            </section>
+
+            <!-- Slide 9: Phase 구성 -->
+            <section>
+                <h2>Azure Arch Builder의 Phase 구성</h2>
+                <div class="mermaid">
+graph TD
+    P0["Phase 0<br/>🔍 기존 인프라 스캔"] --> P1
+    P1["Phase 1<br/>🎨 대화형 아키텍처 설계"] --> P2
+    P2["Phase 2<br/>🔧 Bicep 코드 생성"] --> P3
+    P3["Phase 3<br/>✅ 코드 검증"] --> P4
+    P4["Phase 4<br/>🚀 안전한 배포"]
+
+    NEW["신규 설계<br/>'RAG 챗봇 만들어줘'"] -.-> P1
+    EXIST["기존 분석<br/>'rg-xxx 분석해줘'"] -.-> P0
+
+    style P0 fill:#8b949e,color:#fff
+    style P1 fill:#1f6feb,color:#fff
+    style P2 fill:#f0883e,color:#fff
+    style P3 fill:#238636,color:#fff
+    style P4 fill:#da3633,color:#fff
+    style NEW fill:#1f6feb,color:#fff,stroke-dasharray: 5 5
+    style EXIST fill:#8b949e,color:#fff,stroke-dasharray: 5 5
+                </div>
+                <div style="margin-top:0.5em; font-size:0.75em;">
+                    <p><span class="tag">Path A</span> 신규 설계 — Phase 1 → 2 → 3 → 4</p>
+                    <p><span class="tag-orange">Path B</span> 기존 분석 — Phase 0 → 1 → 2 → 3 → 4</p>
+                </div>
+            </section>
+
+            <!-- Slide 10: Phase별 상세 동작 타이틀 -->
+            <section data-background="linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%)">
+                <h1>Phase별 상세 동작</h1>
+                <p class="subtitle">각 Phase에서 어떤 일이 일어나는지</p>
+            </section>
+
+            <!-- Slide 11: Phase 0 — 기존 인프라 스캔 -->
+            <section>
+                <h2>Phase 0 — 기존 인프라 스캔</h2>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">1</span> <strong>Azure 로그인 확인</strong> — az account show로 현재 로그인 상태 확인
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">2</span> <strong>구독·리소스 그룹 선택</strong> — 사용자에게 스캔 범위를 질문
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">3</span> <strong>리소스 자동 수집</strong> — az resource list + 서비스별 상세 쿼리 실행
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">4</span> <strong>관계 추론</strong> — PE→서비스, VNet→Subnet, Foundry→AI Search 등 연결 관계 자동 감지
+                </div>
+                <div class="box box-green fragment" style="font-size:0.8em;">
+                    <span class="step-num">5</span> <strong>현상태 다이어그램 생성</strong> — 인터랙티브 HTML 다이어그램(00_arch_current.html) 자동 생성 및 브라우저 표시
+                </div>
+            </section>
+
+            <!-- Slide 12: Phase 1 — 대화형 아키텍처 설계 -->
+            <section>
+                <h2>Phase 1 — 대화형 아키텍처 설계</h2>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">1</span> <strong>프로젝트 정보 수집</strong> — 프로젝트 이름, 필요한 서비스, SKU 등을 역질문
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.85em;">
+                    <span class="step-num">2</span> <strong>MS Docs 실시간 검증</strong> — 선택한 리전의 서비스 가용성, 모델 가용성, SKU 옵션 확인
+                </div>
+                <div class="box box-green fragment" style="font-size:0.85em;">
+                    <span class="step-num">3</span> <strong>아키텍처 다이어그램 생성</strong> — 확정된 설계를 기반으로 Draft 다이어그램(01_arch_diagram_draft.html) 생성
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">4</span> <strong>사용자 확인</strong> — 다이어그램을 보며 수정 요청 가능, 확정 시 다음 Phase로
+                </div>
+            </section>
+
+            <!-- Slide 13: Phase 2-3 — Bicep 코드 생성 & 검증 -->
+            <section>
+                <h2>Phase 2-3 — Bicep 코드 생성 &amp; 검증</h2>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">1</span> <strong>API 버전 확인</strong> — MS Docs에서 각 서비스의 최신 안정 버전 조회 (하드코딩 없음)
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.85em;">
+                    <span class="step-num">2</span> <strong>모듈별 Bicep 생성</strong> — main.bicep + modules/(network, ai, storage, private-endpoints 등)
+                </div>
+                <div class="box box-green fragment" style="font-size:0.85em;">
+                    <span class="step-num">3</span> <strong>보안 기본값 적용</strong> — PE, RBAC, publicNetworkAccess:Disabled, Key Vault 등 자동 설정
+                </div>
+                <div class="box box-red fragment" style="font-size:0.85em;">
+                    <span class="step-num">4</span> <strong>컴파일 검증</strong> — az bicep build로 문법·구조 오류 확인, 오류 시 자동 수정 후 재컴파일
+                </div>
+            </section>
+
+            <!-- Slide 14: Phase 4 — 안전한 배포 -->
+            <section>
+                <h2>Phase 4 — 안전한 배포</h2>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">1</span> <strong>Validate</strong> — 정책 위반, 스키마 오류 사전 확인
+                </div>
+                <div class="box box-orange fragment" style="font-size:0.8em;">
+                    <span class="step-num">2</span> <strong>What-if 시뮬레이션</strong> — 실제 배포 없이 어떤 리소스가 생성/수정/삭제되는지 미리 확인
+                </div>
+                <div class="box box-green fragment" style="font-size:0.8em;">
+                    <span class="step-num">3</span> <strong>Preview 다이어그램</strong> — What-if 결과를 기반으로 배포 후 상태 다이어그램 생성
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.8em;">
+                    <span class="step-num">4</span> <strong>사용자 승인 후 배포</strong> — 사용자가 확인하면 실제 배포 실행
+                </div>
+                <div class="box box-green fragment" style="font-size:0.8em;">
+                    <span class="step-num">5</span> <strong>결과 다이어그램</strong> — 배포 완료 후 최종 아키텍처 다이어그램(03_arch_diagram_result.html) 생성
+                </div>
+            </section>
+
+            <!-- Slide 15: 유스케이스 실전 타이틀 -->
+            <section data-background="linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%)">
+                <h1>유스케이스 실전</h1>
+                <p class="subtitle" style="font-size:1em;">이렇게 입력하면 이렇게 동작합니다</p>
+                <p style="margin-top:1em;"><span class="medium">실제 대화 흐름과 결과물을 살펴봅니다</span></p>
+            </section>
+
+            <!-- Slide 16: UC1 대화 — RAG 챗봇 -->
+            <section>
+                <h3>UC1: RAG 챗봇 인프라 구축</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">Foundry와 AI Search로 RAG 챗봇 인프라를 만들어줘</span></p>
+                    <br>
+                    <p><span class="ai">🤖 Azure Arch Builder:</span></p>
+                    <p><span class="ai">⏳ 참조 파일 로딩 중...</span></p>
+                    <p><span class="ai">프로젝트 이름을 정해주세요.</span></p>
+                    <p>&nbsp;&nbsp;1. rag-chatbot (Recommended)</p>
+                    <p>&nbsp;&nbsp;2. 직접 입력</p>
+                    <br>
+                    <p><span class="prompt">❯</span> <span class="user-input">rag-chatbot</span></p>
+                    <br>
+                    <p><span class="ai">🤖 다음 서비스들로 구성하겠습니다:</span></p>
+                    <p>&nbsp;&nbsp;• Microsoft Foundry (AIServices) — GPT-4o 모델 배포</p>
+                    <p>&nbsp;&nbsp;• Azure AI Search — 벡터 검색용</p>
+                    <p>&nbsp;&nbsp;• ADLS Gen2 — 문서 저장소</p>
+                    <p>&nbsp;&nbsp;• Key Vault — 시크릿 관리</p>
+                    <p>&nbsp;&nbsp;• VNet + Private Endpoints — 네트워크 격리</p>
+                    <br>
+                    <p><span class="ai">배포할 리전을 선택해주세요.</span></p>
+                    <p>&nbsp;&nbsp;1. Korea Central (Recommended)</p>
+                    <p>&nbsp;&nbsp;2. East US 2</p>
+                    <p>&nbsp;&nbsp;3. Japan East</p>
+                </div>
+            </section>
+
+            <!-- Slide 17: UC1 대화 계속 — MS Docs 검증 → 다이어그램 생성 -->
+            <section>
+                <h3>UC1: 대화 계속 — 검증 및 다이어그램</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">Korea Central</span></p>
+                    <br>
+                    <p><span class="ai">🤖 ⏳ MS Docs에서 Korea Central 리전 확인 중...</span></p>
+                    <p><span class="ai">✅ Foundry (AIServices): Korea Central 사용 가능</span></p>
+                    <p><span class="ai">✅ GPT-4o: Korea Central에서 배포 가능</span></p>
+                    <p><span class="ai">✅ AI Search: Korea Central 사용 가능</span></p>
+                    <br>
+                    <p><span class="ai">Private Endpoint를 적용할까요?</span></p>
+                    <p>&nbsp;&nbsp;1. 예, 모든 서비스에 적용 (Recommended)</p>
+                    <p>&nbsp;&nbsp;2. 아니요, 퍼블릭 접근</p>
+                    <br>
+                    <p><span class="prompt">❯</span> <span class="user-input">1</span></p>
+                    <br>
+                    <p><span class="ai">🤖 ⏳ 아키텍처 다이어그램 생성 중...</span></p>
+                    <p><span class="success">✅ 01_arch_diagram_draft.html 생성 완료</span></p>
+                    <p><span class="success">✅ 브라우저에서 열었습니다</span></p>
+                    <br>
+                    <p><span class="ai">다이어그램을 확인해주세요. 이대로 진행할까요?</span></p>
+                    <p>&nbsp;&nbsp;1. 좋아요, 이대로 진행</p>
+                    <p>&nbsp;&nbsp;2. 수정하고 싶은 부분이 있어요</p>
+                </div>
+            </section>
+
+            <!-- Slide 18: UC1 결과 아키텍처 다이어그램 -->
+            <section>
+                <h3>UC1: RAG 챗봇 아키텍처</h3>
+                <div class="mermaid">
+graph TD
+    subgraph VNet["🔒 VNet (10.0.0.0/16)"]
+        subgraph PESub["PE Subnet"]
+            PE1["PE: Foundry"]
+            PE2["PE: AI Search"]
+            PE3["PE: ADLS (blob)"]
+            PE4["PE: ADLS (dfs)"]
+            PE5["PE: Key Vault"]
+        end
+    end
+
+    Foundry["🧠 Microsoft Foundry<br/>GPT-4o Model"] --> AISearch["🔍 Azure AI Search<br/>Vector Index"]
+    AISearch --> ADLS["📦 ADLS Gen2<br/>문서 저장소"]
+    Foundry --> KV["🔑 Key Vault"]
+
+    PE1 -.-> Foundry
+    PE2 -.-> AISearch
+    PE3 -.-> ADLS
+    PE4 -.-> ADLS
+    PE5 -.-> KV
+
+    style VNet fill:#21262d,stroke:#8b949e,stroke-dasharray: 5 5
+    style PESub fill:#161b22,stroke:#a371f7,stroke-dasharray: 3 3
+    style Foundry fill:#1f6feb,color:#fff
+    style AISearch fill:#238636,color:#fff
+    style ADLS fill:#f0883e,color:#fff
+    style KV fill:#8b949e,color:#fff
+                </div>
+                <p class="small">실제로는 605+ Azure 아이콘 기반 인터랙티브 HTML 다이어그램이 생성됩니다</p>
+            </section>
+
+            <!-- Slide 19: UC1 생성 코드 구조 -->
+            <section>
+                <h3>UC1: 생성되는 Bicep 코드</h3>
+                <div class="columns">
+                    <div class="col">
+                        <pre><code class="language-plaintext" data-trim>
+rag-chatbot/
+├── main.bicep
+├── main.bicepparam
+└── modules/
+    ├── network.bicep
+    ├── ai.bicep
+    ├── storage.bicep
+    ├── keyvault.bicep
+    └── private-endpoints.bicep
+                        </code></pre>
+                    </div>
+                    <div class="col">
+                        <pre><code class="language-bicep" data-trim>
+// main.bicep
+targetScope = 'resourceGroup'
+
+param location string = resourceGroup().location
+param projectName string = 'rag-chatbot'
+
+module network 'modules/network.bicep' = {
+  name: 'network'
+  params: {
+    location: location
+    projectName: projectName
+  }
+}
+
+module ai 'modules/ai.bicep' = {
+  name: 'ai'
+  params: {
+    location: location
+    projectName: projectName
+    subnetId: network.outputs.peSubnetId
+  }
+}
+// ... storage, keyvault, private-endpoints
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 20: UC2 — 기존 인프라 분석 -->
+            <section>
+                <h3>UC2: 기존 인프라 분석</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">rg-production 리소스 그룹의 아키텍처 다이어그램을 그려줘</span></p>
+                    <br>
+                    <p><span class="ai">🤖 Azure Arch Builder:</span></p>
+                    <p><span class="ai">⏳ Azure 로그인 확인 중...</span></p>
+                    <p><span class="ai">✅ 구독: My-Subscription (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)</span></p>
+                    <br>
+                    <p><span class="ai">⏳ rg-production 리소스 스캔 중...</span></p>
+                    <p><span class="info">&nbsp;&nbsp;발견된 리소스: 12개</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.CognitiveServices/accounts (Foundry)</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.Search/searchServices (AI Search)</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.Storage/storageAccounts (ADLS Gen2)</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.Network/virtualNetworks</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.Network/privateEndpoints × 4</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• Microsoft.KeyVault/vaults</span></p>
+                    <p><span class="info">&nbsp;&nbsp;• ...</span></p>
+                    <br>
+                    <p><span class="ai">⏳ 서비스 간 관계 추론 중...</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;✅ PE → Foundry 연결 확인 (privateLinkServiceId)</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;✅ PE → AI Search 연결 확인</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;✅ Foundry → AI Search 연결 추론 (같은 RG + RAG 패턴)</span></p>
+                    <br>
+                    <p><span class="success">✅ 00_arch_current.html 생성 완료</span></p>
+                </div>
+            </section>
+
+            <!-- Slide 21: UC2 결과 — 스캔 다이어그램 -->
+            <section>
+                <h3>UC2: 스캔 결과 다이어그램</h3>
+                <div class="mermaid">
+graph LR
+    subgraph RG["rg-production"]
+        F["🧠 Foundry<br/>Standard S0"] --> S["🔍 AI Search<br/>Standard"]
+        S --> ST["📦 ADLS Gen2"]
+        F --> KV["🔑 Key Vault"]
+
+        subgraph VNet["VNet"]
+            PE1["PE"] -.-> F
+            PE2["PE"] -.-> S
+            PE3["PE"] -.-> ST
+            PE4["PE"] -.-> KV
+        end
+    end
+
+    style RG fill:#21262d,stroke:#30363d
+    style VNet fill:#161b22,stroke:#a371f7,stroke-dasharray: 5 5
+    style F fill:#1f6feb,color:#fff
+    style S fill:#238636,color:#fff
+    style ST fill:#f0883e,color:#fff
+    style KV fill:#8b949e,color:#fff
+                </div>
+                <p class="small">스캔 후 수정 제안: SKU 변경, 보안 강화, 서비스 추가/삭제 등을 자연어로 요청 가능</p>
+            </section>
+
+            <!-- Slide 22: UC3 — 보안 강화 -->
+            <section>
+                <h3>UC3: 자연어로 인프라 수정</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">보안을 강화하고 싶어. 지금 퍼블릭 접근이 열려있는 서비스가 있어</span></p>
+                    <br>
+                    <p><span class="ai">🤖 Azure Arch Builder:</span></p>
+                    <p><span class="ai">현재 구성을 확인해보겠습니다. 다음 변경을 제안합니다:</span></p>
+                    <br>
+                    <p><span class="ai">1. 모든 서비스에 Private Endpoint 적용</span></p>
+                    <p><span class="ai">2. publicNetworkAccess: 'Disabled' 설정</span></p>
+                    <p><span class="ai">3. Key Vault에 purgeProtection 활성화</span></p>
+                    <p><span class="ai">4. RBAC 역할 할당 추가 (Managed Identity 기반)</span></p>
+                    <br>
+                    <p><span class="ai">이 변경사항들을 적용할까요?</span></p>
+                    <p>&nbsp;&nbsp;1. 모두 적용 (Recommended)</p>
+                    <p>&nbsp;&nbsp;2. 선택적으로 적용</p>
+                    <br>
+                    <p><span class="prompt">❯</span> <span class="user-input">모두 적용</span></p>
+                    <br>
+                    <p><span class="ai">⏳ 다이어그램 업데이트 중...</span></p>
+                    <p><span class="success">✅ 01_arch_diagram_draft.html 업데이트 완료</span></p>
+                    <p><span class="ai">Bicep 코드를 생성할까요?</span></p>
+                </div>
+            </section>
+
+            <!-- Slide 23: UC4 — 데이터 레이크 -->
+            <section>
+                <h3>UC4: 데이터 플랫폼 구축</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">Databricks + ADLS Gen2 + ADF로 데이터 레이크를 구성하고 싶어</span></p>
+                    <br>
+                    <p><span class="ai">🤖 Azure Arch Builder:</span></p>
+                    <p><span class="ai">데이터 플랫폼 구성을 시작하겠습니다.</span></p>
+                    <br>
+                    <p><span class="ai">프로젝트 이름을 정해주세요.</span></p>
+                    <p><span class="prompt">❯</span> <span class="user-input">data-lake-platform</span></p>
+                    <br>
+                    <p><span class="ai">Databricks 워크스페이스 가격 티어를 선택해주세요.</span></p>
+                    <p>&nbsp;&nbsp;1. Premium (Recommended — Unity Catalog, RBAC 지원)</p>
+                    <p>&nbsp;&nbsp;2. Standard</p>
+                    <p><span class="prompt">❯</span> <span class="user-input">Premium</span></p>
+                    <br>
+                    <p><span class="ai">ADLS Gen2 용도를 확인합니다:</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;• Raw Zone: 원본 데이터 수집</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;• Curated Zone: 가공된 데이터</span></p>
+                    <p><span class="ai">&nbsp;&nbsp;• 컨테이너를 이렇게 구성할까요?</span></p>
+                    <br>
+                    <p><span class="ai">⏳ MS Docs에서 Korea Central 리전 확인 중...</span></p>
+                    <p><span class="success">✅ Databricks Premium: Korea Central 사용 가능</span></p>
+                    <p><span class="success">✅ Data Factory: Korea Central 사용 가능</span></p>
+                </div>
+            </section>
+
+            <!-- Slide 24: UC4 결과 — 데이터 플랫폼 아키텍처 -->
+            <section>
+                <h3>UC4: 데이터 플랫폼 아키텍처</h3>
+                <div class="mermaid">
+graph LR
+    ADF["🔄 Azure Data Factory<br/>데이터 파이프라인"] --> Raw["📦 ADLS Gen2<br/>Raw Zone"]
+    Raw --> DBR["⚡ Databricks<br/>Premium"]
+    DBR --> Curated["📦 ADLS Gen2<br/>Curated Zone"]
+
+    DBR --> KV["🔑 Key Vault"]
+
+    style ADF fill:#1f6feb,color:#fff
+    style Raw fill:#f0883e,color:#fff
+    style DBR fill:#da3633,color:#fff
+    style Curated fill:#3fb950,color:#fff
+    style KV fill:#8b949e,color:#fff
+                </div>
+            </section>
+
+            <!-- Slide 25: 그 외 활용 사례 -->
+            <section>
+                <h2>그 외 활용 사례</h2>
+                <div class="columns">
+                    <div class="col">
+                        <div class="box box-blue fragment" style="font-size:0.75em;">
+                            💰 <strong>"비용 줄이고 싶어"</strong><br>
+                            현재 SKU 분석 → 다운그레이드 가능한 서비스 제안 → 변경 적용
+                        </div>
+                        <div class="box box-orange fragment" style="font-size:0.75em;">
+                            📈 <strong>"모니터링 추가해줘"</strong><br>
+                            Log Analytics + Application Insights 자동 추가 → 다이어그램 업데이트
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="box box-green fragment" style="font-size:0.75em;">
+                            🔄 <strong>"SKU를 업그레이드해줘"</strong><br>
+                            현재 티어 확인 → 상위 티어 옵션 제시 → MS Docs 검증 후 적용
+                        </div>
+                        <div class="box box-blue fragment" style="font-size:0.75em;">
+                            🌍 <strong>"다른 리전에도 배포해줘"</strong><br>
+                            리전별 서비스 가용성 확인 → 멀티 리전 구성 제안
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 26: 직접 써보기 타이틀 -->
+            <section data-background="linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%)">
+                <h1>직접 써보기</h1>
+                <p class="subtitle" style="font-size:1em;">설치부터 첫 실행까지</p>
+            </section>
+
+            <!-- Slide 27: 사전 준비 + Skill 등록 -->
+            <section>
+                <h2>사전 준비 + Skill 등록</h2>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">1</span> <strong>Azure CLI 설치</strong> — <span class="code-inline">az version</span>으로 확인 (<a href="https://aka.ms/installazurecli" target="_blank" style="color:#58a6ff;">https://aka.ms/installazurecli</a>)
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">2</span> <strong>Python 3 설치</strong> — <span class="code-inline">python --version</span>으로 확인
+                </div>
+                <div class="box box-blue fragment" style="font-size:0.85em;">
+                    <span class="step-num">3</span> <strong>GitHub Copilot CLI</strong> — <span class="code-inline">copilot --version</span>으로 확인
+                </div>
+                <div class="box box-green fragment" style="font-size:0.85em;">
+                    <span class="step-num">4</span> <strong>Skill 등록</strong> — 프로젝트의 <span class="code-inline">.github/skills/</span> 폴더에 배치, 또는 <span class="code-inline">$HOME/.copilot/skills/</span>에 배치 (글로벌)
+                </div>
+            </section>
+
+            <!-- Slide 28: Skill 등록 명령어 -->
+            <section>
+                <h3>Skill 등록 명령어</h3>
+                <pre><code class="language-bash" data-trim>
+# 프로젝트 로컬 (이 프로젝트에서만 사용)
+mkdir -p .github/skills/
+cp -r azure-arch-builder .github/skills/azure-arch-builder
+
+# 글로벌 (모든 프로젝트에서 사용)
+cp -r azure-arch-builder ~/.copilot/skills/azure-arch-builder
+
+# 등록 확인
+copilot /skills
+                </code></pre>
+                <div class="box box-green" style="font-size:0.75em; margin-top:1em;">
+                    <strong>등록 확인 출력 예시:</strong>
+                    <pre style="border:none; box-shadow:none; margin:0.5em 0 0 0; font-size:1em;"><code class="language-plaintext" data-trim>
+Available Skills:
+  ✓ azure-arch-builder — Azure 인프라를 자연어로 설계하거나, 기존 Azure 리소스를 분석하여...
+                    </code></pre>
+                </div>
+            </section>
+
+            <!-- Slide 29: 첫 실행 예시 -->
+            <section>
+                <h3>첫 실행</h3>
+                <div class="terminal">
+                    <p><span class="prompt">❯</span> <span class="user-input">copilot</span></p>
+                    <p><span class="info">GitHub Copilot CLI v1.0.11</span></p>
+                    <p><span class="info">Skills loaded: azure-arch-builder</span></p>
+                    <br>
+                    <p><span class="prompt">❯</span> <span class="user-input">RAG 아키텍처를 구성해줘. Foundry와 AI Search를 써서.</span></p>
+                    <br>
+                    <p><span class="ai">🤖 Skill 매칭: azure-arch-builder</span></p>
+                    <p><span class="ai">⏳ 참조 파일 로딩 중...</span></p>
+                    <p><span class="ai">프로젝트 이름을 정해주세요.</span></p>
+                    <p>&nbsp;&nbsp;1. rag-architecture (Recommended)</p>
+                    <p>&nbsp;&nbsp;2. 직접 입력</p>
+                    <br>
+                    <p><span class="info">💡 이후 대화형으로 서비스, SKU, 리전 등을 선택하며</span></p>
+                    <p><span class="info">&nbsp;&nbsp;&nbsp;다이어그램 생성 → Bicep 코드 → 배포까지 진행됩니다</span></p>
+                </div>
+            </section>
+
+            <!-- Slide 30: 나만의 Skill 만들기 참고 -->
+            <section>
+                <h2>나만의 Skill 만들기 참고</h2>
+                <div class="box box-blue" style="font-size:0.85em;">
+                    <strong>Skill 최소 구성:</strong>
+                    <pre style="border:none; box-shadow:none; margin:0.5em 0 0 0; font-size:1em;"><code class="language-plaintext" data-trim>
+my-skill/
+├── SKILL.md          ← 라우터 (name, description + 지시사항)
+├── prompts/          ← Phase별 상세 프롬프트
+└── references/       ← 참조 데이터
+                    </code></pre>
+                </div>
+                <div style="margin-top:1em;">
+                    <p class="small">📎 공식 가이드: <a href="https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills" target="_blank">https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills</a></p>
+                    <p class="small">📎 VS Code Skills: <a href="https://code.visualstudio.com/docs/copilot/customization/agent-skills" target="_blank">https://code.visualstudio.com/docs/copilot/customization/agent-skills</a></p>
+                    <p class="small">📎 Skills 비교: <a href="https://dev.to/pwd9000/github-copilot-instructions-vs-prompts-vs-custom-agents-vs-skills-vs-x-vs-why-339l" target="_blank">https://dev.to/pwd9000/github-copilot-instructions-vs-prompts-vs-custom-agents-vs-skills-vs-x-vs-why-339l</a></p>
+                </div>
+            </section>
+
+            <!-- Slide 31: 오늘의 정리 -->
+            <section>
+                <h2>오늘의 정리</h2>
+                <div class="box box-green" style="font-size:0.85em;">
+                    <ul class="checklist">
+                        <li>Azure Arch Builder = 자연어로 Azure 인프라를 설계·시각화·배포하는 도구</li>
+                        <li>Agent Skill로 구현되어 GitHub Copilot CLI에서 자동 매칭</li>
+                        <li>Phase 0~4: 스캔 → 설계 → 코드 생성 → 검증 → 배포</li>
+                        <li>대화 중 MS Docs에서 서비스 가용성·SKU·API 버전 실시간 확인</li>
+                        <li>신규 설계, 기존 분석, 자연어 수정 등 다양한 활용 가능</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slide 32: Q&A -->
+            <section data-background="linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%)">
+                <h1>🙋 Q&amp;A</h1>
+                <p class="subtitle" style="font-size:1em; margin-top:1em;">질문이 있으시면 편하게 말씀해주세요</p>
+                <p style="margin-top:2em; font-size:1.2em;">감사합니다! 🙏</p>
+                <div style="margin-top:2em;">
+                    <p class="small">📎 GitHub Copilot CLI Skills: <a href="https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills" target="_blank">https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-skills</a></p>
+                    <p class="small">📎 VS Code Agent Skills: <a href="https://code.visualstudio.com/docs/copilot/customization/agent-skills" target="_blank">https://code.visualstudio.com/docs/copilot/customization/agent-skills</a></p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/zoom/zoom.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            showSlideNumber: 'all',
+            width: 1280,
+            height: 720,
+            margin: 0.04,
+            minScale: 0.2,
+            maxScale: 2.0,
+            transition: 'slide',
+            transitionSpeed: 'default',
+            plugins: [RevealHighlight, RevealNotes, RevealZoom]
+        }).then(() => {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                themeVariables: {
+                    darkMode: true,
+                    background: '#0d1117',
+                    primaryColor: '#1f6feb',
+                    primaryTextColor: '#e6edf3',
+                    primaryBorderColor: '#58a6ff',
+                    lineColor: '#8b949e',
+                    secondaryColor: '#238636',
+                    tertiaryColor: '#21262d',
+                    fontSize: '14px',
+                    fontFamily: '"Segoe UI", "Malgun Gothic", sans-serif'
+                },
+                flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+                securityLevel: 'loose'
+            });
+
+            document.querySelectorAll('.mermaid').forEach((el, index) => {
+                const graphDefinition = el.textContent.trim();
+                try {
+                    mermaid.render('mermaid-graph-' + index, graphDefinition).then(({ svg }) => {
+                        el.innerHTML = svg;
+                    });
+                } catch (e) {
+                    console.error('Mermaid rendering error:', e);
+                }
+            });
+
+            Reveal.on('slidechanged', event => {
+                event.currentSlide.querySelectorAll('.mermaid svg').forEach(svg => {
+                    svg.style.maxWidth = '100%';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

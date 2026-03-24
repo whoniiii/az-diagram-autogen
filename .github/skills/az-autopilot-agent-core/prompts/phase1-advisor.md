@@ -310,13 +310,13 @@ if (-not $PythonCmd) {
 
 # ─── Step 2: 내장 모듈 경로 탐색 (pip install 불필요) ───
 # 1순위: 프로젝트 로컬 스킬 폴더
-$SkillDir = Get-ChildItem -Path ".github\skills\azure-arch-builder-v4" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
+$SkillDir = Get-ChildItem -Path ".github\skills\az-autopilot-agent-core" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
   Where-Object { $_.Directory.Name -eq 'az_diagram_autogen' } |
   Select-Object -First 1 -ExpandProperty DirectoryName |
   Split-Path -Parent
 # 2순위: 글로벌 스킬 폴더
 if (-not $SkillDir) {
-  $SkillDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\azure-arch-builder-v4" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
+  $SkillDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\az-autopilot-agent-core" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.Directory.Name -eq 'az_diagram_autogen' } |
     Select-Object -First 1 -ExpandProperty DirectoryName |
     Split-Path -Parent

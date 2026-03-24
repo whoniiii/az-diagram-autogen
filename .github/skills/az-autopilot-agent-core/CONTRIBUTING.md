@@ -1,11 +1,11 @@
-# Contributing to azure-arch-builder v4
+# Contributing to az-autopilot-agent-core
 
 Thank you for your interest in contributing! This guide will help you understand the project structure and how to make changes.
 
 ## 📁 Project Structure
 
 ```
-azure-arch-builder-v4/
+az-autopilot-agent-core/
 ├── SKILL.md                    # Main orchestration — 4-phase pipeline
 ├── az_diagram_autogen/         # Embedded diagram engine (no pip install needed)
 │   ├── __init__.py             # Package init, version, exports

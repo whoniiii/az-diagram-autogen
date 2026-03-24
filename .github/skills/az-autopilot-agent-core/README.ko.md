@@ -1,4 +1,4 @@
-# azure-arch-builder v4
+# az-autopilot-agent-core
 
 > Azure 인프라를 자연어로 설계하거나, 기존 리소스를 분석하여 아키텍처를 시각화하고 수정·배포까지 이어주는 GitHub Copilot CLI 스킬
 
@@ -67,11 +67,11 @@ Path B: "현재 Azure 인프라 분석해줘"
 
 ```powershell
 # 프로젝트 스킬
-git clone <repo-url> .github/skills/azure-arch-builder-v4
+git clone <repo-url> .github/skills/az-autopilot-agent-core
 
 # 개인 스킬 (모든 프로젝트)
 New-Item -ItemType Directory -Path "$env:USERPROFILE\.copilot\skills" -Force
-git clone <repo-url> "$env:USERPROFILE\.copilot\skills\azure-arch-builder-v4"
+git clone <repo-url> "$env:USERPROFILE\.copilot\skills\az-autopilot-agent-core"
 
 # pip install 불필요 — 다이어그램 엔진이 내장되어 있습니다!
 ```
