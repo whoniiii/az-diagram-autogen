@@ -1,5 +1,5 @@
 ---
-name: az-autopilot-agent
+name: azure-architecture-autopilot-kr
 description: >
   Azure 인프라를 자연어로 설계하거나, 기존 Azure 리소스를 분석하여
   아키텍처 다이어그램을 자동 생성하고, 대화로 수정한 뒤 Bicep 배포까지 진행한다.
@@ -12,13 +12,14 @@ description: >
   - Microsoft Foundry, AI Search, OpenAI, Fabric, ADLS Gen2, Databricks 등 모든 Azure 서비스
 ---
 
-# Azure Architecture Builder v3
+# Azure Architecture Builder v4
 
 자연어로 Azure 인프라를 설계하거나, 기존 리소스를 분석하여 아키텍처를 시각화하고 수정·배포까지 이어주는 파이프라인.
 
-**v3 핵심 변경**: 다이어그램 생성에 **`az-diagram-autogen`** PyPI 패키지를 사용한다.
-임베디드 스크립트(`generate_html_diagram.py` + `icons_azure.py`) 대신
-`pip install az-diagram-autogen` 한 줄로 605+ Azure 공식 아이콘이 포함된 인터랙티브 HTML 다이어그램을 생성한다.
+**v4 핵심 변경**: 다이어그램 엔진(`az_diagram_autogen`)을 **스킬 내장**으로 탑재.
+`pip install` 없이 스킬 폴더의 `az_diagram_autogen/` 모듈을 직접 import하여
+605+ Azure 공식 아이콘이 포함된 인터랙티브 HTML 다이어그램을 생성한다.
+네트워크/패키지 설치 없이 즉시 사용 가능.
 
 ## 사용자 언어 자동 감지
 
@@ -62,7 +63,7 @@ if (-not $azCmd) {
 }
 ```
 
-Python 경로 + `az-diagram-autogen` 패키지 설치: `prompts/phase1-advisor.md`의 다이어그램 생성 섹션 참조.
+Python 경로 + `az_diagram_autogen` 내장 모듈: `prompts/phase1-advisor.md`의 다이어그램 생성 섹션 참조.
 
 ## 진행 상황 안내 필수
 
@@ -80,7 +81,7 @@ Python 경로 + `az-diagram-autogen` 패키지 설치: `prompts/phase1-advisor.m
 
 | ask_user 질문 | 동시에 프리로드할 것 |
 |---|---|
-| 프로젝트 이름 / 스캔 범위 | reference 파일, MS Docs, Python 경로 탐색, **`az-diagram-autogen` 설치 확인** |
+| 프로젝트 이름 / 스캔 범위 | reference 파일, MS Docs, Python 경로 탐색, **다이어그램 모듈 경로 확인** |
 | 모델/SKU 선택 | 다음 질문 선택지용 MS Docs |
 | 아키텍처 확정 | `az account show/list`, `az group list` |
 | 구독 선택 | `az group list` |
@@ -135,7 +136,7 @@ ask_user({
 - 각 Phase는 해당 `prompts/*.md` 파일의 지침을 읽고 따른다
 - Phase 전환 시 사용자에게 반드시 다음 단계를 안내한다
 - Phase를 건너뛰지 않는다 (특히 Phase 3 → Phase 4 사이의 what-if)
-- **🚨 Phase 1 → Phase 2 전환 필수 조건**: `01_arch_diagram_draft.html`이 `az-diagram-autogen` 패키지로 생성되어 사용자에게 보여진 상태여야 한다. **다이어그램 없이 Bicep 생성으로 넘어가지 않는다.** 스펙 수집만 끝났다고 Phase 1이 완료된 것이 아니다 — 다이어그램 생성 + 사용자 확인까지가 Phase 1이다.
+- **🚨 Phase 1 → Phase 2 전환 필수 조건**: `01_arch_diagram_draft.html`이 내장 `az_diagram_autogen` 모듈로 생성되어 사용자에게 보여진 상태여야 한다. **다이어그램 없이 Bicep 생성으로 넘어가지 않는다.** 스펙 수집만 끝났다고 Phase 1이 완료된 것이 아니다 — 다이어그램 생성 + 사용자 확인까지가 Phase 1이다.
 - 배포 완료 후 수정 요청 → Phase 0가 아닌 Phase 1로 복귀 (Delta Confirmation Rule)
 
 ## v1 Scope & Fallback

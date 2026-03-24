@@ -1,11 +1,11 @@
-# Contributing to az-autopilot-agent
+# Contributing to azure-architecture-autopilot-pip-kr
 
 Thank you for your interest in contributing! This guide will help you understand the project structure and how to make changes.
 
 ## 📁 Project Structure
 
 ```
-az-autopilot-agent/
+azure-architecture-autopilot-pip-kr/
 ├── SKILL.md                    # Main orchestration — 4-phase pipeline
 ├── prompts/
 │   ├── phase0-scanner.md      # Phase 0: Existing resource scan

@@ -2,8 +2,8 @@
 # ── 핵심 3개만 추적, 나머지 전부 무시 ──
 # 추적 대상:
 #   az-diagram-autogen/          ← 다이어그램 엔진 (PyPI 패키지)
-#   .github/skills/az-autopilot-agent/       ← 외부용 스킬
-#   .github/skills/az-autopilot-agent-core/  ← 내부용 스킬
+#   .github/skills/azure-architecture-autopilot-pip-kr/  ← 외부용 스킬 (KR, pip)
+#   .github/skills/azure-architecture-autopilot-kr/  ← 내부용 스킬 (KR)
 #   .github/copilot-instructions.md          ← 프로젝트 인스트럭션
 
 # 전부 무시
@@ -18,6 +18,6 @@
 !.github/copilot-instructions.md
 !.github/skills/
 .github/skills/*
-!.github/skills/az-autopilot-agent/
-!.github/skills/az-autopilot-agent-core/
+!.github/skills/azure-architecture-autopilot-pip-kr/
+!.github/skills/azure-architecture-autopilot-kr/
 !.github/skills/azure-architecture-autopilot/

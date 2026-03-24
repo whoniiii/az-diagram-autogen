@@ -1,11 +1,11 @@
-# Contributing to az-autopilot-agent-core
+# Contributing to azure-architecture-autopilot-kr
 
 Thank you for your interest in contributing! This guide will help you understand the project structure and how to make changes.
 
 ## 📁 Project Structure
 
 ```
-az-autopilot-agent-core/
+azure-architecture-autopilot-kr/
 ├── SKILL.md                    # Main orchestration — 4-phase pipeline
 ├── az_diagram_autogen/         # Embedded diagram engine (no pip install needed)
 │   ├── __init__.py             # Package init, version, exports

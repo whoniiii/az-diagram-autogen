@@ -10,8 +10,8 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 | 컴포넌트 | 경로 | 역할 |
 |---|---|---|
 | **az-diagram-autogen** | `az-diagram-autogen/` | 다이어그램 생성 엔진 (핵심 Python 패키지). PyPI 배포용. |
-| **az-autopilot-agent** | `.github/skills/az-autopilot-agent/` | **외부 사용자용 (KR)** 스킬. `pip install az-diagram-autogen`으로 설치하여 사용. |
-| **az-autopilot-agent-core** | `.github/skills/az-autopilot-agent-core/` | **내부 사용자용 (KR)** 스킬. az-diagram-autogen을 내장(embedded)하여 pip 없이 사용. |
+| **azure-architecture-autopilot-pip-kr** | `.github/skills/azure-architecture-autopilot-pip-kr/` | **외부 사용자용 (KR)** 스킬. `pip install az-diagram-autogen`으로 설치하여 사용. |
+| **azure-architecture-autopilot-kr** | `.github/skills/azure-architecture-autopilot-kr/` | **내부 사용자용 (KR)** 스킬. az-diagram-autogen을 내장(embedded)하여 pip 없이 사용. |
 | **azure-architecture-autopilot** | `.github/skills/azure-architecture-autopilot/` | **awesome-copilot 기여용 (EN)** 스킬. core와 동일하나 영문 + awesome-copilot 표준 구조(scripts/references/ 플랫). |
 
 ## ⚠️ 수정 시 반드시 3곳 동시 반영
@@ -20,13 +20,13 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 
 | # | 경로 | 설명 | 프롬프트 위치 | 참조 문서 위치 |
 |---|------|------|-------------|---------------|
-| 1 | `.github/skills/az-autopilot-agent/` | 외부 사용자용 (KR). pip install 방식 | `prompts/` | `references/` |
-| 2 | `.github/skills/az-autopilot-agent-core/` | 내부 사용자용 (KR). 다이어그램 엔진 내장 | `prompts/` | `references/` |
+| 1 | `.github/skills/azure-architecture-autopilot-pip-kr/` | 외부 사용자용 (KR). pip install 방식 | `prompts/` | `references/` |
+| 2 | `.github/skills/azure-architecture-autopilot-kr/` | 내부 사용자용 (KR). 다이어그램 엔진 내장 | `prompts/` | `references/` |
 | 3 | `.github/skills/azure-architecture-autopilot/` | awesome-copilot 기여용 (EN). 엔진 내장 + 플랫 구조 | `references/` (prompts 포함) | `references/` |
 
 ### 3곳 차이점
 
-| 항목 | az-autopilot-agent (v3) | az-autopilot-agent-core (v4 KR) | azure-architecture-autopilot (v4 EN) |
+| 항목 | azure-architecture-autopilot-pip-kr (v3) | azure-architecture-autopilot-kr (v4 KR) | azure-architecture-autopilot (v4 EN) |
 |------|------------------------|-------------------------------|-----------------------------------|
 | 언어 | 한국어 | 한국어 | **영어** |
 | 다이어그램 엔진 | `pip install az-diagram-autogen` | `az_diagram_autogen/` 내장 | `scripts/` 에 플랫 내장 |
@@ -47,7 +47,7 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 3. **다이어그램 엔진 수정** (`generator.py`, `icons.py` 등)
    ```
    az-diagram-autogen/az_diagram_autogen/generator.py           ← 소스 원본 (PyPI + v3용)
-   .github/skills/az-autopilot-agent-core/az_diagram_autogen/   ← v4 KR 내장 복사본
+   .github/skills/azure-architecture-autopilot-kr/az_diagram_autogen/   ← v4 KR 내장 복사본
    .github/skills/azure-architecture-autopilot/scripts/           ← v4 EN 플랫 복사본
    ```
    → 소스 원본 수정 → v4 KR에 복사 → v4 EN에 복사 (EN은 플랫 구조 + 절대 import)
@@ -97,11 +97,11 @@ GHCP001/
 ├── .github/
 │   ├── copilot-instructions.md      ← 이 파일
 │   └── skills/
-│       ├── az-autopilot-agent/          ← 외부용 (KR, pip)
+│       ├── azure-architecture-autopilot-pip-kr/ ← 외부용 (KR, pip)
 │       │   ├── SKILL.md
 │       │   ├── prompts/
 │       │   └── references/
-│       ├── az-autopilot-agent-core/     ← 내부용 (KR, embedded)
+│       ├── azure-architecture-autopilot-kr/  ← 내부용 (KR, embedded)
 │       │   ├── SKILL.md
 │       │   ├── az_diagram_autogen/      ← 내장 복사본
 │       │   ├── prompts/

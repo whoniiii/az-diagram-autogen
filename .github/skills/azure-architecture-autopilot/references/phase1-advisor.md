@@ -421,7 +421,31 @@ Dynamically composed based on the user's confirmed service list. Below is the JS
 ]
 ```
 
-Available type values: `ai_foundry`, `ai_hub`, `openai`, `search`, `ai_search`, `storage`, `adls`, `keyvault`, `kv`, `fabric`, `vm`, `bastion`, `vpn`, `vpn_gateway`, `adf`, `data_factory`, `pe`, `databricks`, `sql_server`, `sql_database`, `cosmos_db`, `app_service`, `appservice`, `app`, `aks`, `function_app`, `synapse`, `log_analytics`, `app_insights`, `appinsights`, `monitor`, `nsg`, `acr`, `container_registry`, `document_intelligence`, `form_recognizer`, `cdn`, `event_hub`, `redis`, `devops`, `app_gateway`, `iot_hub`, `stream_analytics`, `front_door`, `firewall`, `jumpbox`, `user`, etc. (Types not in the list will be attempted via fuzzy matching and displayed with a default icon)
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `id` | Yes | string | Unique identifier (kebab-case) |
+| `name` | Yes | string | Display name shown on diagram |
+| `type` | Yes | string | Service type (select from list below) |
+| `sku` | | string | SKU/tier information |
+| `private` | | boolean | Private Endpoint connected (default: false) |
+| `details` | | string[] | Additional info shown in sidebar |
+| `subscription` | | string | Subscription name (required when using hierarchy) |
+| `resourceGroup` | | string | Resource group name (required when using hierarchy) |
+
+**Service Type List (by category):**
+
+| Category | Types |
+|----------|-------|
+| **AI** | `ai_foundry`, `ai_hub`, `openai`, `ai_search` / `search`, `document_intelligence` / `form_recognizer`, `aml` |
+| **Data** | `storage` / `adls`, `cosmos_db`, `sql_database`, `sql_server`, `databricks`, `data_factory` / `adf`, `fabric`, `redis`, `stream_analytics`, `synapse` |
+| **Security** | `keyvault` / `kv` |
+| **Compute** | `app_service` / `appservice`, `function_app`, `vm`, `aks`, `acr` / `container_registry` |
+| **Network** | `firewall`, `bastion`, `vpn_gateway` / `vpn`, `app_gateway`, `front_door`, `cdn`, `nsg`, `pe` |
+| **IoT** | `iot_hub` |
+| **Integration** | `event_hub` |
+| **Monitoring** | `log_analytics`, `app_insights` / `appinsights`, `monitor` |
+| **DevOps** | `devops` |
+| **Other** | `jumpbox`, `user`, etc. (unrecognized types use fuzzy matching + default icon) |
 
 **When Using Private Endpoints — PE Node Addition Required:**
 
@@ -472,6 +496,17 @@ The PE groupId differs by service. Refer to the PE groupId & DNS Zone mapping ta
   {"from": "serviceA_ID", "to": "serviceB_ID", "label": "Connection description", "type": "api|data|security|private"}
 ]
 ```
+
+**Connection Types:**
+
+| type | Color | Style | Use For |
+|------|-------|-------|---------|
+| `api` | Blue | Solid | API calls, queries |
+| `data` | Green | Solid | Data flow, indexing |
+| `security` | Orange | Dashed | Secrets, auth |
+| `private` | Purple | Dashed | Private Endpoint connections |
+| `network` | Gray | Solid | Network routing |
+| `default` | Gray | Solid | Other |
 
 **🔹 Diagram Multilingual Principle:**
 - The `name`, `details` in services and `label` in connections are written in **the user's language**

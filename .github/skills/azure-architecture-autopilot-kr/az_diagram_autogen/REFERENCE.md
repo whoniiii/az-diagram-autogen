@@ -142,7 +142,11 @@ with open("output.html", "w", encoding="utf-8") as f:
 | `cosmos_db` | Cosmos DB |
 | `sql_database` | SQL Database |
 | `sql_server` | SQL Server |
+| `postgresql` | PostgreSQL Flexible |
+| `mysql` | MySQL Flexible |
 | `databricks` | Databricks |
+| `data_explorer` | Data Explorer (Kusto) |
+| `kusto` | Data Explorer (alias) |
 | `data_factory` | Data Factory |
 | `adf` | Data Factory (alias) |
 | `fabric` | Microsoft Fabric |
@@ -154,6 +158,7 @@ with open("output.html", "w", encoding="utf-8") as f:
 | type | Display Label |
 |------|--------------|
 | `keyvault` | Key Vault |
+| `sentinel` | Microsoft Sentinel |
 
 ### Compute
 | type | Display Label |
@@ -165,6 +170,10 @@ with open("output.html", "w", encoding="utf-8") as f:
 | `aks` | AKS |
 | `acr` | Container Registry |
 | `container_registry` | Container Registry (alias) |
+| `container_apps` | Container Apps |
+| `container_app` | Container Apps (alias) |
+| `spring_apps` | Spring Apps |
+| `static_web_app` | Static Web App |
 
 ### Network
 | type | Display Label |
@@ -176,16 +185,28 @@ with open("output.html", "w", encoding="utf-8") as f:
 | `front_door` | Front Door |
 | `cdn` | CDN |
 | `nsg` | NSG |
+| `load_balancer` | Load Balancer |
+| `nat_gateway` | NAT Gateway |
+| `expressroute` | ExpressRoute |
 
 ### IoT
 | type | Display Label |
 |------|--------------|
 | `iot_hub` | IoT Hub |
+| `digital_twins` | Digital Twins |
 
 ### Integration
 | type | Display Label |
 |------|--------------|
 | `event_hub` | Event Hub |
+| `event_grid` | Event Grid |
+| `service_bus` | Service Bus |
+| `logic_apps` | Logic Apps |
+| `logic_app` | Logic Apps (alias) |
+| `apim` | API Management |
+| `api_management` | API Management (alias) |
+| `signalr` | SignalR |
+| `notification_hub` | Notification Hub |
 
 ### Monitoring
 | type | Display Label |
@@ -199,6 +220,11 @@ with open("output.html", "w", encoding="utf-8") as f:
 | type | Display Label |
 |------|--------------|
 | `devops` | Azure DevOps |
+
+### Management
+| type | Display Label |
+|------|--------------|
+| `backup` | Backup Vault |
 
 ---
 

@@ -333,13 +333,13 @@ if (-not $PythonCmd) {
 
 # ─── Step 2: 내장 모듈 경로 탐색 (pip install 불필요) ───
 # 1순위: 프로젝트 로컬 스킬 폴더
-$SkillDir = Get-ChildItem -Path ".github\skills\az-autopilot-agent-core" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
+$SkillDir = Get-ChildItem -Path ".github\skills\azure-architecture-autopilot-kr" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
   Where-Object { $_.Directory.Name -eq 'az_diagram_autogen' } |
   Select-Object -First 1 -ExpandProperty DirectoryName |
   Split-Path -Parent
 # 2순위: 글로벌 스킬 폴더
 if (-not $SkillDir) {
-  $SkillDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\az-autopilot-agent-core" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
+  $SkillDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\azure-architecture-autopilot-kr" -Filter "__init__.py" -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.Directory.Name -eq 'az_diagram_autogen' } |
     Select-Object -First 1 -ExpandProperty DirectoryName |
     Split-Path -Parent
@@ -424,7 +424,31 @@ with open("<project-name>/01_arch_diagram_draft.html", "w", encoding="utf-8") as
 ]
 ```
 
-사용 가능한 type 값: `ai_foundry`, `ai_hub`, `openai`, `search`, `ai_search`, `storage`, `adls`, `keyvault`, `kv`, `fabric`, `vm`, `bastion`, `vpn`, `vpn_gateway`, `adf`, `data_factory`, `pe`, `databricks`, `sql_server`, `sql_database`, `cosmos_db`, `app_service`, `appservice`, `app`, `aks`, `function_app`, `synapse`, `log_analytics`, `app_insights`, `appinsights`, `monitor`, `nsg`, `acr`, `container_registry`, `document_intelligence`, `form_recognizer`, `cdn`, `event_hub`, `redis`, `devops`, `app_gateway`, `iot_hub`, `stream_analytics`, `front_door`, `firewall`, `jumpbox`, `user` 등 (`python -m az_diagram_autogen --reference`로 전체 목록 확인. 목록에 없는 type은 fuzzy matching으로 시도 후 default 아이콘으로 표시)
+| 필드 | 필수 | 타입 | 설명 |
+|------|------|------|------|
+| `id` | Yes | string | 고유 식별자 (kebab-case) |
+| `name` | Yes | string | 다이어그램에 표시되는 이름 |
+| `type` | Yes | string | 서비스 타입 (아래 목록에서 선택) |
+| `sku` | | string | SKU/티어 정보 |
+| `private` | | boolean | Private Endpoint 연결 여부 (기본값: false) |
+| `details` | | string[] | 사이드바에 표시되는 추가 정보 |
+| `subscription` | | string | 구독명 (hierarchy 사용 시 필수) |
+| `resourceGroup` | | string | 리소스 그룹명 (hierarchy 사용 시 필수) |
+
+**서비스 타입 목록 (카테고리별):**
+
+| 카테고리 | 타입 |
+|----------|------|
+| **AI** | `ai_foundry`, `ai_hub`, `openai`, `ai_search` / `search`, `document_intelligence` / `form_recognizer`, `aml` |
+| **Data** | `storage` / `adls`, `cosmos_db`, `sql_database`, `sql_server`, `databricks`, `data_factory` / `adf`, `fabric`, `redis`, `stream_analytics`, `synapse` |
+| **Security** | `keyvault` / `kv` |
+| **Compute** | `app_service` / `appservice`, `function_app`, `vm`, `aks`, `acr` / `container_registry` |
+| **Network** | `firewall`, `bastion`, `vpn_gateway` / `vpn`, `app_gateway`, `front_door`, `cdn`, `nsg`, `pe` |
+| **IoT** | `iot_hub` |
+| **Integration** | `event_hub` |
+| **Monitoring** | `log_analytics`, `app_insights` / `appinsights`, `monitor` |
+| **DevOps** | `devops` |
+| **기타** | `jumpbox`, `user` 등 (목록에 없는 type은 fuzzy matching 후 default 아이콘 표시) |
 
 **Private Endpoint 사용 시 — PE 노드 추가 필수:**
 
@@ -475,6 +499,17 @@ PE의 groupId는 서비스별로 다르다. `references/service-gotchas.md`의 P
   {"from": "서비스A_ID", "to": "서비스B_ID", "label": "연결 설명", "type": "api|data|security|private"}
 ]
 ```
+
+**연결 타입:**
+
+| type | 색상 | 스타일 | 용도 |
+|------|------|--------|------|
+| `api` | 파란색 | 실선 | API 호출, 쿼리 |
+| `data` | 초록색 | 실선 | 데이터 흐름, 인덱싱 |
+| `security` | 주황색 | 점선 | 시크릿, 인증 |
+| `private` | 보라색 | 점선 | Private Endpoint 연결 |
+| `network` | 회색 | 실선 | 네트워크 라우팅 |
+| `default` | 회색 | 실선 | 기타 |
 
 **🔹 다이어그램 다국어 원칙:**
 - services의 `name`, `details`와 connections의 `label`은 **사용자 언어**로 작성한다
