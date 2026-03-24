@@ -1,5 +1,0 @@
-WARNING: C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C19-hybrid-network-vpn-expressroute\phase2_bicep\modules\vpn-gateway.bicep(59,5) : Warning BCP035: The specified "object" declaration is missing the following required properties: "properties". If this is a resource type definition inaccuracy, report it using https://aka.ms/bicep-type-issues. [https://aka.ms/bicep/core-diagnostics#BCP035]
-
-C:\Users\jeonghoonlee\OneDrive - Microsoft\Documents\01Dev\GHCP001\.github\skills\azure-arch-builder-v2\dev\test-results\C19-hybrid-network-vpn-expressroute\phase2_bicep\modules\vpn-gateway.bicep(60,5) : Warning BCP035: The specified "object" declaration is missing the following required properties: "properties". If this is a resource type definition inaccuracy, report it using https://aka.ms/bicep-type-issues. [https://aka.ms/bicep/core-diagnostics#BCP035]
-
-

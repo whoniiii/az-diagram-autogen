@@ -1,5 +1,0 @@
-ERROR: {"code": "InvalidTemplateDeployment", "message": "The template deployment 'main' is not valid according to the validation procedure. The tracking id is '3f909fca-2b4e-4931-a7d6-62bf1383a01d'. See inner errors for details."}
-
-Inner Errors: 
-{"code": "ApiPropertiesInvalid", "message": "The given 'apiProperties' 'statisticsEnabled' is invalid. Validation errors: Property 'statisticsEnabled' has not been defined and the schema does not allow additional properties. Path 'apiProperties.statisticsEnabled'."}
-

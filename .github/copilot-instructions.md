@@ -48,12 +48,9 @@ az-diagram-autogen/az_diagram_autogen/generator.py          ← 소스 원본 (P
 | 네트워크 | pip 설치 시 필요 | 오프라인 가능 |
 | phase1-advisor.md Section 1-2 | pip install + `python -m az_diagram_autogen` | `PYTHONPATH=$SkillDir` + `python -m az_diagram_autogen` |
 
-## 레거시 버전 (참고용, 수정 불필요)
+## 레거시 버전
 
-| 버전 | 경로 | 상태 |
-|---|---|---|
-| v1 | `.github/skills/azure-arch-builder/` | 레거시 — Mermaid 기반 |
-| v2 | `.github/skills/azure-arch-builder-v2/` | 레거시 — 자체 스크립트 내장 |
+v1, v2는 삭제됨. v3/v4로 완전 대체.
 
 ## 기술 환경
 
