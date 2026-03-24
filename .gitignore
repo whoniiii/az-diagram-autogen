@@ -1,5 +1,22 @@
 
-# 테스트 산출물
-rg-kb-search-bench/
-0066/
-0000012/
+# ── 핵심 3개만 추적, 나머지 전부 무시 ──
+# 추적 대상:
+#   az-diagram-autogen/          ← 다이어그램 엔진 (PyPI 패키지)
+#   .github/skills/az-autopilot-agent/       ← 외부용 스킬
+#   .github/skills/az-autopilot-agent-core/  ← 내부용 스킬
+#   .github/copilot-instructions.md          ← 프로젝트 인스트럭션
+
+# 전부 무시
+/*
+/*/
+
+# 핵심 3개 + instructions만 허용
+!.gitignore
+!az-diagram-autogen/
+!.github/
+.github/*
+!.github/copilot-instructions.md
+!.github/skills/
+.github/skills/*
+!.github/skills/az-autopilot-agent/
+!.github/skills/az-autopilot-agent-core/
