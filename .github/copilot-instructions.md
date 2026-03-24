@@ -59,6 +59,25 @@ v1, v2는 삭제됨. v3/v4로 완전 대체.
 - **PyPI 패키지**: `az-diagram-autogen` (현재 v0.1.2)
 - **Git**: master 브랜치
 
+## ⚠️ 크로스플랫폼 요구사항
+
+이 스킬은 **Windows, WSL, macOS** 3개 환경 모두에서 동작해야 한다.
+
+현재 프롬프트 코드 스니펫이 Windows PowerShell에 하드코딩되어 있으므로, 수정 시 아래를 고려:
+
+| 항목 | Windows | WSL / macOS |
+|---|---|---|
+| 셸 | PowerShell | bash/zsh |
+| 경로 구분자 | `\` | `/` |
+| Python 탐색 | `$env:LOCALAPPDATA\Programs\Python` | `which python3` |
+| 환경변수 | `$env:USERPROFILE`, `$env:LOCALAPPDATA` | `$HOME` |
+| 브라우저 오픈 | `Start-Process` | `open` (macOS) / `xdg-open` (Linux) |
+| 파일 저장 | `Set-Content` | `>` 리다이렉트 |
+
+**현재 상태**: 프롬프트가 Windows 전용 — 크로스플랫폼 리팩토링 필요 (phase0-scanner.md ~14건, phase1-advisor.md ~7건)
+
+**산출물 저장 규칙**: 모든 산출물(스캔 JSON, 다이어그램 HTML, Bicep 코드)은 **cwd 아래 프로젝트 폴더**에 저장. 절대로 `~/.copilot/session-state/` 안에 저장하지 않음.
+
 ## 파일 구조
 
 ```

@@ -4,6 +4,8 @@
 
 스캔 결과를 아키텍처 다이어그램으로 시각화하고, 이후 사용자의 자연어 수정 요청을 Phase 1로 연결한다.
 
+> **🚨 산출물 저장 경로 규칙**: 모든 산출물(스캔 JSON, 다이어그램 HTML, Bicep 코드)은 **현재 작업 디렉토리(cwd) 아래 프로젝트 폴더**에 저장한다. 절대로 `~/.copilot/session-state/` 안에 저장하지 않는다. session-state는 임시 공간이라 세션 종료 시 사라질 수 있다.
+
 ---
 
 ## Step 1: Azure 로그인 + 스캔 범위 선택
@@ -112,7 +114,7 @@ az resource list -g "<RG>" -o json
 ### 2-A: 리소스 목록 조회
 
 ```powershell
-$outDir = "<session-files>\azure-scan"
+$outDir = "<project-name>\azure-scan"
 New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 
 # 1차: 기본 리소스 목록 (이름, 타입, kind, 위치)
