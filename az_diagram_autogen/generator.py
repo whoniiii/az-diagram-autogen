@@ -22,7 +22,7 @@ SERVICE_ICONS = {
     "ai_foundry": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="4" fill="#0078D4"/><rect x="12" y="16" width="10" height="8" rx="2" fill="white" opacity="0.9"/><rect x="26" y="16" width="10" height="8" rx="2" fill="white" opacity="0.9"/><rect x="12" y="27" width="24" height="5" rx="2" fill="white" opacity="0.6"/>',
         "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
-        "azure_icon_key": "cognitive_services"
+        "azure_icon_key": "azure_openai"
     },
     "ai_hub": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="4" fill="#0078D4"/><circle cx="24" cy="24" r="8" fill="white" opacity="0.9"/><circle cx="24" cy="24" r="4" fill="#0078D4"/>',
@@ -41,7 +41,8 @@ SERVICE_ICONS = {
     },
     "aml": {
         "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 32 L20 18 L26 26 L32 14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "AI",
+        "azure_icon_key": "machine_learning"
     },
     "storage": {
         "icon_svg": '<rect x="8" y="8" width="32" height="8" rx="3" fill="#0078D4"/><rect x="8" y="20" width="32" height="8" rx="3" fill="#0078D4" opacity="0.7"/><rect x="8" y="32" width="32" height="8" rx="3" fill="#0078D4" opacity="0.4"/>',
@@ -60,11 +61,13 @@ SERVICE_ICONS = {
     },
     "synapse": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><path d="M15 24 L24 15 L33 24 L24 33 Z" fill="white" opacity="0.9"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_synapse_analytics"
     },
     "adf": {
         "icon_svg": '<rect x="6" y="12" width="36" height="24" rx="4" fill="#0078D4"/><path d="M16 24 L28 24 M24 18 L30 24 L24 30" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "data_factory"
     },
     "data_factory": {
         "icon_svg": '<rect x="6" y="12" width="36" height="24" rx="4" fill="#0078D4"/><path d="M16 24 L28 24 M24 18 L30 24 L24 30" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -93,7 +96,8 @@ SERVICE_ICONS = {
     },
     "nsg": {
         "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#5C2D91"/><path d="M18 20 L24 14 L30 20 M18 28 L24 34 L30 28" stroke="white" stroke-width="2" fill="none"/>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "network_security_groups"
     },
     "acr": {
         "icon_svg": '<rect x="8" y="10" width="32" height="28" rx="4" fill="#0078D4"/><rect x="14" y="16" width="20" height="16" rx="2" fill="white" opacity="0.3"/><text x="24" y="30" text-anchor="middle" font-size="12" fill="white" font-weight="600">ACR</text>',
@@ -101,19 +105,23 @@ SERVICE_ICONS = {
     },
     "aks": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#326CE5"/><text x="24" y="30" text-anchor="middle" font-size="16" fill="white" font-weight="700">K</text>',
-        "color": "#326CE5", "bg": "#EBF0FC", "category": "Compute"
+        "color": "#326CE5", "bg": "#EBF0FC", "category": "Compute",
+        "azure_icon_key": "kubernetes_services"
     },
     "appservice": {
         "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="6" fill="#0078D4"/><polygon points="24,14 34,34 14,34" fill="white" opacity="0.9"/>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "app_services"
     },
     "appinsights": {
         "icon_svg": '<circle cx="24" cy="24" r="16" fill="#773ADC"/><path d="M16 28 L20 20 L24 24 L28 16 L32 22" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>',
-        "color": "#773ADC", "bg": "#F0EAFA", "category": "Monitor"
+        "color": "#773ADC", "bg": "#F0EAFA", "category": "Monitor",
+        "azure_icon_key": "application_insights"
     },
     "monitor": {
         "icon_svg": '<rect x="6" y="10" width="36" height="24" rx="4" fill="#773ADC"/><path d="M14 28 L20 20 L26 24 L34 16" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="14" y="36" width="20" height="3" rx="1" fill="#773ADC" opacity="0.5"/>',
-        "color": "#773ADC", "bg": "#F0EAFA", "category": "Monitor"
+        "color": "#773ADC", "bg": "#F0EAFA", "category": "Monitor",
+        "azure_icon_key": "monitor"
     },
     "vm": {
         "icon_svg": '<rect x="6" y="8" width="36" height="26" rx="3" fill="#0078D4"/><rect x="10" y="12" width="28" height="18" rx="1" fill="white" opacity="0.2"/><rect x="16" y="36" width="16" height="4" rx="1" fill="#0078D4"/>',
@@ -127,11 +135,13 @@ SERVICE_ICONS = {
     },
     "jumpbox": {
         "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#5C2D91"/><text x="24" y="30" text-anchor="middle" font-size="14" fill="white" font-weight="600">JB</text>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "virtual_machine"
     },
     "vpn": {
         "icon_svg": '<rect x="6" y="12" width="36" height="24" rx="4" fill="#5C2D91"/><path d="M16 24 L24 16 L32 24 L24 32 Z" fill="white" opacity="0.8"/>',
-        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network"
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "virtual_network_gateways"
     },
     "user": {
         "icon_svg": '<circle cx="24" cy="16" r="8" fill="#0078D4"/><path d="M10 42 Q10 30 24 30 Q38 30 38 42" fill="#0078D4"/>',
@@ -242,31 +252,148 @@ SERVICE_ICONS = {
     },
     "app_service": {
         "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="6" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="11" fill="white" font-weight="700">App</text>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "app_services"
     },
     "aks": {
         "icon_svg": '<polygon points="24,4 44,20 38,44 10,44 4,20" fill="#326CE5" stroke="#fff" stroke-width="1"/><text x="24" y="30" text-anchor="middle" font-size="11" fill="white" font-weight="700">K8s</text>',
-        "color": "#326CE5", "bg": "#EBF0FA", "category": "Compute"
+        "color": "#326CE5", "bg": "#EBF0FA", "category": "Compute",
+        "azure_icon_key": "kubernetes_services"
     },
     "function_app": {
         "icon_svg": '<polygon points="24,6 42,42 6,42" fill="#F0AD4E"/><text x="24" y="36" text-anchor="middle" font-size="14" fill="white" font-weight="700">ƒ</text>',
-        "color": "#F0AD4E", "bg": "#FFF8ED", "category": "Compute"
+        "color": "#F0AD4E", "bg": "#FFF8ED", "category": "Compute",
+        "azure_icon_key": "function_apps"
     },
     "synapse": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><text x="24" y="22" text-anchor="middle" font-size="8" fill="white" font-weight="700">Syn</text><text x="24" y="32" text-anchor="middle" font-size="8" fill="white">apse</text>',
-        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data"
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_synapse_analytics"
     },
     "log_analytics": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#5C2D91"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">Log</text>',
-        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring"
+        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring",
+        "azure_icon_key": "log_analytics_workspaces"
     },
     "app_insights": {
         "icon_svg": '<circle cx="24" cy="24" r="18" fill="#5C2D91"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">AI</text>',
-        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring"
+        "color": "#5C2D91", "bg": "#F3EDF7", "category": "Monitoring",
+        "azure_icon_key": "application_insights"
     },
     "nsg": {
         "icon_svg": '<rect x="6" y="6" width="36" height="36" rx="4" fill="#E8A000"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">NSG</text>',
-        "color": "#E8A000", "bg": "#FFF8E1", "category": "Network"
+        "color": "#E8A000", "bg": "#FFF8E1", "category": "Network",
+        "azure_icon_key": "network_security_groups"
+    },
+    "apim": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M16 20 L32 20 M16 28 L32 28 M24 14 L24 34" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "api_management_services"
+    },
+    "api_management": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M16 20 L32 20 M16 28 L32 28 M24 14 L24 34" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "api_management_services"
+    },
+    "service_bus": {
+        "icon_svg": '<rect x="6" y="10" width="36" height="28" rx="4" fill="#0078D4"/><path d="M14 24 L22 24 M26 24 L34 24" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="24" cy="24" r="4" fill="white"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "azure_service_bus"
+    },
+    "logic_apps": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 18 L24 28 L34 18" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "logic_apps"
+    },
+    "logic_app": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 18 L24 28 L34 18" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "logic_apps"
+    },
+    "event_grid": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><circle cx="16" cy="18" r="3" fill="white"/><circle cx="32" cy="18" r="3" fill="white"/><circle cx="16" cy="30" r="3" fill="white"/><circle cx="32" cy="30" r="3" fill="white"/><line x1="16" y1="18" x2="32" y2="30" stroke="white" stroke-width="1.5"/><line x1="32" y1="18" x2="16" y2="30" stroke="white" stroke-width="1.5"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "event_grid_topics"
+    },
+    "container_apps": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><rect x="12" y="14" width="10" height="10" rx="2" fill="white" opacity="0.9"/><rect x="26" y="14" width="10" height="10" rx="2" fill="white" opacity="0.9"/><rect x="12" y="28" width="24" height="6" rx="2" fill="white" opacity="0.6"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "container_apps_environments"
+    },
+    "container_app": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><rect x="12" y="14" width="10" height="10" rx="2" fill="white" opacity="0.9"/><rect x="26" y="14" width="10" height="10" rx="2" fill="white" opacity="0.9"/><rect x="12" y="28" width="24" height="6" rx="2" fill="white" opacity="0.6"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "container_apps_environments"
+    },
+    "postgresql": {
+        "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">PG</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_database_postgresql_server"
+    },
+    "mysql": {
+        "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">My</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_database_mysql_server"
+    },
+    "load_balancer": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#5C2D91"/><path d="M16 18 L32 18 M16 24 L32 24 M16 30 L32 30" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>',
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "load_balancers"
+    },
+    "nat_gateway": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#5C2D91"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">NAT</text>',
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "nat"
+    },
+    "expressroute": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#5C2D91"/><path d="M14 24 L34 24" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="14" cy="24" r="4" fill="white"/><circle cx="34" cy="24" r="4" fill="white"/>',
+        "color": "#5C2D91", "bg": "#F3EEF9", "category": "Network",
+        "azure_icon_key": "expressroute_circuits"
+    },
+    "sentinel": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><path d="M24 12 L24 24 L32 28" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="24" r="3" fill="white"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Security",
+        "azure_icon_key": "azure_sentinel"
+    },
+    "data_explorer": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 30 L20 18 L26 26 L34 14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_data_explorer_clusters"
+    },
+    "kusto": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M14 30 L20 18 L26 26 L34 14" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Data",
+        "azure_icon_key": "azure_data_explorer_clusters"
+    },
+    "signalr": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#0078D4"/><path d="M16 20 Q24 12 32 20 M16 28 Q24 36 32 28" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "signalr"
+    },
+    "notification_hub": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><path d="M18 16 L24 12 L30 16 L30 28 L18 28 Z" stroke="white" stroke-width="2" fill="white" opacity="0.9"/><circle cx="24" cy="32" r="3" fill="white"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Integration",
+        "azure_icon_key": "notification_hubs"
+    },
+    "spring_apps": {
+        "icon_svg": '<circle cx="24" cy="24" r="18" fill="#6DB33F"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">🌱</text>',
+        "color": "#6DB33F", "bg": "#EFF8E8", "category": "Compute",
+        "azure_icon_key": "azure_spring_apps"
+    },
+    "static_web_app": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><text x="24" y="28" text-anchor="middle" font-size="10" fill="white" font-weight="700">SWA</text>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Compute",
+        "azure_icon_key": "static_apps"
+    },
+    "digital_twins": {
+        "icon_svg": '<rect x="6" y="8" width="36" height="32" rx="4" fill="#0078D4"/><circle cx="18" cy="20" r="5" fill="white" opacity="0.9"/><circle cx="30" cy="20" r="5" fill="white" opacity="0.9"/><line x1="18" y1="25" x2="18" y2="34" stroke="white" stroke-width="2"/><line x1="30" y1="25" x2="30" y2="34" stroke="white" stroke-width="2"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "IoT",
+        "azure_icon_key": "digital_twins"
+    },
+    "backup": {
+        "icon_svg": '<rect x="8" y="8" width="32" height="32" rx="4" fill="#0078D4"/><path d="M16 28 L24 16 L32 28 Z" stroke="white" stroke-width="2" fill="white" opacity="0.8"/>',
+        "color": "#0078D4", "bg": "#E8F4FD", "category": "Management",
+        "azure_icon_key": "backup_vault"
     },
 }
 
@@ -437,6 +564,17 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
   .node .node-bg {{ pointer-events: all; }}
   .node.selected .node-bg {{ stroke: #0078D4; stroke-width: 2.5; }}
   .node.selected {{ filter: drop-shadow(0 0 6px rgba(0,120,212,0.4)); }}
+
+  /* ── Edge highlight on node select ── */
+  .edge-path {{ transition: opacity 0.2s, stroke-width 0.2s; }}
+  .edge-label {{ transition: opacity 0.2s; }}
+  .edge-path.highlight {{ opacity: 1 !important; stroke-width: 2.5 !important; filter: drop-shadow(0 0 4px rgba(0,120,212,0.5)); }}
+  .edge-path.dimmed {{ opacity: 0.1 !important; }}
+  .edge-label.highlight {{ opacity: 1 !important; font-weight: 700; }}
+  .edge-label.dimmed {{ opacity: 0.15 !important; }}
+  .edge-label-bg.highlight {{ stroke: #0078D4 !important; stroke-width: 1.5 !important; }}
+  .edge-label-bg.dimmed {{ opacity: 0.15 !important; }}
+  .node.dimmed {{ opacity: 0.25; transition: opacity 0.2s; }}
 
   .subnet-rect {{
     rx: 6; ry: 6;
@@ -816,16 +954,62 @@ let isPanning = false, panSX = 0, panSY = 0, panSTx = 0, panSTy = 0;
 let _routeCounter = 0;
 
 // ── Bidirectional highlight ──
+let _selectedNodeId = null;
+
 function selectNode(nodeId) {{
+  const wasSelected = _selectedNodeId === nodeId;
+
   // Clear all selections
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  clearSelection();
+
+  // Toggle off if clicking same node
+  if (wasSelected) {{ _selectedNodeId = null; return; }}
+
+  _selectedNodeId = nodeId;
+
   // Highlight diagram node
   const svgNode = document.querySelector(`.node[data-id="${{nodeId}}"]`);
   if (svgNode) svgNode.classList.add('selected');
   // Highlight sidebar card
   const card = document.getElementById('card-' + nodeId);
   if (card) {{ card.classList.add('selected'); card.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }}); }}
+
+  // Find connected edges (where this node is from or to)
+  const connectedNodeIds = new Set([nodeId]);
+  document.querySelectorAll('.edge-path').forEach(p => {{
+    const f = p.getAttribute('data-from'), t = p.getAttribute('data-to');
+    if (f === nodeId || t === nodeId) {{
+      p.classList.add('highlight');
+      connectedNodeIds.add(f);
+      connectedNodeIds.add(t);
+    }} else {{
+      p.classList.add('dimmed');
+    }}
+  }});
+  document.querySelectorAll('.edge-label').forEach(g => {{
+    const f = g.getAttribute('data-from'), t = g.getAttribute('data-to');
+    if (f === nodeId || t === nodeId) {{
+      g.classList.add('highlight');
+      g.querySelector('.edge-label-bg')?.classList.add('highlight');
+    }} else {{
+      g.classList.add('dimmed');
+      g.querySelector('.edge-label-bg')?.classList.add('dimmed');
+    }}
+  }});
+  // Dim unconnected nodes
+  document.querySelectorAll('.node').forEach(n => {{
+    const nid = n.getAttribute('data-id');
+    if (!connectedNodeIds.has(nid)) n.classList.add('dimmed');
+  }});
+}}
+
+function clearSelection() {{
+  _selectedNodeId = null;
+  document.querySelectorAll('.node').forEach(n => {{ n.classList.remove('selected', 'dimmed'); }});
+  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.edge-path').forEach(p => {{ p.classList.remove('highlight', 'dimmed'); }});
+  document.querySelectorAll('.edge-label').forEach(g => {{ g.classList.remove('highlight', 'dimmed'); }});
+  document.querySelectorAll('.edge-label-bg').forEach(r => {{ r.classList.remove('highlight', 'dimmed'); }});
 }}
 
 function markerFor(type) {{
@@ -1296,6 +1480,9 @@ function renderDiagram() {{
     path.setAttribute('stroke-dasharray', edge.dash || '0');
     path.setAttribute('marker-end', `url(#${{markerFor(edge.type)}})`);
     path.setAttribute('opacity', isPeEdge ? '0.5' : '0.65');
+    path.classList.add('edge-path');
+    path.setAttribute('data-from', edge.from);
+    path.setAttribute('data-to', edge.to);
     root.appendChild(path);
 
     // Store label position for deferred rendering (after nodes)
@@ -1344,7 +1531,7 @@ function renderDiagram() {{
         }}
       }}
 
-      _edgeLabels.push({{ label: edge.label, x: chosen.x, y: chosen.y }});
+      _edgeLabels.push({{ label: edge.label, x: chosen.x, y: chosen.y, from: edge.from, to: edge.to }});
     }}
   }});
 
@@ -1512,7 +1699,11 @@ function renderDiagram() {{
   // ── Edge labels (rendered AFTER nodes — always visible on top) ──
   _edgeLabels.forEach(el => {{
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.classList.add('edge-label');
+    g.setAttribute('data-from', el.from);
+    g.setAttribute('data-to', el.to);
     const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.classList.add('edge-label-bg');
     const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     const bw = el.label.length * 5.5 + 10;
     r.setAttribute('x', el.x-bw/2); r.setAttribute('y', el.y-7);
@@ -1657,6 +1848,8 @@ document.getElementById('canvas').addEventListener('wheel', e => {{
 
 document.getElementById('canvas').addEventListener('mousedown', e => {{
   if (e.target.closest('.node')) return;
+  // Clear selection when clicking on empty canvas area
+  if (_selectedNodeId && !e.target.closest('.node')) clearSelection();
   isPanning = true;
   panSX = e.clientX; panSY = e.clientY;
   panSTx = viewTransform.x; panSTy = viewTransform.y;
