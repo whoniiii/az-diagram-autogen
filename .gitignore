@@ -20,4 +20,4 @@
 .github/skills/*
 !.github/skills/az-autopilot-agent/
 !.github/skills/az-autopilot-agent-core/
-!.github/skills/az-autopilot-agent-core-en/
+!.github/skills/azure-architecture-autopilot/

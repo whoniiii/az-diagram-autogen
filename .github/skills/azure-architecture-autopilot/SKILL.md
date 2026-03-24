@@ -1,5 +1,5 @@
 ---
-name: az-autopilot-agent-core-en
+name: azure-architecture-autopilot
 description: >
   Design Azure infrastructure using natural language, or analyze existing Azure resources
   to auto-generate architecture diagrams, refine them through conversation, and deploy with Bicep.

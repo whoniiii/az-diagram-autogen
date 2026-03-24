@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI for az-diagram-autogen."""
+"""CLI for azure-architecture-autopilot diagram engine."""
 import argparse
 import json
 import sys
@@ -15,7 +15,7 @@ from generator import generate_diagram
 def main():
     parser = argparse.ArgumentParser(
         description="Generate interactive Azure architecture diagrams",
-        prog="az-diagram-autogen"
+        prog="azure-architecture-autopilot"
     )
     parser.add_argument("-s", "--services", help="Services JSON (string or file path)")
     parser.add_argument("-c", "--connections", help="Connections JSON (string or file path)")
@@ -25,18 +25,11 @@ def main():
                         help="Output format: html (default), png, or both (html+png)")
     parser.add_argument("--vnet-info", default="", help="VNet CIDR info")
     parser.add_argument("--hierarchy", default="", help="Subscription/RG hierarchy JSON")
-    parser.add_argument("--reference", action="store_true", help="Print REFERENCE.md (skill integration guide)")
 
     args = parser.parse_args()
 
-    if args.reference:
-        ref_path = Path(__file__).parent / "REFERENCE.md"
-        content = ref_path.read_text(encoding="utf-8")
-        sys.stdout.buffer.write(content.encode("utf-8", errors="replace"))
-        return
-
     if not args.services or not args.connections:
-        parser.error("-s/--services and -c/--connections are required (use --reference for guide)")
+        parser.error("-s/--services and -c/--connections are required")
 
     services = _load_json(args.services, "services")
     connections = _load_json(args.connections, "connections")

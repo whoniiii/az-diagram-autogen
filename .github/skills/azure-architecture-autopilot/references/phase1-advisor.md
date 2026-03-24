@@ -333,12 +333,12 @@ if (-not $PythonCmd) {
 
 # ─── Step 2: Built-in Script Path Discovery (no pip install needed) ───
 # Priority 1: Project local skill folder
-$ScriptsDir = Get-ChildItem -Path ".github\skills\az-autopilot-agent-core-en" -Filter "cli.py" -Recurse -ErrorAction SilentlyContinue |
+$ScriptsDir = Get-ChildItem -Path ".github\skills\azure-architecture-autopilot" -Filter "cli.py" -Recurse -ErrorAction SilentlyContinue |
   Where-Object { $_.Directory.Name -eq 'scripts' } |
   Select-Object -First 1 -ExpandProperty DirectoryName
 # Priority 2: Global skill folder
 if (-not $ScriptsDir) {
-  $ScriptsDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\az-autopilot-agent-core-en" -Filter "cli.py" -Recurse -ErrorAction SilentlyContinue |
+  $ScriptsDir = Get-ChildItem -Path "$env:USERPROFILE\.copilot\skills\azure-architecture-autopilot" -Filter "cli.py" -Recurse -ErrorAction SilentlyContinue |
     Where-Object { $_.Directory.Name -eq 'scripts' } |
     Select-Object -First 1 -ExpandProperty DirectoryName
 }
@@ -395,8 +395,8 @@ with open("<project-name>/01_arch_diagram_draft.html", "w", encoding="utf-8") as
 
 **Full list of supported service types:**
 
-Available in the skill's built-in REFERENCE.md: `scripts/REFERENCE.md`
-Or via CLI: `& $PythonCmd "$ScriptsDir\cli.py" --reference`
+Available in the skill's built-in reference files under `references/`.
+Supported service type values are listed below in the services JSON format section.
 
 > **Diagram generation order**: (1) Verify Python path → (2) Verify built-in module path → (3) Compose services/connections JSON → (4) Execute. If Python is not installed, guide the user to install it before composing JSON. This prevents the waste of building JSON only to fail because Python is missing.
 
@@ -421,7 +421,7 @@ Dynamically composed based on the user's confirmed service list. Below is the JS
 ]
 ```
 
-Available type values: `ai_foundry`, `ai_hub`, `openai`, `search`, `ai_search`, `storage`, `adls`, `keyvault`, `kv`, `fabric`, `vm`, `bastion`, `vpn`, `vpn_gateway`, `adf`, `data_factory`, `pe`, `databricks`, `sql_server`, `sql_database`, `cosmos_db`, `app_service`, `appservice`, `app`, `aks`, `function_app`, `synapse`, `log_analytics`, `app_insights`, `appinsights`, `monitor`, `nsg`, `acr`, `container_registry`, `document_intelligence`, `form_recognizer`, `cdn`, `event_hub`, `redis`, `devops`, `app_gateway`, `iot_hub`, `stream_analytics`, `front_door`, `firewall`, `jumpbox`, `user`, etc. (Check the full list with `python scripts/cli.py --reference`. Types not in the list will be attempted via fuzzy matching and displayed with a default icon)
+Available type values: `ai_foundry`, `ai_hub`, `openai`, `search`, `ai_search`, `storage`, `adls`, `keyvault`, `kv`, `fabric`, `vm`, `bastion`, `vpn`, `vpn_gateway`, `adf`, `data_factory`, `pe`, `databricks`, `sql_server`, `sql_database`, `cosmos_db`, `app_service`, `appservice`, `app`, `aks`, `function_app`, `synapse`, `log_analytics`, `app_insights`, `appinsights`, `monitor`, `nsg`, `acr`, `container_registry`, `document_intelligence`, `form_recognizer`, `cdn`, `event_hub`, `redis`, `devops`, `app_gateway`, `iot_hub`, `stream_analytics`, `front_door`, `firewall`, `jumpbox`, `user`, etc. (Types not in the list will be attempted via fuzzy matching and displayed with a default icon)
 
 **When Using Private Endpoints — PE Node Addition Required:**
 

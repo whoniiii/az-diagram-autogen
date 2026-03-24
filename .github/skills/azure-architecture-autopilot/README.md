@@ -1,4 +1,4 @@
-# az-autopilot-agent-core-en
+# azure-architecture-autopilot
 
 > Design Azure infrastructure in natural language — or scan existing resources, visualize the architecture, and modify it through conversation.
 
@@ -162,8 +162,7 @@ SKILL.md (Router ~170 lines)
 ├── scripts/                       ← Embedded diagram engine (605+ icons)
 │   ├── generator.py               ← Main diagram generator
 │   ├── icons.py                   ← Azure official icons (Base64 SVG)
-│   ├── cli.py                     ← CLI entry point
-│   └── REFERENCE.md               ← Service type reference
+│   └── cli.py                     ← CLI entry point
 ├── references/                    ← Phase instructions + service patterns
 │   ├── phase0-scanner.md          ← Existing resource scan
 │   ├── phase1-advisor.md          ← Architecture design/modify
@@ -185,8 +184,6 @@ SKILL.md is a lightweight router. All phase logic lives in `references/`.
 ---
 
 ## 📊 Supported Diagram Types (47+)
-
-Full list: `python scripts/cli.py --reference`
 
 Key types: `ai_foundry`, `openai`, `ai_search`, `storage`, `adls`, `keyvault`, `fabric`, `databricks`, `aks`, `vm`, `app_service`, `function_app`, `cosmos_db`, `sql_server`, `synapse`, `adf`, `app_insights`, `log_analytics`, `firewall`, `front_door`, `redis`, `event_hub`, `iot_hub`, `acr`, `bastion`, `vpn_gateway`, `document_intelligence` ...
 
