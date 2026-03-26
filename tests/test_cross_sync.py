@@ -9,14 +9,9 @@ import unittest
 
 
 def _repo_root():
-    """Find the repo root (GHCP001/)."""
-    d = os.path.dirname(os.path.abspath(__file__))
-    while d and os.path.basename(d) != "GHCP001":
-        parent = os.path.dirname(d)
-        if parent == d:
-            break
-        d = parent
-    return d
+    """Find the repo root (parent of tests/)."""
+    d = os.path.dirname(os.path.abspath(__file__))  # tests/
+    return os.path.dirname(d)  # repo root
 
 
 def _read(path):
@@ -32,7 +27,7 @@ class TestGeneratorSync(unittest.TestCase):
     def setUp(self):
         root = _repo_root()
         self.source = _read(os.path.join(
-            root, "az-diagram-autogen", "az_diagram_autogen", "generator.py"))
+            root, "az_diagram_autogen", "generator.py"))
         self.en = _read(os.path.join(
             root, ".github", "skills", "azure-architecture-autopilot",
             "scripts", "generator.py"))
@@ -88,7 +83,7 @@ class TestIconsSync(unittest.TestCase):
     def setUp(self):
         root = _repo_root()
         self.source = _read(os.path.join(
-            root, "az-diagram-autogen", "az_diagram_autogen", "icons.py"))
+            root, "az_diagram_autogen", "icons.py"))
         self.en = _read(os.path.join(
             root, ".github", "skills", "azure-architecture-autopilot",
             "scripts", "icons.py"))

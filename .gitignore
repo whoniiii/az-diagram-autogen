@@ -1,21 +1,29 @@
+# ── Python / Build ──
+*.egg-info/
+__pycache__/
+*.pyc
+dist/
+build/
 
-# ── 핵심 2개만 추적, 나머지 전부 무시 ──
-# 추적 대상:
-#   az-diagram-autogen/          ← 다이어그램 엔진 (PyPI 패키지)
-#   .github/skills/azure-architecture-autopilot/  ← awesome-copilot 기여용 (EN)
-#   .github/copilot-instructions.md          ← 프로젝트 인스트럭션
+# ── Test output ──
+tests/test_output/
 
-# 전부 무시
-/*
-/*/
+# ── Misc ──
+*.html
+dev/
+*.zip
+*.code-workspace
 
-# 허용 목록
-!.gitignore
-!az-diagram-autogen/
-!.github/
-.github/*
-!.github/copilot-instructions.md
-!.github/agents/
-!.github/skills/
+# ── Docs/examples (not for PyPI) ──
+docs/
+examples/
+presentation/
+showcase_diagram.html
+
+# ── Legacy nested folder (flattened) ──
+az-diagram-autogen/
+
+# ── GitHub: only track allowed paths ──
+# .github/ — allow skills, agents, instructions
 .github/skills/*
 !.github/skills/azure-architecture-autopilot/

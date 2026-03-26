@@ -2,7 +2,6 @@
 and produces a markdown report for human review.
 
 Run:
-    cd az-diagram-autogen
     python -m pytest tests/test_visual_render.py -v -s
 
 Output:
