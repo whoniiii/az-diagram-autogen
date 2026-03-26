@@ -103,7 +103,7 @@ with open("output.html", "w", encoding="utf-8") as f:
 ```
 ````
 
-> The bundled `REFERENCE.md` contains the complete service type list (30+), JSON schema, connection types, and hierarchy format. The agent reads it via `--reference` so you don't need to list types in your SKILL.md.
+> The bundled `REFERENCE.md` contains the complete service type list (72 types), JSON schema, connection types, and hierarchy format. The agent reads it via `--reference` so you don't need to list types in your SKILL.md.
 
 ---
 
@@ -111,7 +111,7 @@ with open("output.html", "w", encoding="utf-8") as f:
 
 | Feature | Description |
 |---------|-------------|
-| **605 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
+| **636 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
 | **Interactive** | Drag-and-drop nodes, pan & zoom, click for details |
 | **Private Endpoints** | Visualize PE connections with dedicated group |
 | **VNet Boundaries** | Purple dashed boundaries with CIDR labels |
@@ -200,7 +200,7 @@ Contributions welcome! Feel free to open issues or submit PRs.
 git clone https://github.com/whoniiii/az-diagram-autogen.git
 cd az-diagram-autogen
 pip install -e .
-python -m unittest discover -s tests
+pytest tests/ -v
 ```
 
 ---
