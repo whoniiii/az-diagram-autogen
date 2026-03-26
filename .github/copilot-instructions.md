@@ -5,52 +5,46 @@
 Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 자연어로 Azure 아키텍처를 설계 → 다이어그램 생성 → Bicep 코드 생성 → 배포까지 자동화한다.
 
-## 핵심 컴포넌트 (4개)
+## 핵심 컴포넌트 (2개)
 
 | 컴포넌트 | 경로 | 역할 |
 |---|---|---|
 | **az-diagram-autogen** | `az-diagram-autogen/` | 다이어그램 생성 엔진 (핵심 Python 패키지). PyPI 배포용. |
-| **azure-architecture-autopilot-pip-kr** | `.github/skills/azure-architecture-autopilot-pip-kr/` | **외부 사용자용 (KR)** 스킬. `pip install az-diagram-autogen`으로 설치하여 사용. |
-| **azure-architecture-autopilot-kr** | `.github/skills/azure-architecture-autopilot-kr/` | **내부 사용자용 (KR)** 스킬. az-diagram-autogen을 내장(embedded)하여 pip 없이 사용. |
-| **azure-architecture-autopilot** | `.github/skills/azure-architecture-autopilot/` | **awesome-copilot 기여용 (EN)** 스킬. core와 동일하나 영문 + awesome-copilot 표준 구조(scripts/references/ 플랫). |
+| **azure-architecture-autopilot** | `.github/skills/azure-architecture-autopilot/` | **awesome-copilot 기여용 (EN)** 스킬. 엔진 내장 + awesome-copilot 표준 구조(scripts/references/ 플랫). |
 
-## ⚠️ 수정 시 반드시 3곳 동시 반영
+> ℹ️ KR 스킬 (`azure-architecture-autopilot-kr`, `azure-architecture-autopilot-pip-kr`)은 로컬에만 존재하며 git 추적 대상이 아님.
 
-**스킬 프롬프트/참조 문서 수정 요청이 오면 반드시 아래 3곳을 모두 업데이트해야 한다:**
+## ⚠️ 수정 시 반드시 2곳 동시 반영
 
-| # | 경로 | 설명 | 프롬프트 위치 | 참조 문서 위치 |
-|---|------|------|-------------|---------------|
-| 1 | `.github/skills/azure-architecture-autopilot-pip-kr/` | 외부 사용자용 (KR). pip install 방식 | `prompts/` | `references/` |
-| 2 | `.github/skills/azure-architecture-autopilot-kr/` | 내부 사용자용 (KR). 다이어그램 엔진 내장 | `prompts/` | `references/` |
-| 3 | `.github/skills/azure-architecture-autopilot/` | awesome-copilot 기여용 (EN). 엔진 내장 + 플랫 구조 | `references/` (prompts 포함) | `references/` |
+**스킬 프롬프트/참조 문서/엔진 수정 요청이 오면 반드시 아래 2곳을 모두 업데이트해야 한다:**
 
-### 3곳 차이점
+| # | 경로 | 설명 |
+|---|------|------|
+| 1 | `az-diagram-autogen/` | 소스 원본 (PyPI 패키지). 상대 import (`from .icons`) |
+| 2 | `.github/skills/azure-architecture-autopilot/` | awesome-copilot 기여용 (EN). 절대 import (`from icons`) |
 
-| 항목 | azure-architecture-autopilot-pip-kr (v3) | azure-architecture-autopilot-kr (v4 KR) | azure-architecture-autopilot (v4 EN) |
-|------|------------------------|-------------------------------|-----------------------------------|
-| 언어 | 한국어 | 한국어 | **영어** |
-| 다이어그램 엔진 | `pip install az-diagram-autogen` | `az_diagram_autogen/` 내장 | `scripts/` 에 플랫 내장 |
-| 프롬프트 경로 | `prompts/` | `prompts/` | `references/` (플랫, prompts 통합) |
-| 참조 문서 경로 | `references/`, `references/domain-packs/` | `references/`, `references/domain-packs/` | `references/` (플랫, domain-packs 통합) |
-| 실행 방식 | `pip install` + `python -m az_diagram_autogen` | `PYTHONPATH=$SkillDir` + `python -m az_diagram_autogen` | `python scripts/cli.py` |
-| 대상 | 외부 공개 배포 | 내부(사내) 배포 | github/awesome-copilot 기여 |
+### 2곳 차이점
+
+| 항목 | az-diagram-autogen (Source) | azure-architecture-autopilot (EN) |
+|------|---------------------------|-----------------------------------|
+| 언어 | — (라이브러리) | **영어** |
+| 다이어그램 엔진 | `az_diagram_autogen/` (패키지) | `scripts/` 에 플랫 내장 |
+| import 방식 | `from .icons import` (상대) | `from icons import` (절대) |
+| 프롬프트 | 없음 | `references/` (플랫, prompts 통합) |
+| 참조 문서 | 없음 | `references/` (플랫, domain-packs 통합) |
+| 실행 방식 | `python -m az_diagram_autogen` | `python scripts/cli.py` |
 
 ### 수정 규칙
 
-1. **프롬프트 내용 수정** (Phase 흐름, 질문 로직, 보고 형식 등)
-   - 3곳 모두 동일하게 수정
-   - 단, Section 1-2 (다이어그램 실행 방식)만 각각 다름 (위 표 참조)
+1. **프롬프트/참조 문서 수정** (Phase 흐름, 질문 로직, 보고 형식 등)
+   - `.github/skills/azure-architecture-autopilot/references/` 만 수정
 
-2. **참조 문서 수정** (`service-gotchas.md`, `azure-common-patterns.md` 등)
-   - 3곳 모두 동일하게 수정
-
-3. **다이어그램 엔진 수정** (`generator.py`, `icons.py` 등)
+2. **다이어그램 엔진 수정** (`generator.py`, `icons.py` 등)
    ```
-   az-diagram-autogen/az_diagram_autogen/generator.py           ← 소스 원본 (PyPI + v3용)
-   .github/skills/azure-architecture-autopilot-kr/az_diagram_autogen/   ← v4 KR 내장 복사본
-   .github/skills/azure-architecture-autopilot/scripts/           ← v4 EN 플랫 복사본
+   az-diagram-autogen/az_diagram_autogen/generator.py   ← 소스 원본 (상대 import)
+   .github/skills/azure-architecture-autopilot/scripts/  ← EN 플랫 복사본 (절대 import)
    ```
-   → 소스 원본 수정 → v4 KR에 복사 → v4 EN에 복사 (EN은 플랫 구조 + 절대 import)
+   → 소스 원본 수정 → EN에 복사 (import만 `from .icons` → `from icons` 변경)
 
 ## 기술 환경
 
@@ -82,6 +76,36 @@ Azure 인프라 자동화를 위한 GitHub Copilot CLI 스킬 생태계.
 
 **자동 커밋 금지** — 사용자가 명시적으로 "커밋해" 라고 요청할 때만 커밋한다. 수정 후 자동으로 `git commit`을 실행하지 않는다.
 
+## 🧪 테스트 규칙
+
+**코드 수정 후 반드시 테스트를 실행한다.**
+
+```powershell
+cd az-diagram-autogen
+& "C:\Users\jeonghoonlee\AppData\Local\Programs\Python\Python314\python.exe" -m pytest tests/ -v --tb=short
+```
+
+### 테스트 스위트 (67 tests)
+
+| 파일 | 역할 | 주요 검증 |
+|---|---|---|
+| `test_type_normalization.py` | 타입 정규화 | 95개 alias → canonical, ARM 이름 매핑, 대소문자/하이픈 |
+| `test_icon_resolution.py` | 아이콘 매핑 | Fabric/Foundry 아이콘, azure_icon_key 유효성 |
+| `test_pe_detection.py` | PE 렌더링 | PE 타입 변환, 보라색 색상, 카운트 |
+| `test_e2e.py` | E2E 다이어그램 | 전체 서비스 렌더링, 실제 아키텍처, 엣지케이스 |
+| `test_visual_render.py` | 시각 검증 | HTML→PNG 렌더링, 5개 시나리오, RENDER_REPORT.md 생성 |
+| `test_cross_sync.py` | 2곳 동기화 | source↔EN generator.py/icons.py 일치 검증 |
+| `test_generator.py` | 기본 생성 | HTML 출력, 타이틀, hierarchy |
+| `test_icons.py` | 아이콘 DB | 636개 아이콘 존재, 검색, 정규화 |
+| `test_cli.py` | CLI | JSON 로딩, 파일 출력 |
+
+### 수정 시 테스트 추가 기준
+
+- **새 서비스 타입 추가** → `test_type_normalization.py`에 alias 추가
+- **새 아이콘 추가** → `test_icon_resolution.py`에 키 검증 추가
+- **generator.py 로직 변경** → `test_e2e.py`에 시나리오 추가
+- **source↔EN 동기화 후** → `test_cross_sync.py` 자동 검증됨
+
 ## 파일 구조
 
 ```
@@ -97,20 +121,10 @@ GHCP001/
 ├── .github/
 │   ├── copilot-instructions.md      ← 이 파일
 │   └── skills/
-│       ├── azure-architecture-autopilot-pip-kr/ ← 외부용 (KR, pip)
-│       │   ├── SKILL.md
-│       │   ├── prompts/
-│       │   └── references/
-│       ├── azure-architecture-autopilot-kr/  ← 내부용 (KR, embedded)
-│       │   ├── SKILL.md
-│       │   ├── az_diagram_autogen/      ← 내장 복사본
-│       │   ├── prompts/
-│       │   └── references/
-│       ├── azure-architecture-autopilot/  ← awesome-copilot 기여용 (EN, flat)
-│       │   ├── SKILL.md
-│       │   ├── scripts/                 ← 다이어그램 엔진 (플랫)
-│       │   ├── references/              ← 프롬프트 + 참조 문서 (플랫)
-│       │   └── assets/                  ← 스크린샷 이미지
-│       └── revealjs-presentation-builder/
+│       └── azure-architecture-autopilot/  ← awesome-copilot 기여용 (EN, flat)
+│           ├── SKILL.md
+│           ├── scripts/                 ← 다이어그램 엔진 (플랫)
+│           ├── references/              ← 프롬프트 + 참조 문서 (플랫)
+│           └── assets/                  ← 스크린샷 이미지
 └── .gitignore
 ```

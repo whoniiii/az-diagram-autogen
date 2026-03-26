@@ -6,3 +6,4 @@ build/
 *.html
 
 dev/
+tests/test_output/
