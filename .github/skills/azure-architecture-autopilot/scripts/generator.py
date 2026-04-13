@@ -762,10 +762,10 @@ const mainNodes = useRgLayout ? NODES : NODES.filter(n => n.type !== 'pe');
 // Group box layout parameters
 const GROUP_PAD = 24;
 const GROUP_TITLE_H = 28;
-const GROUP_GAP = 50;
+const GROUP_GAP = 60;
 const COLS_PER_GROUP = 3;
-const CELL_W = SVC_W + 70;
-const CELL_H = SVC_H + 70;
+const CELL_W = SVC_W + 100;
+const CELL_H = SVC_H + 90;
 
 function groupDimensions(nodeCount) {{
   const cols = Math.min(nodeCount, COLS_PER_GROUP);
@@ -1142,7 +1142,7 @@ function renderDiagram() {{
       gr.setAttribute('x', gb.x); gr.setAttribute('y', gb.y);
       gr.setAttribute('width', gb.w); gr.setAttribute('height', gb.h);
       gr.setAttribute('rx', '8'); gr.setAttribute('fill', '#f3eef9');
-      gr.setAttribute('stroke', '#d4b8ff'); gr.setAttribute('stroke-width', '1');
+      gr.setAttribute('stroke', '#c8b8e8'); gr.setAttribute('stroke-width', '1.2');
       gr.setAttribute('stroke-dasharray', '4,4');
       root.appendChild(gr);
     }} else {{
@@ -1152,8 +1152,8 @@ function renderDiagram() {{
       gr.setAttribute('width', gb.w); gr.setAttribute('height', gb.h);
       gr.setAttribute('rx', '8');
       gr.setAttribute('fill', gb.isRG ? '#fafafa' : 'white');
-      gr.setAttribute('stroke', gb.isRG ? gb.color : '#e1dfdd');
-      gr.setAttribute('stroke-width', gb.isRG ? '1.5' : '1');
+      gr.setAttribute('stroke', gb.isRG ? gb.color : '#c8c6c4');
+      gr.setAttribute('stroke-width', gb.isRG ? '1.5' : '1.2');
       if (gb.isRG) gr.setAttribute('stroke-dasharray', '6,3');
       root.appendChild(gr);
     }}
@@ -1182,7 +1182,7 @@ function renderDiagram() {{
     // Group label — RG uses 📁, PE uses "Private Endpoints", category uses category name
     const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     label.setAttribute('x', gb.x + 12); label.setAttribute('y', gb.y + 18);
-    label.setAttribute('font-size', '11'); label.setAttribute('font-weight', '600');
+    label.setAttribute('font-size', '12'); label.setAttribute('font-weight', '600');
     label.setAttribute('fill', gb.color); label.setAttribute('font-family', 'Segoe UI, sans-serif');
     label.textContent = gb.isRG ? `📁 ${{gb.cat}}` : gb.cat;
     root.appendChild(label);
@@ -1357,6 +1357,113 @@ function renderDiagram() {{
     return d;
   }}
 
+  // Find crossing point between two orthogonal segments (H crosses V only)
+  function findSegCrossing(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2) {{
+    const aIsH = Math.abs(ay1 - ay2) < 1;
+    const bIsH = Math.abs(by1 - by2) < 1;
+    if (aIsH === bIsH) return null;
+    let hx1, hx2, hy, vx, vy1, vy2;
+    if (aIsH) {{
+      hy = ay1; hx1 = Math.min(ax1, ax2); hx2 = Math.max(ax1, ax2);
+      vx = bx1; vy1 = Math.min(by1, by2); vy2 = Math.max(by1, by2);
+    }} else {{
+      hy = by1; hx1 = Math.min(bx1, bx2); hx2 = Math.max(bx1, bx2);
+      vx = ax1; vy1 = Math.min(ay1, ay2); vy2 = Math.max(ay1, ay2);
+    }}
+    const MM = 14;
+    if (vx > hx1 + MM && vx < hx2 - MM &&
+        hy > vy1 + MM && hy < vy2 - MM) {{
+      return {{ x: vx, y: hy }};
+    }}
+    return null;
+  }}
+
+  // Build orthogonal path with rounded corners AND bridge arcs at crossing points
+  function buildPathWithBridges(pts, bridges) {{
+    const CR = 6, BR = 7;
+    if (pts.length <= 1) return '';
+
+    // Index bridges by segment, sort along travel direction
+    const bySeg = {{}};
+    (bridges || []).forEach(b => {{
+      if (!bySeg[b.segIdx]) bySeg[b.segIdx] = [];
+      bySeg[b.segIdx].push(b);
+    }});
+    for (const si in bySeg) {{
+      const i = parseInt(si);
+      if (i >= pts.length - 1) continue;
+      const p1 = pts[i], p2 = pts[i + 1];
+      const isH = Math.abs(p1.y - p2.y) < 1;
+      if (isH) {{
+        const dir = Math.sign(p2.x - p1.x) || 1;
+        bySeg[si].sort((a, b) => (a.x - b.x) * dir);
+      }} else {{
+        const dir = Math.sign(p2.y - p1.y) || 1;
+        bySeg[si].sort((a, b) => (a.y - b.y) * dir);
+      }}
+    }}
+
+    // Helper: append bridge arcs for a segment
+    function appendBridges(d, segIdx, segP1, segP2) {{
+      const segB = bySeg[segIdx] || [];
+      if (segB.length === 0) return d;
+      const isH = Math.abs(segP1.y - segP2.y) < 1;
+      segB.forEach(b => {{
+        if (isH) {{
+          const dir = Math.sign(segP2.x - segP1.x) || 1;
+          d += ` L ${{b.x - BR * dir}} ${{segP1.y}}`;
+          d += ` A ${{BR}} ${{BR}} 0 0 ${{dir > 0 ? 1 : 0}} ${{b.x + BR * dir}} ${{segP1.y}}`;
+        }} else {{
+          const dir = Math.sign(segP2.y - segP1.y) || 1;
+          d += ` L ${{segP1.x}} ${{b.y - BR * dir}}`;
+          d += ` A ${{BR}} ${{BR}} 0 0 ${{dir > 0 ? 0 : 1}} ${{segP1.x}} ${{b.y + BR * dir}}`;
+        }}
+      }});
+      return d;
+    }}
+
+    // 2-point path (straight line)
+    if (pts.length === 2) {{
+      let d = `M ${{pts[0].x}} ${{pts[0].y}}`;
+      d = appendBridges(d, 0, pts[0], pts[1]);
+      d += ` L ${{pts[1].x}} ${{pts[1].y}}`;
+      return d;
+    }}
+
+    // Multi-point path with corners + bridges
+    let d = `M ${{pts[0].x}} ${{pts[0].y}}`;
+    for (let i = 1; i < pts.length; i++) {{
+      const prev = pts[i - 1], curr = pts[i];
+      const isLast = (i === pts.length - 1);
+
+      // Compute corner trimming for non-last points
+      let target = curr, cSuffix = '';
+      if (!isLast) {{
+        const next = pts[i + 1];
+        const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
+        const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+        const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+        const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+        if (len1 >= 1 && len2 >= 1) {{
+          const r = Math.min(CR, len1 / 2, len2 / 2);
+          const bx = curr.x - (dx1 / len1) * r;
+          const by = curr.y - (dy1 / len1) * r;
+          const ax = curr.x + (dx2 / len2) * r;
+          const ay = curr.y + (dy2 / len2) * r;
+          target = {{ x: bx, y: by }};
+          cSuffix = ` Q ${{curr.x}} ${{curr.y}} ${{ax}} ${{ay}}`;
+        }}
+      }}
+
+      // Draw bridges on segment (i-1) → i
+      d = appendBridges(d, i - 1, prev, curr);
+
+      // Line to target + optional corner curve
+      d += ` L ${{target.x}} ${{target.y}}${{cSuffix}}`;
+    }}
+    return d;
+  }}
+
   // ── Obstacle avoidance: route edges around nodes ──
   function segHitsNode(x1, y1, x2, y2, pos, nw, nh, margin) {{
     const nx1 = pos.x - margin, ny1 = pos.y - margin;
@@ -1392,7 +1499,7 @@ function renderDiagram() {{
           const pos = positions[node.id];
           if (!pos) continue;
           const nw = node.type === 'pe' ? PE_W : SVC_W;
-          const nh = node.type === 'pe' ? PE_H : SVC_H;
+          const nh = (node.type === 'pe' ? PE_H : SVC_H) + 20; // include text below box
 
           if (!segHitsNode(p1.x, p1.y, p2.x, p2.y, pos, nw, nh, MARGIN)) continue;
 
@@ -1474,39 +1581,29 @@ function renderDiagram() {{
     return points;
   }}
 
-  // ── Edges (rendered FIRST — nodes render on top, covering crossings) ──
-  // Edge labels are collected and rendered AFTER nodes so they stay visible.
-  // Orthogonal routing only: horizontal/vertical segments with right-angle turns.
+  // ── Edges: three-phase rendering ──
+  // Phase 0: pre-scan exit sides → Phase 1: compute paths with staggered anchors
+  // Phase 2: detect crossings → Phase 3: render with bridge arcs
   const _edgeLabels = [];
+
+  // PHASE 0 — pre-scan: count how many edges exit each side of each node
+  const _sideTotal = {{}};
+  const _edgeSides = [];
   EDGES.forEach(edge => {{
     const fn = NODES.find(n => n.id === edge.from);
     const tn = NODES.find(n => n.id === edge.to);
-    if (!fn || !tn) return;
+    if (!fn || !tn) {{ _edgeSides.push(null); return; }}
     const fromBox = getNodeBox(fn);
     const toBox = getNodeBox(tn);
-    if (!fromBox || !toBox) return;
+    if (!fromBox || !toBox) {{ _edgeSides.push(null); return; }}
 
     const isPeEdge = edge.type === 'private';
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    let pts;
-
+    let exitSide, entrySide;
     if (isPeEdge) {{
-      // PE → orthogonal routing (also avoids nodes)
-      const sx = fromBox.cx, sy = fromBox.y + fromBox.h;
-      const ex = toBox.cx, ey = toBox.y;
-      if (Math.abs(sx - ex) < 8) {{
-        pts = [{{x: sx, y: sy}}, {{x: ex, y: ey}}];
-      }} else {{
-        const midY = (sy + ey) / 2;
-        pts = [{{x: sx, y: sy}}, {{x: sx, y: midY}}, {{x: ex, y: midY}}, {{x: ex, y: ey}}];
-      }}
-      pts = avoidNodes(pts, edge.from, edge.to);
+      exitSide = 'bottom'; entrySide = 'top';
     }} else {{
-      // Orthogonal routing: determine exit/entry sides
       const dx = toBox.cx - fromBox.cx;
       const dy = toBox.cy - fromBox.cy;
-      let exitSide, entrySide;
-
       if (Math.abs(dx) >= Math.abs(dy)) {{
         exitSide = dx >= 0 ? 'right' : 'left';
         entrySide = dx >= 0 ? 'left' : 'right';
@@ -1514,36 +1611,303 @@ function renderDiagram() {{
         exitSide = dy >= 0 ? 'bottom' : 'top';
         entrySide = dy >= 0 ? 'top' : 'bottom';
       }}
+    }}
+    const ek = `${{edge.from}}_${{exitSide}}`;
+    const nk = `${{edge.to}}_${{entrySide}}`;
+    _sideTotal[ek] = (_sideTotal[ek] || 0) + 1;
+    _sideTotal[nk] = (_sideTotal[nk] || 0) + 1;
+    _edgeSides.push({{ exitSide, entrySide, isPeEdge, fromBox, toBox, edge }});
+  }});
 
-      const sp = borderExit(fromBox, exitSide);
-      const ep = borderExit(toBox, entrySide);
-      const stagger = (_routeCounter % 5 - 2) * 6;
+  // Staggered border exit: spread multiple edges evenly along node side
+  const _sideUsed = {{}};
+  function staggeredExit(nodeId, box, side) {{
+    const key = `${{nodeId}}_${{side}}`;
+    const total = _sideTotal[key] || 1;
+    const idx = _sideUsed[key] || 0;
+    _sideUsed[key] = idx + 1;
+    const isH = (side === 'top' || side === 'bottom');
+    const sideLen = isH ? box.w : box.h;
+    const CM = Math.max(40, sideLen * 0.3); // corner margin — 40px min or 30% of side
+    const usable = Math.max(0, sideLen - 2 * CM);
+    const maxSpread = Math.min(usable, total * 14);
+    const step = total > 1 ? maxSpread / (total - 1) : 0;
+    const offset = total > 1 ? -maxSpread / 2 + idx * step : 0;
+    if (side === 'top') return {{ x: Math.max(box.x + CM, Math.min(box.x + box.w - CM, box.cx + offset)), y: box.y }};
+    if (side === 'bottom') return {{ x: Math.max(box.x + CM, Math.min(box.x + box.w - CM, box.cx + offset)), y: box.y + box.h }};
+    if (side === 'left') return {{ x: box.x, y: Math.max(box.y + CM, Math.min(box.y + box.h - CM, box.cy + offset)) }};
+    return {{ x: box.x + box.w, y: Math.max(box.y + CM, Math.min(box.y + box.h - CM, box.cy + offset)) }};
+  }}
+
+  // PHASE 1 — compute edge paths with staggered anchors
+  const _allEdgePaths = [];
+  _edgeSides.forEach((info, idx) => {{
+    if (!info) return;
+    const {{ exitSide, entrySide, isPeEdge, fromBox, toBox, edge }} = info;
+    let pts;
+
+    if (isPeEdge) {{
+      const sp = staggeredExit(edge.from, fromBox, 'bottom');
+      const ep = staggeredExit(edge.to, toBox, 'top');
+      if (Math.abs(sp.x - ep.x) < 8) {{
+        pts = [sp, ep];
+      }} else {{
+        let midY = (sp.y + ep.y) / 2;
+        midY = Math.max(midY, fromBox.y + fromBox.h + 40);
+        midY = Math.min(midY, toBox.y - 40);
+        pts = [sp, {{x: sp.x, y: midY}}, {{x: ep.x, y: midY}}, ep];
+      }}
+      pts = avoidNodes(pts, edge.from, edge.to);
+    }} else {{
+      const sp = staggeredExit(edge.from, fromBox, exitSide);
+      const ep = staggeredExit(edge.to, toBox, entrySide);
+      const stagger = (_routeCounter % 11 - 5) * 12;
       _routeCounter++;
+      const STUB = 40;
 
       if (exitSide === 'right' || exitSide === 'left') {{
         if (Math.abs(sp.y - ep.y) < 8) {{
-          pts = [sp, ep]; // straight horizontal
+          pts = [sp, ep];
         }} else {{
-          const midX = (sp.x + ep.x) / 2 + stagger;
+          let midX = (sp.x + ep.x) / 2 + stagger;
+          if (exitSide === 'right') midX = Math.max(midX, fromBox.x + fromBox.w + STUB);
+          if (exitSide === 'left') midX = Math.min(midX, fromBox.x - STUB);
+          if (entrySide === 'right') midX = Math.max(midX, toBox.x + toBox.w + STUB);
+          if (entrySide === 'left') midX = Math.min(midX, toBox.x - STUB);
           pts = [sp, {{x: midX, y: sp.y}}, {{x: midX, y: ep.y}}, ep];
         }}
       }} else {{
         if (Math.abs(sp.x - ep.x) < 8) {{
-          pts = [sp, ep]; // straight vertical
+          pts = [sp, ep];
         }} else {{
-          const midY = (sp.y + ep.y) / 2 + stagger;
+          let midY = (sp.y + ep.y) / 2 + stagger;
+          if (exitSide === 'bottom') midY = Math.max(midY, fromBox.y + fromBox.h + STUB);
+          if (exitSide === 'top') midY = Math.min(midY, fromBox.y - STUB);
+          if (entrySide === 'bottom') midY = Math.max(midY, toBox.y + toBox.h + STUB);
+          if (entrySide === 'top') midY = Math.min(midY, toBox.y - STUB);
           pts = [sp, {{x: sp.x, y: midY}}, {{x: ep.x, y: midY}}, ep];
         }}
       }}
 
-      // Avoid intermediate nodes
       pts = avoidNodes(pts, edge.from, edge.to);
     }}
 
-    // Render path
-    path.setAttribute('d', pts.length <= 2
-      ? `M ${{pts[0].x}} ${{pts[0].y}} L ${{pts[pts.length-1].x}} ${{pts[pts.length-1].y}}`
-      : buildOrthoPath(pts));
+    // POST-ROUTING: enforce perpendicular stub at exit & entry ends
+    // 3 cases: (a) already orthogonal + long enough → skip
+    //          (b) orthogonal but short → extend existing turn point
+    //          (c) non-orthogonal → insert 2-point connector
+    const _eSide = isPeEdge ? 'bottom' : exitSide;
+    const _nSide = isPeEdge ? 'top' : entrySide;
+    const _STUB = 40;
+    if (pts.length >= 3) {{
+      // --- EXIT end ---
+      const _p0 = pts[0], _p1 = pts[1];
+      const _eH = (_eSide === 'right' || _eSide === 'left');
+      if (_eH) {{
+        const _d = _eSide === 'right' ? 1 : -1;
+        const _ortho = Math.abs(_p0.y - _p1.y) <= 1;
+        if (_ortho) {{
+          const _dist = (_p1.x - _p0.x) * _d;
+          if (_dist < _STUB) {{
+            const sx = _p0.x + _d * _STUB;
+            pts[1] = {{x: sx, y: _p0.y}};
+            if (pts.length > 2 && Math.abs(pts[2].x - _p1.x) <= 1) {{
+              pts[2] = {{x: sx, y: pts[2].y}};
+            }}
+          }}
+        }} else {{
+          const sx = _p0.x + _d * _STUB;
+          pts.splice(1, 0, {{x: sx, y: _p0.y}}, {{x: sx, y: _p1.y}});
+        }}
+      }} else {{
+        const _d = _eSide === 'bottom' ? 1 : -1;
+        const _ortho = Math.abs(_p0.x - _p1.x) <= 1;
+        if (_ortho) {{
+          const _dist = (_p1.y - _p0.y) * _d;
+          if (_dist < _STUB) {{
+            const sy = _p0.y + _d * _STUB;
+            pts[1] = {{x: _p0.x, y: sy}};
+            if (pts.length > 2 && Math.abs(pts[2].y - _p1.y) <= 1) {{
+              pts[2] = {{x: pts[2].x, y: sy}};
+            }}
+          }}
+        }} else {{
+          const sy = _p0.y + _d * _STUB;
+          pts.splice(1, 0, {{x: _p0.x, y: sy}}, {{x: _p1.x, y: sy}});
+        }}
+      }}
+      // --- ENTRY end ---
+      const _pN = pts[pts.length - 1], _pP = pts[pts.length - 2];
+      const _nH = (_nSide === 'right' || _nSide === 'left');
+      if (_nH) {{
+        const _d = _nSide === 'left' ? -1 : 1;
+        const _ortho = Math.abs(_pN.y - _pP.y) <= 1;
+        if (_ortho) {{
+          const _dist = (_pP.x - _pN.x) * _d;
+          if (_dist < _STUB) {{
+            const sx = _pN.x + _d * _STUB;
+            const _idx = pts.length - 2;
+            pts[_idx] = {{x: sx, y: _pN.y}};
+            if (_idx > 0 && Math.abs(pts[_idx - 1].x - _pP.x) <= 1) {{
+              pts[_idx - 1] = {{x: sx, y: pts[_idx - 1].y}};
+            }}
+          }}
+        }} else {{
+          const sx = _pN.x + _d * _STUB;
+          pts.splice(pts.length - 1, 0, {{x: sx, y: _pP.y}}, {{x: sx, y: _pN.y}});
+        }}
+      }} else {{
+        const _d = _nSide === 'top' ? -1 : 1;
+        const _ortho = Math.abs(_pN.x - _pP.x) <= 1;
+        if (_ortho) {{
+          const _dist = (_pP.y - _pN.y) * _d;
+          if (_dist < _STUB) {{
+            const sy = _pN.y + _d * _STUB;
+            const _idx = pts.length - 2;
+            pts[_idx] = {{x: _pN.x, y: sy}};
+            if (_idx > 0 && Math.abs(pts[_idx - 1].y - _pP.y) <= 1) {{
+              pts[_idx - 1] = {{x: pts[_idx - 1].x, y: sy}};
+            }}
+          }}
+        }} else {{
+          const sy = _pN.y + _d * _STUB;
+          pts.splice(pts.length - 1, 0, {{x: _pP.x, y: sy}}, {{x: _pN.x, y: sy}});
+        }}
+      }}
+    }}
+
+    // SAFETY: break any remaining diagonal segments into orthogonal L-shapes
+    for (let _i = 0; _i < pts.length - 1; _i++) {{
+      const _a = pts[_i], _b = pts[_i + 1];
+      if (Math.abs(_a.x - _b.x) > 1 && Math.abs(_a.y - _b.y) > 1) {{
+        pts.splice(_i + 1, 0, {{x: _a.x, y: _b.y}});
+      }}
+    }}
+
+    // SIMPLIFY: remove duplicate & collinear middle points
+    for (let _i = pts.length - 2; _i >= 1; _i--) {{
+      const _a = pts[_i - 1], _b = pts[_i], _c = pts[_i + 1];
+      if (Math.abs(_a.x - _b.x) <= 1 && Math.abs(_a.y - _b.y) <= 1) {{
+        pts.splice(_i, 1); continue;
+      }}
+      if ((Math.abs(_a.x - _b.x) <= 1 && Math.abs(_b.x - _c.x) <= 1) ||
+          (Math.abs(_a.y - _b.y) <= 1 && Math.abs(_b.y - _c.y) <= 1)) {{
+        pts.splice(_i, 1);
+      }}
+    }}
+
+    _allEdgePaths.push({{ edge, pts, isPeEdge }});
+  }});
+
+  // OVERLAP SEPARATION — shift collinear overlapping segments apart
+  // Direction based on edge index (consistent per edge, no cancellation)
+  const OSEP = 12;
+  for (let pass = 0; pass < 3; pass++) {{
+    for (let i = 0; i < _allEdgePaths.length; i++) {{
+      for (let j = i + 1; j < _allEdgePaths.length; j++) {{
+        const pA = _allEdgePaths[i].pts;
+        const pB = _allEdgePaths[j].pts;
+        const dir = (j % 2 === 0) ? 1 : -1;
+        for (let si = 0; si < pA.length - 1; si++) {{
+          for (let sj = 0; sj < pB.length - 1; sj++) {{
+            const a1 = pA[si], a2 = pA[si + 1];
+            const b1 = pB[sj], b2 = pB[sj + 1];
+            const aV = Math.abs(a1.x - a2.x) < 2;
+            const bV = Math.abs(b1.x - b2.x) < 2;
+            const aH = Math.abs(a1.y - a2.y) < 2;
+            const bH = Math.abs(b1.y - b2.y) < 2;
+
+            if (aV && bV && Math.abs(a1.x - b1.x) < OSEP) {{
+              const ov = Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y))
+                       - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y));
+              if (ov > 10) {{
+                const shift = OSEP * dir;
+                if (sj > 0) pB[sj] = {{ x: b1.x + shift, y: b1.y }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x + shift, y: b2.y }};
+              }}
+            }}
+            if (aH && bH && Math.abs(a1.y - b1.y) < OSEP) {{
+              const ov = Math.min(Math.max(a1.x, a2.x), Math.max(b1.x, b2.x))
+                       - Math.max(Math.min(a1.x, a2.x), Math.min(b1.x, b2.x));
+              if (ov > 10) {{
+                const shift = OSEP * dir;
+                if (sj > 0) pB[sj] = {{ x: b1.x, y: b1.y + shift }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x, y: b2.y + shift }};
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+
+  // FINAL ORTHOGONALIZATION — fix diagonals introduced by overlap separation
+  _allEdgePaths.forEach(({{ pts }}) => {{
+    for (let _i = 0; _i < pts.length - 1; _i++) {{
+      const _a = pts[_i], _b = pts[_i + 1];
+      if (Math.abs(_a.x - _b.x) > 1 && Math.abs(_a.y - _b.y) > 1) {{
+        pts.splice(_i + 1, 0, {{x: _a.x, y: _b.y}});
+      }}
+    }}
+    // Remove collinear
+    for (let _i = pts.length - 2; _i >= 1; _i--) {{
+      const _a = pts[_i - 1], _b = pts[_i], _c = pts[_i + 1];
+      if (Math.abs(_a.x - _b.x) <= 1 && Math.abs(_a.y - _b.y) <= 1) {{
+        pts.splice(_i, 1); continue;
+      }}
+      if ((Math.abs(_a.x - _b.x) <= 1 && Math.abs(_b.x - _c.x) <= 1) ||
+          (Math.abs(_a.y - _b.y) <= 1 && Math.abs(_b.y - _c.y) <= 1)) {{
+        pts.splice(_i, 1);
+      }}
+    }}
+  }});
+
+  // CROSSING DETECTION — find where edges cross each other
+  // Global bridge registry prevents overlapping arcs at nearby crossing points
+  const _edgeBridges = {{}};
+  const _allBridgePositions = [];
+  const BRIDGE_DEDUP = 18; // min distance between bridge arcs (> 2*BR)
+  for (let i = 0; i < _allEdgePaths.length; i++) {{
+    for (let j = i + 1; j < _allEdgePaths.length; j++) {{
+      const ptsA = _allEdgePaths[i].pts;
+      const ptsB = _allEdgePaths[j].pts;
+      for (let si = 0; si < ptsA.length - 1; si++) {{
+        for (let sj = 0; sj < ptsB.length - 1; sj++) {{
+          const cross = findSegCrossing(
+            ptsA[si].x, ptsA[si].y, ptsA[si + 1].x, ptsA[si + 1].y,
+            ptsB[sj].x, ptsB[sj].y, ptsB[sj + 1].x, ptsB[sj + 1].y
+          );
+          if (cross) {{
+            // Skip if another bridge arc already exists nearby
+            const tooClose = _allBridgePositions.some(
+              bp => Math.abs(bp.x - cross.x) < BRIDGE_DEDUP && Math.abs(bp.y - cross.y) < BRIDGE_DEDUP
+            );
+            if (!tooClose) {{
+              if (!_edgeBridges[j]) _edgeBridges[j] = [];
+              _edgeBridges[j].push({{ segIdx: sj, x: cross.x, y: cross.y }});
+              _allBridgePositions.push({{ x: cross.x, y: cross.y }});
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+
+  // PASS 2 — render edges with bridge arcs
+  _allEdgePaths.forEach(({{ edge, pts, isPeEdge }}, edgeIdx) => {{
+    const bridges = _edgeBridges[edgeIdx] || [];
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+    let pathD;
+    if (bridges.length > 0) {{
+      pathD = buildPathWithBridges(pts, bridges);
+    }} else if (pts.length <= 2) {{
+      pathD = `M ${{pts[0].x}} ${{pts[0].y}} L ${{pts[pts.length - 1].x}} ${{pts[pts.length - 1].y}}`;
+    }} else {{
+      pathD = buildOrthoPath(pts);
+    }}
+
+    path.setAttribute('d', pathD);
     path.setAttribute('fill', 'none');
     path.setAttribute('stroke', isPeEdge ? '#5C2D91' : '#8a8886');
     path.setAttribute('stroke-width', isPeEdge ? '1' : '1.2');
@@ -1555,8 +1919,7 @@ function renderDiagram() {{
     path.setAttribute('data-to', edge.to);
     root.appendChild(path);
 
-    // Store label position for deferred rendering (after nodes)
-    // Collision-aware: try each segment's midpoint, pick the first that doesn't overlap a node.
+    // Label placement — collision-aware
     if (edge.label) {{
       const bw = edge.label.length * 5.5 + 10;
       const bh = 14;
@@ -1572,30 +1935,25 @@ function renderDiagram() {{
         }});
       }}
 
-      // Collect candidate positions: midpoint of each segment
       const candidates = [];
       for (let s = 0; s < pts.length - 1; s++) {{
-        const cx = (pts[s].x + pts[s+1].x) / 2;
-        const cy = (pts[s].y + pts[s+1].y) / 2;
-        // Prefer middle segments first, then outer ones
-        const priority = Math.abs(s - (pts.length-2)/2);
+        const cx = (pts[s].x + pts[s + 1].x) / 2;
+        const cy = (pts[s].y + pts[s + 1].y) / 2;
+        const priority = Math.abs(s - (pts.length - 2) / 2);
         candidates.push({{ x: cx, y: cy, priority }});
       }}
       candidates.sort((a, b) => a.priority - b.priority);
 
-      // Pick first candidate that doesn't hit a node
       let chosen = candidates[0];
       for (const c of candidates) {{
         if (!labelHitsNode(c.x, c.y)) {{ chosen = c; break; }}
       }}
 
-      // If all candidates hit, offset the best one perpendicular to segment
       if (labelHitsNode(chosen.x, chosen.y)) {{
-        // Try shifting up/down/left/right by 20px
         const offsets = [{{x:0,y:-20}},{{x:0,y:20}},{{x:-20,y:0}},{{x:20,y:0}}];
         for (const off of offsets) {{
-          if (!labelHitsNode(chosen.x+off.x, chosen.y+off.y)) {{
-            chosen = {{ x: chosen.x+off.x, y: chosen.y+off.y }};
+          if (!labelHitsNode(chosen.x + off.x, chosen.y + off.y)) {{
+            chosen = {{ x: chosen.x + off.x, y: chosen.y + off.y }};
             break;
           }}
         }}
@@ -1622,7 +1980,7 @@ function renderDiagram() {{
     rect.setAttribute('class', 'node-bg');
     rect.setAttribute('width', nw); rect.setAttribute('height', nh);
     rect.setAttribute('rx', '8'); rect.setAttribute('fill', 'white');
-    rect.setAttribute('stroke', '#edebe9'); rect.setAttribute('stroke-width', '1');
+    rect.setAttribute('stroke', '#c8c6c4'); rect.setAttribute('stroke-width', '1.2');
     rect.setAttribute('filter', 'url(#shadow)');
     g.appendChild(rect);
 
@@ -1658,7 +2016,7 @@ function renderDiagram() {{
     const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     name.setAttribute('x', nw/2); name.setAttribute('y', isPe ? 52 : 60);
     name.setAttribute('text-anchor', 'middle');
-    name.setAttribute('font-size', isPe ? '9' : '10');
+    name.setAttribute('font-size', isPe ? '10' : '11');
     name.setAttribute('font-weight', '600'); name.setAttribute('fill', '#323130');
     name.setAttribute('font-family', 'Segoe UI, sans-serif');
     const maxC = isPe ? 14 : 20;
@@ -1670,7 +2028,7 @@ function renderDiagram() {{
       const sku = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       sku.setAttribute('x', nw/2); sku.setAttribute('y', 72);
       sku.setAttribute('text-anchor', 'middle');
-      sku.setAttribute('font-size', '9'); sku.setAttribute('fill', '#a19f9d');
+      sku.setAttribute('font-size', '10'); sku.setAttribute('fill', '#a19f9d');
       sku.setAttribute('font-family', 'Segoe UI, sans-serif');
       sku.textContent = node.sku;
       g.appendChild(sku);
@@ -1680,7 +2038,7 @@ function renderDiagram() {{
       const det = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       det.setAttribute('x', nw/2); det.setAttribute('y', 63);
       det.setAttribute('text-anchor', 'middle');
-      det.setAttribute('font-size', '8'); det.setAttribute('fill', '#a19f9d');
+      det.setAttribute('font-size', '9'); det.setAttribute('fill', '#a19f9d');
       det.setAttribute('font-family', 'Segoe UI, sans-serif');
       det.textContent = node.details[0];
       g.appendChild(det);
@@ -1709,7 +2067,7 @@ function renderDiagram() {{
       const cat = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       cat.setAttribute('x', nw/2); cat.setAttribute('y', nh + 14);
       cat.setAttribute('text-anchor', 'middle');
-      cat.setAttribute('font-size', '9'); cat.setAttribute('fill', node.color);
+      cat.setAttribute('font-size', '10'); cat.setAttribute('fill', node.color);
       cat.setAttribute('font-weight', '600');
       cat.setAttribute('font-family', 'Segoe UI, sans-serif');
       cat.textContent = typeLabel;
@@ -1775,14 +2133,14 @@ function renderDiagram() {{
     const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     r.classList.add('edge-label-bg');
     const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    const bw = el.label.length * 5.5 + 10;
+    const bw = el.label.length * 6 + 10;
     r.setAttribute('x', el.x-bw/2); r.setAttribute('y', el.y-7);
     r.setAttribute('width', bw); r.setAttribute('height', 14);
     r.setAttribute('rx', '3'); r.setAttribute('fill', 'white');
     r.setAttribute('stroke', '#d2d0ce'); r.setAttribute('stroke-width', '0.5');
     r.setAttribute('opacity', '0.95');
     t.setAttribute('x', el.x); t.setAttribute('y', el.y+3);
-    t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '8');
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '9');
     t.setAttribute('fill', '#605e5c'); t.setAttribute('font-family', 'Segoe UI, sans-serif');
     t.textContent = el.label;
     g.appendChild(r); g.appendChild(t);

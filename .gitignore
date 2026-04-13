@@ -6,7 +6,7 @@ dist/
 build/
 
 # ── Test output ──
-tests/test_output/
+tests/
 
 # ── Misc ──
 *.html
