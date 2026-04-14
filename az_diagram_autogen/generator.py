@@ -863,10 +863,10 @@ const fullCatOrder = [...catOrder, ...extraCats];
 const serviceGroups = fullCatOrder.filter(cat => catGroups[cat] && catGroups[cat].length > 0
   && !bottomCategories.includes(cat));
 
-let gx = 60, gy = 140;  // starting position for service groups
+let gx = 60, gy = 140;
 let rowMaxH = 0;
 let rowStartX = 60;
-const MAX_ROW_W = Math.max(1600, serviceGroups.length * 400);  // wider to keep Security alongside AI/Data
+const MAX_ROW_W = Math.max(1600, serviceGroups.length * 400);
 
 serviceGroups.forEach(cat => {{
   const nodes = catGroups[cat];
@@ -1259,36 +1259,6 @@ function renderDiagram() {{
     const w = node.type === 'pe' ? PE_W : SVC_W;
     const h = node.type === 'pe' ? PE_H : SVC_H;
     return {{ x: pos.x, y: pos.y, w, h, cx: pos.x + w/2, cy: pos.y + h/2 }};
-  }}
-
-  // Check if direct line between two nodes crosses ANY other node
-  function hasObstacle(fromId, toId, x1, y1, x2, y2) {{
-    for (const n of NODES) {{
-      if (n.id === fromId || n.id === toId) continue;
-      const pos = positions[n.id];
-      if (!pos) continue;
-      const w = n.type === 'pe' ? PE_W : SVC_W;
-      const h = n.type === 'pe' ? PE_H : SVC_H;
-      const pad = 6;
-      const left = pos.x - pad, right = pos.x + w + pad;
-      const top = pos.y - pad, bottom = pos.y + h + pad;
-      // Liang-Barsky line clipping
-      const dx = x2 - x1, dy = y2 - y1;
-      let tmin = 0, tmax = 1;
-      const edges = [[-dx, x1 - left], [dx, right - x1], [-dy, y1 - top], [dy, bottom - y1]];
-      let hit = true;
-      for (const [p, q] of edges) {{
-        if (Math.abs(p) < 0.001) {{ if (q < 0) {{ hit = false; break; }} }}
-        else {{
-          const t = q / p;
-          if (p < 0) {{ if (t > tmin) tmin = t; }}
-          else {{ if (t < tmax) tmax = t; }}
-          if (tmin > tmax) {{ hit = false; break; }}
-        }}
-      }}
-      if (hit && tmin < tmax) return true;
-    }}
-    return false;
   }}
 
   // Border point: exit/enter at edge of rectangle
@@ -1893,7 +1863,8 @@ function renderDiagram() {{
               const ov = Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y))
                        - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y));
               if (ov > 10) {{
-                const shift = OSEP * dir;
+                let shift = OSEP * dir;
+                if (b1.x + shift < 20) shift = Math.abs(shift);
                 if (sj > 0) pB[sj] = {{ x: b1.x + shift, y: b1.y }};
                 if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x + shift, y: b2.y }};
               }}
@@ -2126,6 +2097,7 @@ function renderDiagram() {{
     for (let _t = 1; _t <= 100; _t++) {{
       for (const _d of [-1, 1]) {{
         const _cx = prefX + _d * _t * OSEP;
+        if (_cx < 20) continue;
         if (_colUsed(_cx)) continue;
         if (_isColClear(_cx, yMin, yMax, skipId1, skipId2, skipGbs)) return _cx;
       }}
@@ -2167,11 +2139,11 @@ function renderDiagram() {{
     const _toId = _allEdgePaths[_worstEdge].edge.to;
     const start = pB[0];
     const end = pB[pB.length - 1];
-    const laneY = _bottomLaneBase + _bottomSlot * _LANE_SPC;
     // Source/dest sections are exempt — verticals can pass through own sections
     const srcGb = _findGb(start.x, start.y);
     const dstGb = _findGb(end.x, end.y);
     const skipGbs = [srcGb, dstGb].filter(g => g !== null);
+    const laneY = _bottomLaneBase + _bottomSlot * _LANE_SPC;
     const _exitX = _findCol(start.x, Math.min(start.y, laneY), Math.max(start.y, laneY), _fromId, _toId, skipGbs);
     const _enterX = _findCol(end.x, Math.min(end.y, laneY), Math.max(end.y, laneY), _fromId, _toId, skipGbs);
     if (_exitX === null || _enterX === null) {{
@@ -2195,9 +2167,9 @@ function renderDiagram() {{
   for (let _rSep = 0; _rSep < 6; _rSep++) {{
     for (let i = 0; i < _allEdgePaths.length; i++) {{
       for (let j = i + 1; j < _allEdgePaths.length; j++) {{
-        // Separate all edge pairs (rerouted or not) to handle post-reroute overlaps
         const pA = _allEdgePaths[i].pts;
         const pB = _allEdgePaths[j].pts;
+        // Separate all edge pairs (rerouted or not) to handle post-reroute overlaps
         const dir = (j % 2 === 0) ? 1 : -1;
         for (let si = 0; si < pA.length - 1; si++) {{
           for (let sj = 0; sj < pB.length - 1; sj++) {{
@@ -2211,7 +2183,8 @@ function renderDiagram() {{
               const ov = Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y))
                        - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y));
               if (ov > 10) {{
-                const shift = OSEP2 * dir;
+                let shift = OSEP2 * dir;
+                if (b1.x + shift < 20) shift = Math.abs(shift);
                 if (sj > 0) pB[sj] = {{ x: b1.x + shift, y: b1.y }};
                 if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x + shift, y: b2.y }};
               }}
@@ -2249,6 +2222,45 @@ function renderDiagram() {{
       }}
     }}
   }});
+
+  // FINAL OVERLAP SEPARATION — catch any overlaps re-created by orthogonalization
+  for (let _fSep = 0; _fSep < 4; _fSep++) {{
+    for (let i = 0; i < _allEdgePaths.length; i++) {{
+      for (let j = i + 1; j < _allEdgePaths.length; j++) {{
+        const pA = _allEdgePaths[i].pts;
+        const pB = _allEdgePaths[j].pts;
+        for (let si = 0; si < pA.length - 1; si++) {{
+          for (let sj = 0; sj < pB.length - 1; sj++) {{
+            const a1 = pA[si], a2 = pA[si + 1];
+            const b1 = pB[sj], b2 = pB[sj + 1];
+            const aH = Math.abs(a1.y - a2.y) < 2;
+            const bH = Math.abs(b1.y - b2.y) < 2;
+            const aV = Math.abs(a1.x - a2.x) < 2;
+            const bV = Math.abs(b1.x - b2.x) < 2;
+            if (aH && bH && Math.abs(a1.y - b1.y) < 6) {{
+              const ov = Math.min(Math.max(a1.x, a2.x), Math.max(b1.x, b2.x))
+                       - Math.max(Math.min(a1.x, a2.x), Math.min(b1.x, b2.x));
+              if (ov > 20) {{
+                const shift = 8 * ((j % 2 === 0) ? 1 : -1);
+                if (sj > 0) pB[sj] = {{ x: b1.x, y: b1.y + shift }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x, y: b2.y + shift }};
+              }}
+            }}
+            if (aV && bV && Math.abs(a1.x - b1.x) < 6) {{
+              const ov = Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y))
+                       - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y));
+              if (ov > 20) {{
+                let shift = 8 * ((j % 2 === 0) ? 1 : -1);
+                if (b1.x + shift < 20) shift = Math.abs(shift);
+                if (sj > 0) pB[sj] = {{ x: b1.x + shift, y: b1.y }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x + shift, y: b2.y }};
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
 
   // CROSSING DETECTION— find which edges cross each other (for color differentiation)
   const _crossNeighbors = {{}};
