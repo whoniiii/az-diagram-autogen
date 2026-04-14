@@ -704,16 +704,16 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
     <svg id="canvas">
       <defs>
         <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#0078D4" opacity="0.5"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" opacity="0.7"/>
         </marker>
         <marker id="arr-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#0F9D58" opacity="0.5"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" opacity="0.7"/>
         </marker>
         <marker id="arr-sec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#E8A000" opacity="0.5"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" opacity="0.7"/>
         </marker>
         <marker id="arr-pe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#5C2D91" opacity="0.5"/>
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" opacity="0.7"/>
         </marker>
         <filter id="shadow">
           <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.08"/>
@@ -1135,6 +1135,7 @@ function renderDiagram() {{
   }} // end if(!useRgLayout) for VNet boundary
 
   // ── Draw group boxes (category or RG — depends on layout mode) ──
+  const _groupLabelElements = []; // store labels to re-render on top of edges
   groupBoxes.forEach(gb => {{
     if (gb.isPE) {{
       // PE group — always draw with dashed style
@@ -1186,6 +1187,7 @@ function renderDiagram() {{
     label.setAttribute('fill', gb.color); label.setAttribute('font-family', 'Segoe UI, sans-serif');
     label.textContent = gb.isRG ? `📁 ${{gb.cat}}` : gb.cat;
     root.appendChild(label);
+    _groupLabelElements.push(label);
 
     // Make title bar draggable — drags all nodes inside
     titleBar.style.cursor = 'grab';
@@ -1370,7 +1372,7 @@ function renderDiagram() {{
       hy = by1; hx1 = Math.min(bx1, bx2); hx2 = Math.max(bx1, bx2);
       vx = ax1; vy1 = Math.min(ay1, ay2); vy2 = Math.max(ay1, ay2);
     }}
-    const MM = 14;
+    const MM = 2;
     if (vx > hx1 + MM && vx < hx2 - MM &&
         hy > vy1 + MM && hy < vy2 - MM) {{
       return {{ x: vx, y: hy }};
@@ -1380,7 +1382,7 @@ function renderDiagram() {{
 
   // Build orthogonal path with rounded corners AND bridge arcs at crossing points
   function buildPathWithBridges(pts, bridges) {{
-    const CR = 6, BR = 7;
+    const CR = 6, BR = 12;
     if (pts.length <= 1) return '';
 
     // Index bridges by segment, sort along travel direction
@@ -1619,6 +1621,71 @@ function renderDiagram() {{
     _edgeSides.push({{ exitSide, entrySide, isPeEdge, fromBox, toBox, edge }});
   }});
 
+  // ── RACK MARSHALLING: build channel map for inter-group edge bundling ──
+  // Step 1: map each node to its containing group box
+  const _nodeGrp = {{}};
+  NODES.forEach(n => {{
+    const pos = positions[n.id];
+    if (!pos) return;
+    const nw = n.type === 'pe' ? PE_W : SVC_W;
+    const nh = n.type === 'pe' ? PE_H : SVC_H;
+    const cx = pos.x + nw / 2, cy = pos.y + nh / 2;
+    for (let gi = 0; gi < groupBoxes.length; gi++) {{
+      const gb = groupBoxes[gi];
+      if (cx >= gb.x && cx <= gb.x + gb.w && cy >= gb.y && cy <= gb.y + gb.h) {{
+        _nodeGrp[n.id] = gi; break;
+      }}
+    }}
+  }});
+
+  // Step 2: identify channels between group pairs + assign slot offsets
+  const _chMap = {{}};       // key → {{ axis:'y'|'x', value: number }}
+  const _chEdges = {{}};     // key → [edgeIdx, ...]
+  _edgeSides.forEach((info, idx) => {{
+    if (!info || info.isPeEdge) return;
+    const sg = _nodeGrp[info.edge.from], tg = _nodeGrp[info.edge.to];
+    if (sg === undefined || tg === undefined) return;
+
+    let key;
+    if (sg !== tg) {{
+      key = Math.min(sg, tg) + '_' + Math.max(sg, tg);
+      if (!_chEdges[key]) _chEdges[key] = [];
+      _chEdges[key].push(idx);
+      if (!_chMap[key]) {{
+        const a = groupBoxes[sg], b = groupBoxes[tg];
+        if (a.y + a.h <= b.y)      _chMap[key] = {{ axis: 'y', value: (a.y + a.h + b.y) / 2 }};
+        else if (b.y + b.h <= a.y) _chMap[key] = {{ axis: 'y', value: (b.y + b.h + a.y) / 2 }};
+        else if (a.x + a.w <= b.x) _chMap[key] = {{ axis: 'x', value: (a.x + a.w + b.x) / 2 }};
+        else if (b.x + b.w <= a.x) _chMap[key] = {{ axis: 'x', value: (b.x + b.w + a.x) / 2 }};
+      }}
+    }} else {{
+      // Intra-group edges: group by direction for slot offset assignment
+      const dir = (info.exitSide === 'bottom' || info.exitSide === 'top') ? 'v' : 'h';
+      key = 'i' + sg + dir;
+      if (!_chEdges[key]) _chEdges[key] = [];
+      _chEdges[key].push(idx);
+      // No fixed channel value — each edge uses its own midpoint + offset
+    }}
+  }});
+
+  // Step 3: sort edges within each channel and assign slot offsets
+  const _chOff = {{}};  // edgeIdx → offset in px
+  const _CH_SLOT = 18;  // spacing between lines in a bundle
+  Object.keys(_chEdges).forEach(key => {{
+    const ch = _chMap[key];
+    const arr = _chEdges[key];
+    const isVert = ch ? ch.axis === 'y' : key.endsWith('v');
+    arr.sort((a, b) => {{
+      const ia = _edgeSides[a], ib = _edgeSides[b];
+      if (isVert) return (ia.fromBox.cx + ia.toBox.cx) - (ib.fromBox.cx + ib.toBox.cx);
+      return (ia.fromBox.cy + ia.toBox.cy) - (ib.fromBox.cy + ib.toBox.cy);
+    }});
+    const n = arr.length;
+    arr.forEach((ei, slot) => {{
+      _chOff[ei] = n > 1 ? (slot - (n - 1) / 2) * _CH_SLOT : 0;
+    }});
+  }});
+
   // Staggered border exit: spread multiple edges evenly along node side
   const _sideUsed = {{}};
   function staggeredExit(nodeId, box, side) {{
@@ -1661,15 +1728,20 @@ function renderDiagram() {{
     }} else {{
       const sp = staggeredExit(edge.from, fromBox, exitSide);
       const ep = staggeredExit(edge.to, toBox, entrySide);
-      const stagger = (_routeCounter % 11 - 5) * 12;
-      _routeCounter++;
       const STUB = 40;
+
+      // Channel lookup for inter-group marshalling
+      const _sg = _nodeGrp[edge.from], _tg = _nodeGrp[edge.to];
+      const _ck = _sg !== undefined && _tg !== undefined && _sg !== _tg
+        ? Math.min(_sg, _tg) + '_' + Math.max(_sg, _tg) : null;
+      const _cc = _ck ? _chMap[_ck] : null;
+      const _co = _chOff[idx] || 0;
 
       if (exitSide === 'right' || exitSide === 'left') {{
         if (Math.abs(sp.y - ep.y) < 8) {{
           pts = [sp, ep];
         }} else {{
-          let midX = (sp.x + ep.x) / 2 + stagger;
+          let midX = (_cc && _cc.axis === 'x') ? _cc.value + _co : (sp.x + ep.x) / 2 + _co;
           if (exitSide === 'right') midX = Math.max(midX, fromBox.x + fromBox.w + STUB);
           if (exitSide === 'left') midX = Math.min(midX, fromBox.x - STUB);
           if (entrySide === 'right') midX = Math.max(midX, toBox.x + toBox.w + STUB);
@@ -1680,7 +1752,7 @@ function renderDiagram() {{
         if (Math.abs(sp.x - ep.x) < 8) {{
           pts = [sp, ep];
         }} else {{
-          let midY = (sp.y + ep.y) / 2 + stagger;
+          let midY = (_cc && _cc.axis === 'y') ? _cc.value + _co : (sp.y + ep.y) / 2 + _co;
           if (exitSide === 'bottom') midY = Math.max(midY, fromBox.y + fromBox.h + STUB);
           if (exitSide === 'top') midY = Math.min(midY, fromBox.y - STUB);
           if (entrySide === 'bottom') midY = Math.max(midY, toBox.y + toBox.h + STUB);
@@ -1800,9 +1872,9 @@ function renderDiagram() {{
   }});
 
   // OVERLAP SEPARATION — shift collinear overlapping segments apart
-  // Direction based on edge index (consistent per edge, no cancellation)
-  const OSEP = 12;
-  for (let pass = 0; pass < 3; pass++) {{
+  // Only separate segments closer than OSEP — pre-marshalled edges (16px apart) are unaffected
+  const OSEP = 8;
+  for (let pass = 0; pass < 4; pass++) {{
     for (let i = 0; i < _allEdgePaths.length; i++) {{
       for (let j = i + 1; j < _allEdgePaths.length; j++) {{
         const pA = _allEdgePaths[i].pts;
@@ -1862,58 +1934,221 @@ function renderDiagram() {{
     }}
   }});
 
-  // CROSSING DETECTION — find where edges cross each other
-  // Global bridge registry prevents overlapping arcs at nearby crossing points
-  const _edgeBridges = {{}};
-  const _allBridgePositions = [];
-  const BRIDGE_DEDUP = 18; // min distance between bridge arcs (> 2*BR)
+  // ── RE-ROUTING PASS: minimize crossings by routing edges via outer margins ──
+  // Instead of shortest-path, reroute crossing edges AROUND group boxes
+  const _gbLeft = groupBoxes.length > 0 ? Math.min(...groupBoxes.map(g => g.x)) : 0;
+  const _gbRight = groupBoxes.length > 0 ? Math.max(...groupBoxes.map(g => g.x + g.w)) : 800;
+  const _gbTop = groupBoxes.length > 0 ? Math.min(...groupBoxes.map(g => g.y)) : 0;
+  const _gbBottom = groupBoxes.length > 0 ? Math.max(...groupBoxes.map(g => g.y + g.h)) : 600;
+  const _RMARGIN = 50; // margin outside group bounds for rerouted edges
+  const _RM_SLOT = 14; // spacing between rerouted edges on the same margin
+
+  // Count H×V crossings between one edge and all others
+  function _cntCross(eIdx) {{
+    let c = 0;
+    const pA = _allEdgePaths[eIdx].pts;
+    for (let j = 0; j < _allEdgePaths.length; j++) {{
+      if (j === eIdx) continue;
+      const pB = _allEdgePaths[j].pts;
+      for (let si = 0; si < pA.length - 1; si++) {{
+        for (let sj = 0; sj < pB.length - 1; sj++) {{
+          if (findSegCrossing(pA[si].x, pA[si].y, pA[si+1].x, pA[si+1].y,
+                              pB[sj].x, pB[sj].y, pB[sj+1].x, pB[sj+1].y)) c++;
+        }}
+      }}
+    }}
+    return c;
+  }}
+
+  // Generate a margin route: sp → stub → margin → margin → stub → ep
+  function _mRoute(sp, ep, exitSide, entrySide, side, slotOff) {{
+    const S = 40; // stub length
+    const so = slotOff || 0;
+    // stub exit from source node
+    const s1 = exitSide === 'bottom' ? {{x: sp.x, y: sp.y + S}}
+             : exitSide === 'top'    ? {{x: sp.x, y: sp.y - S}}
+             : exitSide === 'right'  ? {{x: sp.x + S, y: sp.y}}
+             :                         {{x: sp.x - S, y: sp.y}};
+    // stub entry to target node
+    const s2 = entrySide === 'top'    ? {{x: ep.x, y: ep.y - S}}
+             : entrySide === 'bottom' ? {{x: ep.x, y: ep.y + S}}
+             : entrySide === 'left'   ? {{x: ep.x - S, y: ep.y}}
+             :                          {{x: ep.x + S, y: ep.y}};
+    if (side === 'left') {{
+      const mx = _gbLeft - _RMARGIN - so;
+      return [sp, s1, {{x: mx, y: s1.y}}, {{x: mx, y: s2.y}}, s2, ep];
+    }}
+    if (side === 'right') {{
+      const mx = _gbRight + _RMARGIN + so;
+      return [sp, s1, {{x: mx, y: s1.y}}, {{x: mx, y: s2.y}}, s2, ep];
+    }}
+    if (side === 'top') {{
+      const my = _gbTop - _RMARGIN - so;
+      return [sp, s1, {{x: s1.x, y: my}}, {{x: s2.x, y: my}}, s2, ep];
+    }}
+    // bottom
+    const my = _gbBottom + _RMARGIN + so;
+    return [sp, s1, {{x: s1.x, y: my}}, {{x: s2.x, y: my}}, s2, ep];
+  }}
+
+  // Iteratively reroute edges with crossings via margins
+  const _marginUsed = {{ left: 0, right: 0, top: 0, bottom: 0 }};
+  const _tried = new Set();
+  for (let _ri = 0; _ri < 30; _ri++) {{
+    // Find edge with most crossings that hasn't been tried
+    let worstIdx = -1, worstCnt = 0;
+    for (let i = 0; i < _allEdgePaths.length; i++) {{
+      if (_allEdgePaths[i].isPeEdge || _tried.has(i)) continue;
+      const cnt = _cntCross(i);
+      if (cnt > worstCnt) {{ worstCnt = cnt; worstIdx = i; }}
+    }}
+    if (worstIdx < 0 || worstCnt === 0) break;
+
+    const ei = _edgeSides[worstIdx];
+    if (!ei) {{ _tried.add(worstIdx); continue; }}
+    const origPts = _allEdgePaths[worstIdx].pts;
+    const sp = origPts[0];
+    const ep = origPts[origPts.length - 1];
+    let bestPts = origPts, bestCnt = worstCnt, bestSide = null;
+
+    // Calculate span width for each margin to assign proper slot depth
+    for (const side of ['left', 'right', 'top', 'bottom']) {{
+      const alt = _mRoute(sp, ep, ei.exitSide, ei.entrySide, side, _marginUsed[side]);
+      _allEdgePaths[worstIdx].pts = alt;
+      const cnt = _cntCross(worstIdx);
+      _allEdgePaths[worstIdx].pts = origPts;
+      if (cnt < bestCnt) {{
+        bestCnt = cnt; bestPts = alt; bestSide = side;
+      }}
+    }}
+
+    if (bestSide && bestCnt < worstCnt) {{
+      _allEdgePaths[worstIdx].pts = bestPts;
+      _marginUsed[bestSide] += _RM_SLOT;
+    }} else {{
+      _tried.add(worstIdx); // mark as cannot-improve, try next edge
+    }}
+  }}
+
+  // POST-REROUTE: sort co-margin edges by span width (widest = outermost)
+  // Prevents vertical-segment crossings between edges on same margin side
+  const _marginEdges = {{ left: [], right: [], top: [], bottom: [] }};
+  for (let i = 0; i < _allEdgePaths.length; i++) {{
+    const pts = _allEdgePaths[i].pts;
+    if (pts.length !== 6) continue; // only margin-routed edges have 6 points
+    // Detect which margin side this edge uses
+    const p2 = pts[2], p3 = pts[3];
+    if (p2.y === p3.y) {{
+      // horizontal segment on margin → top or bottom
+      if (p2.y < _gbTop) {{ _marginEdges.top.push(i); }}
+      else if (p2.y > _gbBottom) {{ _marginEdges.bottom.push(i); }}
+    }} else if (p2.x === p3.x) {{
+      // vertical segment on margin → left or right
+      if (p2.x < _gbLeft) {{ _marginEdges.left.push(i); }}
+      else if (p2.x > _gbRight) {{ _marginEdges.right.push(i); }}
+    }}
+  }}
+  // Sort each margin group: widest span → outermost slot
+  for (const side of ['left', 'right', 'top', 'bottom']) {{
+    const idxs = _marginEdges[side];
+    if (idxs.length < 2) continue;
+    const isHoriz = (side === 'top' || side === 'bottom');
+    // Calculate span for each edge
+    const spans = idxs.map(i => {{
+      const pts = _allEdgePaths[i].pts;
+      return isHoriz
+        ? Math.abs(pts[2].x - pts[3].x)
+        : Math.abs(pts[2].y - pts[3].y);
+    }});
+    // Sort indices by span descending (widest first → outermost)
+    const sorted = idxs.map((idx, j) => ({{ idx, span: spans[j] }}))
+                       .sort((a, b) => b.span - a.span);
+    // Reassign y/x positions for sorted edges
+    const baseMargin = isHoriz
+      ? (side === 'top' ? _gbTop - _RMARGIN : _gbBottom + _RMARGIN)
+      : (side === 'left' ? _gbLeft - _RMARGIN : _gbRight + _RMARGIN);
+    const dir = (side === 'top' || side === 'left') ? -1 : 1;
+    sorted.forEach((s, k) => {{
+      const pts = _allEdgePaths[s.idx].pts;
+      const newM = baseMargin + dir * k * _RM_SLOT;
+      if (isHoriz) {{
+        pts[2].y = newM; pts[3].y = newM;
+      }} else {{
+        pts[2].x = newM; pts[3].x = newM;
+      }}
+    }});
+  }}
+
+  // CROSSING DETECTION — find which edges cross each other (for color differentiation)
+  const _crossNeighbors = {{}};
   for (let i = 0; i < _allEdgePaths.length; i++) {{
     for (let j = i + 1; j < _allEdgePaths.length; j++) {{
       const ptsA = _allEdgePaths[i].pts;
       const ptsB = _allEdgePaths[j].pts;
-      for (let si = 0; si < ptsA.length - 1; si++) {{
-        for (let sj = 0; sj < ptsB.length - 1; sj++) {{
-          const cross = findSegCrossing(
+      let crossed = false;
+      for (let si = 0; si < ptsA.length - 1 && !crossed; si++) {{
+        for (let sj = 0; sj < ptsB.length - 1 && !crossed; sj++) {{
+          if (findSegCrossing(
             ptsA[si].x, ptsA[si].y, ptsA[si + 1].x, ptsA[si + 1].y,
             ptsB[sj].x, ptsB[sj].y, ptsB[sj + 1].x, ptsB[sj + 1].y
-          );
-          if (cross) {{
-            // Skip if another bridge arc already exists nearby
-            const tooClose = _allBridgePositions.some(
-              bp => Math.abs(bp.x - cross.x) < BRIDGE_DEDUP && Math.abs(bp.y - cross.y) < BRIDGE_DEDUP
-            );
-            if (!tooClose) {{
-              if (!_edgeBridges[j]) _edgeBridges[j] = [];
-              _edgeBridges[j].push({{ segIdx: sj, x: cross.x, y: cross.y }});
-              _allBridgePositions.push({{ x: cross.x, y: cross.y }});
-            }}
-          }}
+          )) crossed = true;
         }}
+      }}
+      if (crossed) {{
+        if (!_crossNeighbors[i]) _crossNeighbors[i] = new Set();
+        if (!_crossNeighbors[j]) _crossNeighbors[j] = new Set();
+        _crossNeighbors[i].add(j);
+        _crossNeighbors[j].add(i);
       }}
     }}
   }}
 
-  // PASS 2 — render edges with bridge arcs
-  _allEdgePaths.forEach(({{ edge, pts, isPeEdge }}, edgeIdx) => {{
-    const bridges = _edgeBridges[edgeIdx] || [];
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  // Greedy graph coloring — crossing edges get distinct colors
+  const _CROSS_COLORS = ['#0078D4', '#E3008C', '#00B7C3', '#FF8C00', '#107C10', '#881798'];
+  const _edgeColor = {{}};
+  const crossingEdges = Object.keys(_crossNeighbors).map(Number)
+    .sort((a, b) => _crossNeighbors[b].size - _crossNeighbors[a].size);
+  crossingEdges.forEach(eIdx => {{
+    const neighborColors = new Set();
+    _crossNeighbors[eIdx].forEach(n => {{
+      if (_edgeColor[n] !== undefined) neighborColors.add(_edgeColor[n]);
+    }});
+    let colorIdx = 0;
+    while (neighborColors.has(colorIdx)) colorIdx++;
+    _edgeColor[eIdx] = colorIdx;
+  }});
 
+  // RENDER EDGES — no bridge arcs, just orthogonal paths with color coding
+
+  function renderEdge({{ edge, pts, isPeEdge, edgeIdx }}) {{
     let pathD;
-    if (bridges.length > 0) {{
-      pathD = buildPathWithBridges(pts, bridges);
-    }} else if (pts.length <= 2) {{
+    if (pts.length <= 2) {{
       pathD = `M ${{pts[0].x}} ${{pts[0].y}} L ${{pts[pts.length - 1].x}} ${{pts[pts.length - 1].y}}`;
     }} else {{
       pathD = buildOrthoPath(pts);
     }}
 
+    // Determine edge color: PE=purple, crossing=colored, normal=gray
+    let edgeStroke, edgeOpacity;
+    if (isPeEdge) {{
+      edgeStroke = '#5C2D91';
+      edgeOpacity = '0.5';
+    }} else if (_edgeColor[edgeIdx] !== undefined) {{
+      edgeStroke = _CROSS_COLORS[_edgeColor[edgeIdx] % _CROSS_COLORS.length];
+      edgeOpacity = '0.75';
+    }} else {{
+      edgeStroke = '#8a8886';
+      edgeOpacity = '0.65';
+    }}
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', pathD);
     path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', isPeEdge ? '#5C2D91' : '#8a8886');
+    path.setAttribute('stroke', edgeStroke);
     path.setAttribute('stroke-width', isPeEdge ? '1' : '1.2');
     path.setAttribute('stroke-dasharray', edge.dash || '0');
     path.setAttribute('marker-end', `url(#${{markerFor(edge.type)}})`);
-    path.setAttribute('opacity', isPeEdge ? '0.5' : '0.65');
+    path.setAttribute('opacity', edgeOpacity);
     path.classList.add('edge-path');
     path.setAttribute('data-from', edge.from);
     path.setAttribute('data-to', edge.to);
@@ -1961,7 +2196,15 @@ function renderDiagram() {{
 
       _edgeLabels.push({{ label: edge.label, x: chosen.x, y: chosen.y, from: edge.from, to: edge.to }});
     }}
-  }});
+
+    return {{ path, edge, pts }};
+  }}
+
+  // Render all edges
+  _allEdgePaths.forEach((ep, edgeIdx) => renderEdge({{ ...ep, edgeIdx }}));
+
+  // Re-append group labels on top of edges
+  _groupLabelElements.forEach(el => root.appendChild(el));
 
   // ── Nodes (rendered LAST — on top of edges, covering crossing points) ──
   NODES.forEach(node => {{
