@@ -2083,6 +2083,28 @@ function renderDiagram() {{
     }}
     return true;
   }}
+  // Check if horizontal row is free of nodes and non-exempt section boxes
+  function _isRowClear(cy, xMin, xMax, skipId1, skipId2, skipGbs) {{
+    for (const _nd of NODES) {{
+      if (_nd.id === skipId1 || _nd.id === skipId2) continue;
+      const _np = positions[_nd.id]; if (!_np) continue;
+      const _nw = _nd.type === 'pe' ? PE_W : SVC_W;
+      const _nh = (_nd.type === 'pe' ? PE_H : SVC_H) + 20;
+      const _pad = 6;
+      if (cy > _np.y - _pad && cy < _np.y + _nh + _pad &&
+          xMin < _np.x + _nw + _pad && xMax > _np.x - _pad) {{
+        return false;
+      }}
+    }}
+    for (const _gb of groupBoxes) {{
+      if (skipGbs && skipGbs.indexOf(_gb) >= 0) continue;
+      if (cy > _gb.y - 4 && cy < _gb.y + _gb.h + 4 &&
+          xMin < _gb.x + _gb.w + 4 && xMax > _gb.x - 4) {{
+        return false;
+      }}
+    }}
+    return true;
+  }}
   function _findGb(px, py) {{
     for (const _gb of groupBoxes) {{
       if (px >= _gb.x && px <= _gb.x + _gb.w && py >= _gb.y && py <= _gb.y + _gb.h) return _gb;
@@ -2090,12 +2112,13 @@ function renderDiagram() {{
     return null;
   }}
   // Find nearest clear column starting from preferred x, skipping source/dest sections
-  function _findCol(prefX, yMin, yMax, skipId1, skipId2, skipGbs) {{
+  function _findCol(prefX, yMin, yMax, skipId1, skipId2, skipGbs, preferDir) {{
     // Try preferred position first (direct vertical from node)
     if (!_colUsed(prefX) && _isColClear(prefX, yMin, yMax, skipId1, skipId2, skipGbs)) return prefX;
     // Search outward in small steps
+    const _dirs = preferDir < 0 ? [-1, 1] : (preferDir > 0 ? [1, -1] : [-1, 1]);
     for (let _t = 1; _t <= 100; _t++) {{
-      for (const _d of [-1, 1]) {{
+      for (const _d of _dirs) {{
         const _cx = prefX + _d * _t * OSEP;
         if (_cx < 20) continue;
         if (_colUsed(_cx)) continue;
@@ -2143,9 +2166,32 @@ function renderDiagram() {{
     const srcGb = _findGb(start.x, start.y);
     const dstGb = _findGb(end.x, end.y);
     const skipGbs = [srcGb, dstGb].filter(g => g !== null);
+    const _yMin = Math.min(start.y, end.y);
+    const _yMax = Math.max(start.y, end.y);
+    const _spanX = Math.abs(end.x - start.x);
+    // Prefer a local single-column reroute first to avoid long bottom-lane detours.
+    const _localPrefX = (start.x + end.x) / 2;
+    const _localX = _findCol(_localPrefX, _yMin, _yMax, _fromId, _toId, skipGbs);
+    const _localLimit = Math.max(_spanX + 40, 120);
+    if (_localX !== null &&
+        Math.abs(_localX - start.x) <= _localLimit &&
+        Math.abs(_localX - end.x) <= _localLimit &&
+        _isRowClear(start.y, Math.min(start.x, _localX), Math.max(start.x, _localX), _fromId, _toId, skipGbs) &&
+        _isRowClear(end.y, Math.min(end.x, _localX), Math.max(end.x, _localX), _fromId, _toId, skipGbs)) {{
+      _usedCols.push(_localX);
+      pB.length = 0;
+      pB.push(start);
+      if (Math.abs(_localX - start.x) > 2) pB.push({{ x: _localX, y: start.y }});
+      if (Math.abs(end.y - start.y) > 2) pB.push({{ x: _localX, y: end.y }});
+      if (Math.abs(_localX - end.x) > 2) pB.push({{ x: _localX, y: end.y }});
+      pB.push(end);
+      _rerouted.add(_worstEdge);
+      continue;
+    }}
     const laneY = _bottomLaneBase + _bottomSlot * _LANE_SPC;
-    const _exitX = _findCol(start.x, Math.min(start.y, laneY), Math.max(start.y, laneY), _fromId, _toId, skipGbs);
-    const _enterX = _findCol(end.x, Math.min(end.y, laneY), Math.max(end.y, laneY), _fromId, _toId, skipGbs);
+    const _towardEnd = end.x >= start.x ? 1 : -1;
+    const _exitX = _findCol(start.x, Math.min(start.y, laneY), Math.max(start.y, laneY), _fromId, _toId, skipGbs, _towardEnd);
+    const _enterX = _findCol(end.x, Math.min(end.y, laneY), Math.max(end.y, laneY), _fromId, _toId, skipGbs, -_towardEnd);
     if (_exitX === null || _enterX === null) {{
       _rerouted.add(_worstEdge);
       continue;
