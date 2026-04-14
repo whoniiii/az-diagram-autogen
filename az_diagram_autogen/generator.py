@@ -2079,14 +2079,60 @@ function renderDiagram() {{
     }});
   }}
 
-  // POST-REROUTE OVERLAP SEPARATION — iterative bottom-lane rerouter
-  // Each pass: fresh scan → find worst overlapping non-rerouted edge → reroute via bottom
+  // BOTTOM-LANE REROUTER — marshalled U-shape approach
+  // Reroute overlapping edges via evenly-spaced horizontal lanes below all sections.
+  // Direct vertical descent from node when possible (2 bends); offset only when blocked (4 bends).
   const OSEP2 = 14;
   const _bottomLaneBase = _gbBottom + _RMARGIN + 30;
   let _bottomSlot = 0;
+  const _LANE_SPC = OSEP2; // 14px lane spacing — precise marshalled look
+  const _COL_SPC = OSEP2; // minimum distance between vertical corridors
   const _rerouted = new Set();
+  const _usedCols = [];
+  function _colUsed(cx) {{ for (const ux of _usedCols) {{ if (Math.abs(cx - ux) < _COL_SPC) return true; }} return false; }}
+  // Check if vertical column is free of nodes and non-exempt section boxes
+  function _isColClear(cx, yMin, yMax, skipId1, skipId2, skipGbs) {{
+    for (const _nd of NODES) {{
+      if (_nd.id === skipId1 || _nd.id === skipId2) continue;
+      const _np = positions[_nd.id]; if (!_np) continue;
+      const _nw = _nd.type === 'pe' ? PE_W : SVC_W;
+      const _nh = (_nd.type === 'pe' ? PE_H : SVC_H) + 20;
+      const _pad = 6;
+      if (cx > _np.x - _pad && cx < _np.x + _nw + _pad &&
+          yMin < _np.y + _nh + _pad && yMax > _np.y - _pad) {{
+        return false;
+      }}
+    }}
+    for (const _gb of groupBoxes) {{
+      if (skipGbs && skipGbs.indexOf(_gb) >= 0) continue;
+      if (cx > _gb.x - 4 && cx < _gb.x + _gb.w + 4 &&
+          yMin < _gb.y + _gb.h + 4 && yMax > _gb.y - 4) {{
+        return false;
+      }}
+    }}
+    return true;
+  }}
+  function _findGb(px, py) {{
+    for (const _gb of groupBoxes) {{
+      if (px >= _gb.x && px <= _gb.x + _gb.w && py >= _gb.y && py <= _gb.y + _gb.h) return _gb;
+    }}
+    return null;
+  }}
+  // Find nearest clear column starting from preferred x, skipping source/dest sections
+  function _findCol(prefX, yMin, yMax, skipId1, skipId2, skipGbs) {{
+    // Try preferred position first (direct vertical from node)
+    if (!_colUsed(prefX) && _isColClear(prefX, yMin, yMax, skipId1, skipId2, skipGbs)) return prefX;
+    // Search outward in small steps
+    for (let _t = 1; _t <= 100; _t++) {{
+      for (const _d of [-1, 1]) {{
+        const _cx = prefX + _d * _t * OSEP;
+        if (_colUsed(_cx)) continue;
+        if (_isColClear(_cx, yMin, yMax, skipId1, skipId2, skipGbs)) return _cx;
+      }}
+    }}
+    return null;
+  }}
   for (let _blPass = 0; _blPass < 20; _blPass++) {{
-    // Fresh overlap scan — compare ALL edges including rerouted ones
     let _worstEdge = -1, _worstCount = 0;
     for (let i = 0; i < _allEdgePaths.length; i++) {{
       if (_rerouted.has(i)) continue;
@@ -2116,29 +2162,73 @@ function renderDiagram() {{
       if (cnt > _worstCount) {{ _worstCount = cnt; _worstEdge = i; }}
     }}
     if (_worstEdge < 0) break;
-    // Reroute via bottom lane with unique x-offset for vertical segments
     const pB = _allEdgePaths[_worstEdge].pts;
+    const _fromId = _allEdgePaths[_worstEdge].edge.from;
+    const _toId = _allEdgePaths[_worstEdge].edge.to;
     const start = pB[0];
     const end = pB[pB.length - 1];
-    const laneY = _bottomLaneBase + _bottomSlot * OSEP2;
-    const xOff = (_bottomSlot + 1) * OSEP2;
+    const laneY = _bottomLaneBase + _bottomSlot * _LANE_SPC;
+    // Source/dest sections are exempt — verticals can pass through own sections
+    const srcGb = _findGb(start.x, start.y);
+    const dstGb = _findGb(end.x, end.y);
+    const skipGbs = [srcGb, dstGb].filter(g => g !== null);
+    const _exitX = _findCol(start.x, Math.min(start.y, laneY), Math.max(start.y, laneY), _fromId, _toId, skipGbs);
+    const _enterX = _findCol(end.x, Math.min(end.y, laneY), Math.max(end.y, laneY), _fromId, _toId, skipGbs);
+    if (_exitX === null || _enterX === null) {{
+      _rerouted.add(_worstEdge);
+      continue;
+    }}
+    _usedCols.push(_exitX);
+    _usedCols.push(_enterX);
     _bottomSlot++;
-    const exitX = start.x < end.x ? start.x - xOff : start.x + xOff;
-    const enterX = start.x < end.x ? end.x + xOff : end.x - xOff;
     pB.length = 0;
     pB.push(start);
-    // Vertical jog at start to avoid stub overlap at startY
-    const sJog = Math.min(start.y + OSEP2, laneY - OSEP2);
-    pB.push({{ x: start.x, y: sJog }});
-    pB.push({{ x: exitX, y: sJog }});
-    pB.push({{ x: exitX, y: laneY }});
-    pB.push({{ x: enterX, y: laneY }});
-    // Vertical jog at end to avoid stub overlap at endY
-    const eJog = Math.min(end.y + OSEP2, laneY - OSEP2);
-    pB.push({{ x: enterX, y: eJog }});
-    pB.push({{ x: end.x, y: eJog }});
+    // Only add horizontal stub if exit column differs from node x
+    if (Math.abs(_exitX - start.x) > 2) pB.push({{ x: _exitX, y: start.y }});
+    pB.push({{ x: _exitX, y: laneY }});
+    pB.push({{ x: _enterX, y: laneY }});
+    if (Math.abs(_enterX - end.x) > 2) pB.push({{ x: _enterX, y: end.y }});
     pB.push(end);
     _rerouted.add(_worstEdge);
+  }}
+  // POST-REROUTE OVERLAP SEPARATION — push rerouted segments apart
+  for (let _rSep = 0; _rSep < 6; _rSep++) {{
+    for (let i = 0; i < _allEdgePaths.length; i++) {{
+      for (let j = i + 1; j < _allEdgePaths.length; j++) {{
+        // Separate all edge pairs (rerouted or not) to handle post-reroute overlaps
+        const pA = _allEdgePaths[i].pts;
+        const pB = _allEdgePaths[j].pts;
+        const dir = (j % 2 === 0) ? 1 : -1;
+        for (let si = 0; si < pA.length - 1; si++) {{
+          for (let sj = 0; sj < pB.length - 1; sj++) {{
+            const a1 = pA[si], a2 = pA[si + 1];
+            const b1 = pB[sj], b2 = pB[sj + 1];
+            const aV = Math.abs(a1.x - a2.x) < 2;
+            const bV = Math.abs(b1.x - b2.x) < 2;
+            const aH = Math.abs(a1.y - a2.y) < 2;
+            const bH = Math.abs(b1.y - b2.y) < 2;
+            if (aV && bV && Math.abs(a1.x - b1.x) < OSEP2) {{
+              const ov = Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y))
+                       - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y));
+              if (ov > 10) {{
+                const shift = OSEP2 * dir;
+                if (sj > 0) pB[sj] = {{ x: b1.x + shift, y: b1.y }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x + shift, y: b2.y }};
+              }}
+            }}
+            if (aH && bH && Math.abs(a1.y - b1.y) < OSEP2) {{
+              const ov = Math.min(Math.max(a1.x, a2.x), Math.max(b1.x, b2.x))
+                       - Math.max(Math.min(a1.x, a2.x), Math.min(b1.x, b2.x));
+              if (ov > 10) {{
+                const shift = OSEP2 * dir;
+                if (sj > 0) pB[sj] = {{ x: b1.x, y: b1.y + shift }};
+                if (sj + 1 < pB.length - 1) pB[sj + 1] = {{ x: b2.x, y: b2.y + shift }};
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
   }}
   // POST-REROUTE ORTHOGONALIZATION
   _allEdgePaths.forEach(({{ pts }}) => {{
@@ -2160,7 +2250,7 @@ function renderDiagram() {{
     }}
   }});
 
-  // CROSSING DETECTION — find which edges cross each other (for color differentiation)
+  // CROSSING DETECTION— find which edges cross each other (for color differentiation)
   const _crossNeighbors = {{}};
   for (let i = 0; i < _allEdgePaths.length; i++) {{
     for (let j = i + 1; j < _allEdgePaths.length; j++) {{
