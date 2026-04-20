@@ -113,6 +113,9 @@ with open("output.html", "w", encoding="utf-8") as f:
 |---------|-------------|
 | **636 Azure Icons** | Official Microsoft Azure icons, Base64-encoded — works offline |
 | **Interactive** | Drag-and-drop nodes, pan & zoom, click for details |
+| **Text Size Controls** | A+/A− toolbar buttons to scale labels at runtime (0.5×–2.5×) |
+| **Persistent Selection** | Selected node stays highlighted while dragging or panning |
+| **Orthogonal Routing** | Axis-aligned edges with overlap/crossing minimization and section-aware detours |
 | **Private Endpoints** | Visualize PE connections with dedicated group |
 | **VNet Boundaries** | Purple dashed boundaries with CIDR labels |
 | **Multi-Sub/RG** | Nested subscription → resource group hierarchy |
@@ -122,6 +125,19 @@ with open("output.html", "w", encoding="utf-8") as f:
 | **Dual Interface** | CLI tool + Python API |
 | **Zero Dependencies** | Pure Python, no external packages required |
 | **Cross-Platform** | Windows, macOS, Linux, WSL — anywhere Python runs |
+
+---
+
+## 🆕 What's New in 0.1.5
+
+- **Edge routing overhaul** — zero overlaps and drastically fewer crossings on dense diagrams via bottom-lane / U-shape marshalling, section-aware descent, and a final orthogonalization pass that eliminates stray diagonals.
+- **Outside-VNet routing** — edges whose endpoints sit outside the VNet no longer cut through the VNet interior.
+- **Bigger, more legible boxes** — service boxes are 20 % larger and the default text scale is now **1.4×**, with extra breathing room between icon and service name.
+- **Interactive text size** — new **A+ / A−** toolbar buttons adjust label size on the fly (0.5×–2.5×). The standalone *Reset* button has been merged into **Fit**.
+- **Selection no longer drops** — dragging a node or panning the canvas keeps the current selection highlighted.
+- **Darker section outlines** for better contrast against the canvas.
+
+No breaking API changes — `generate_diagram(...)` signature and JSON schema are unchanged.
 
 ---
 
