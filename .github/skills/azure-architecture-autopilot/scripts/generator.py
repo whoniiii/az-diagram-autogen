@@ -746,8 +746,8 @@ const VNET_INFO = {vnet_info_js};
 const HIERARCHY = {hierarchy_js};
 
 // ── Node sizing ──
-const SVC_W = 150, SVC_H = 100;  // service node (icon above, name below)
-const PE_W = 100, PE_H = 70;     // pe node (smaller)
+const SVC_W = 180, SVC_H = 120;  // service node (icon above, name below) — 20% larger
+const PE_W = 120, PE_H = 84;     // pe node (smaller) — 20% larger
 const GAP = 40;
 
 // ── Layout: Category Group Box style ──
@@ -2582,7 +2582,7 @@ function renderDiagram() {{
     // Icon — official Azure icon (data URI) preferred, fallback to SVG
     const iconSize = isPe ? 28 : 36;
     const iconX = (nw - iconSize) / 2;
-    const iconY = isPe ? 10 : 12;
+    const iconY = isPe ? 12 : 14;
     if (node.icon_data_uri) {{
       // Official Azure icon (Base64 image)
       const iconImg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
@@ -2600,9 +2600,9 @@ function renderDiagram() {{
       g.appendChild(iconG);
     }}
 
-    // Name
+    // Name — extra gap below icon (icon bottom ~50, name baseline at 74 → 24px breathing room)
     const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    name.setAttribute('x', nw/2); name.setAttribute('y', isPe ? 52 : 60);
+    name.setAttribute('x', nw/2); name.setAttribute('y', isPe ? 64 : 74);
     name.setAttribute('text-anchor', 'middle');
     name.setAttribute('font-size', isPe ? '10' : '11');
     name.setAttribute('font-weight', '600'); name.setAttribute('fill', '#323130');
@@ -2614,7 +2614,7 @@ function renderDiagram() {{
     // SKU label
     if (!isPe && node.sku) {{
       const sku = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      sku.setAttribute('x', nw/2); sku.setAttribute('y', 72);
+      sku.setAttribute('x', nw/2); sku.setAttribute('y', 90);
       sku.setAttribute('text-anchor', 'middle');
       sku.setAttribute('font-size', '10'); sku.setAttribute('fill', '#a19f9d');
       sku.setAttribute('font-family', 'Segoe UI, sans-serif');
@@ -2624,7 +2624,7 @@ function renderDiagram() {{
 
     if (isPe && node.details.length > 0) {{
       const det = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      det.setAttribute('x', nw/2); det.setAttribute('y', 63);
+      det.setAttribute('x', nw/2); det.setAttribute('y', 76);
       det.setAttribute('text-anchor', 'middle');
       det.setAttribute('font-size', '9'); det.setAttribute('fill', '#a19f9d');
       det.setAttribute('font-family', 'Segoe UI, sans-serif');
@@ -2797,7 +2797,7 @@ function zoomIn() {{ viewTransform.scale *= 1.25; applyTransform(); }}
 function zoomOut() {{ viewTransform.scale *= 0.8; applyTransform(); }}
 
 // ── Text size controls ──
-let _textScale = 1;
+let _textScale = 1.4;  // default 40% larger than raw attribute sizes
 function applyTextScale() {{
   document.querySelectorAll('#canvas text').forEach(t => {{
     let orig = t.getAttribute('data-orig-fs');
