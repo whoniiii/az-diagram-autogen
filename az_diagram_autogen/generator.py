@@ -1106,6 +1106,22 @@ function renderDiagram() {{
   root.innerHTML = '';
   _routeCounter = 0;  // reset stagger counter each render
 
+  // ── VNet bounds (hoisted so avoidNodes can push detours outside VNet) ──
+  let _vnetBounds = null;
+  if (!useRgLayout) {{
+    const _pg = groupBoxes.filter(gb => !gb.isBottom);
+    const _hasPriv = NODES.some(n => n.private && n.type !== 'pe');
+    const _hasVNI = VNET_INFO && VNET_INFO.length > 0;
+    const _hasPe = NODES.some(n => n.type === 'pe');
+    if (_pg.length > 0 && (_hasPriv || _hasVNI || _hasPe)) {{
+      const vx = Math.min(..._pg.map(g => g.x)) - 16;
+      const vy = Math.min(..._pg.map(g => g.y)) - 36;
+      const vR = Math.max(..._pg.map(g => g.x + g.w)) + 16;
+      const vB = Math.max(..._pg.map(g => g.y + g.h)) + 16;
+      _vnetBounds = {{ x: vx, y: vy, w: vR - vx, h: vB - vy }};
+    }}
+  }}
+
   // ── Draw VNet boundary (only in category-based layout, not RG layout) ──
   if (!useRgLayout) {{
   const privateGroups = groupBoxes.filter(gb => !gb.isBottom);
@@ -1485,6 +1501,26 @@ function renderDiagram() {{
       sectionObstacles.push(gb);
     }}
 
+    // Helper: if the section detour coord lands inside the VNet rect while
+    // either endpoint sits outside the VNet, push the detour past the nearer
+    // VNet edge so unrelated VNet interior is not traversed.
+    function _clampOutsideVNet(val, axis) {{
+      if (!_vnetBounds) return val;
+      const inAnchor = (a) => (a.x > _vnetBounds.x && a.x < _vnetBounds.x + _vnetBounds.w
+                            && a.y > _vnetBounds.y && a.y < _vnetBounds.y + _vnetBounds.h);
+      const srcOut = !inAnchor(startAnchor);
+      const dstOut = !inAnchor(endAnchor);
+      if (!srcOut && !dstOut) return val;
+      if (axis === 'x') {{
+        const L = _vnetBounds.x, R = _vnetBounds.x + _vnetBounds.w;
+        if (val > L && val < R) return (val - L) <= (R - val) ? L - SECTION_MARGIN : R + SECTION_MARGIN;
+      }} else {{
+        const T = _vnetBounds.y, B = _vnetBounds.y + _vnetBounds.h;
+        if (val > T && val < B) return (val - T) <= (B - val) ? T - SECTION_MARGIN : B + SECTION_MARGIN;
+      }}
+      return val;
+    }}
+
     for (let iter = 0; iter < 20; iter++) {{
       let found = false;
 
@@ -1505,25 +1541,29 @@ function renderDiagram() {{
             if (isVert) {{
               const leftX = gb.x - SECTION_MARGIN;
               const rightX = gb.x + gb.w + SECTION_MARGIN;
-              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              let detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              detourX = _clampOutsideVNet(detourX, 'x');
               points = [points[0], {{x: detourX, y: p1.y}}, {{x: detourX, y: p2.y}}, points[points.length-1]];
             }} else {{
               const topY = gb.y - SECTION_MARGIN;
               const bottomY = gb.y + gb.h + SECTION_MARGIN;
-              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              let detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              detourY = _clampOutsideVNet(detourY, 'y');
               points = [points[0], {{x: p1.x, y: detourY}}, {{x: p2.x, y: detourY}}, points[points.length-1]];
             }}
           }} else if (isFirst) {{
             if (isVert) {{
               const leftX = gb.x - SECTION_MARGIN;
               const rightX = gb.x + gb.w + SECTION_MARGIN;
-              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              let detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              detourX = _clampOutsideVNet(detourX, 'x');
               points.splice(1, 0, {{x: p1.x, y: p1.y}}, {{x: detourX, y: p1.y}});
               points[3] = {{x: detourX, y: p2.y}};
             }} else {{
               const topY = gb.y - SECTION_MARGIN;
               const bottomY = gb.y + gb.h + SECTION_MARGIN;
-              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              let detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              detourY = _clampOutsideVNet(detourY, 'y');
               points.splice(1, 0, {{x: p1.x, y: detourY}});
               points[2] = {{x: p2.x, y: detourY}};
             }}
@@ -1531,13 +1571,15 @@ function renderDiagram() {{
             if (isVert) {{
               const leftX = gb.x - SECTION_MARGIN;
               const rightX = gb.x + gb.w + SECTION_MARGIN;
-              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              let detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              detourX = _clampOutsideVNet(detourX, 'x');
               points[i] = {{x: detourX, y: p1.y}};
               points.splice(i + 1, 0, {{x: detourX, y: p2.y}}, {{x: p2.x, y: p2.y}});
             }} else {{
               const topY = gb.y - SECTION_MARGIN;
               const bottomY = gb.y + gb.h + SECTION_MARGIN;
-              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              let detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              detourY = _clampOutsideVNet(detourY, 'y');
               points[i] = {{x: p1.x, y: detourY}};
               points.splice(i + 1, 0, {{x: p2.x, y: detourY}});
             }}
@@ -1545,13 +1587,15 @@ function renderDiagram() {{
             if (isVert) {{
               const leftX = gb.x - SECTION_MARGIN;
               const rightX = gb.x + gb.w + SECTION_MARGIN;
-              const newX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              let newX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              newX = _clampOutsideVNet(newX, 'x');
               points[i] = {{ x: newX, y: p1.y }};
               points[i+1] = {{ x: newX, y: p2.y }};
             }} else {{
               const topY = gb.y - SECTION_MARGIN;
               const bottomY = gb.y + gb.h + SECTION_MARGIN;
-              const newY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              let newY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              newY = _clampOutsideVNet(newY, 'y');
               points[i] = {{ x: p1.x, y: newY }};
               points[i+1] = {{ x: p2.x, y: newY }};
             }}
