@@ -696,7 +696,8 @@ def generate_html(services: list, connections: list, title: str, vnet_info: str 
       <button class="tool-btn" onclick="zoomIn()">+</button>
       <button class="tool-btn" onclick="zoomOut()">&minus;</button>
       <div class="tool-sep"></div>
-      <button class="tool-btn" onclick="resetZoom()">Reset</button>
+      <button class="tool-btn" onclick="textBigger()" title="Bigger text" style="font-size:13px;">A+</button>
+      <button class="tool-btn" onclick="textSmaller()" title="Smaller text" style="font-size:10px;">A&minus;</button>
       <div class="tool-sep"></div>
       <button class="tool-btn" onclick="downloadPNG()" title="Download PNG">&#128247; PNG</button>
     </div>
@@ -1019,6 +1020,7 @@ const _leftMarginBase = groupBoxes.length > 0 ? Math.min(...groupBoxes.map(g => 
 // ── State ──
 let dragging = null, dragOffX = 0, dragOffY = 0;
 let draggingGroup = null, groupDragNodes = [];  // for RG/group box dragging
+let _dragStartX = 0, _dragStartY = 0, _didDrag = false;  // global so renderDiagram rebuilding DOM mid-drag doesn't reset them
 let viewTransform = {{ x: 0, y: 0, scale: 1 }};
 let isPanning = false, panSX = 0, panSY = 0, panSTx = 0, panSTy = 0;
 let _routeCounter = 0;
@@ -1036,13 +1038,23 @@ function selectNode(nodeId) {{
   if (wasSelected) {{ _selectedNodeId = null; return; }}
 
   _selectedNodeId = nodeId;
+  applySelectionHighlight();
+  // Scroll sidebar card into view on initial selection
+  const sCard = document.getElementById('card-' + nodeId);
+  if (sCard) sCard.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }});
+}}
+
+// Re-apply CSS classes for current _selectedNodeId (called after renderDiagram rebuilds DOM)
+function applySelectionHighlight() {{
+  const nodeId = _selectedNodeId;
+  if (!nodeId) return;
 
   // Highlight diagram node
   const svgNode = document.querySelector(`.node[data-id="${{nodeId}}"]`);
   if (svgNode) svgNode.classList.add('selected');
   // Highlight sidebar card
   const card = document.getElementById('card-' + nodeId);
-  if (card) {{ card.classList.add('selected'); card.scrollIntoView({{ behavior: 'smooth', block: 'nearest' }}); }}
+  if (card) card.classList.add('selected');
 
   // Find connected edges (where this node is from or to)
   const connectedNodeIds = new Set([nodeId]);
@@ -2663,7 +2675,6 @@ function renderDiagram() {{
     }}
 
     // ── Events: drag vs click separation ──
-    let _dragStartX = 0, _dragStartY = 0, _didDrag = false;
     g.addEventListener('mousedown', e => {{
       if (e.button !== 0) return;
       dragging = node.id;
@@ -2723,6 +2734,10 @@ function renderDiagram() {{
     root.appendChild(g);
   }});
 
+  // Re-apply text scale and selection state after DOM rebuild
+  if (typeof _textScale !== 'undefined' && _textScale !== 1) applyTextScale();
+  if (_selectedNodeId) applySelectionHighlight();
+
 }}
 
 function getSVGPoint(e) {{
@@ -2780,7 +2795,25 @@ function fitToScreen() {{
 }}
 function zoomIn() {{ viewTransform.scale *= 1.25; applyTransform(); }}
 function zoomOut() {{ viewTransform.scale *= 0.8; applyTransform(); }}
-function resetZoom() {{ viewTransform = {{x:0,y:0,scale:1}}; applyTransform(); }}
+
+// ── Text size controls ──
+let _textScale = 1;
+function applyTextScale() {{
+  document.querySelectorAll('#canvas text').forEach(t => {{
+    let orig = t.getAttribute('data-orig-fs');
+    if (!orig) {{
+      orig = t.getAttribute('font-size');
+      if (!orig) {{
+        const cs = window.getComputedStyle(t).fontSize;
+        orig = cs ? parseFloat(cs).toString() : '11';
+      }}
+      t.setAttribute('data-orig-fs', orig);
+    }}
+    t.setAttribute('font-size', (parseFloat(orig) * _textScale).toFixed(2));
+  }});
+}}
+function textBigger() {{ _textScale = Math.min(2.5, _textScale * 1.15); applyTextScale(); }}
+function textSmaller() {{ _textScale = Math.max(0.5, _textScale / 1.15); applyTextScale(); }}
 
 function downloadPNG() {{
   const svg = document.getElementById('canvas');
@@ -2852,8 +2885,6 @@ document.getElementById('canvas').addEventListener('wheel', e => {{
 
 document.getElementById('canvas').addEventListener('mousedown', e => {{
   if (e.target.closest('.node')) return;
-  // Clear selection when clicking on empty canvas area
-  if (_selectedNodeId && !e.target.closest('.node')) clearSelection();
   isPanning = true;
   panSX = e.clientX; panSY = e.clientY;
   panSTx = viewTransform.x; panSTy = viewTransform.y;
