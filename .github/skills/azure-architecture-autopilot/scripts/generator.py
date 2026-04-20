@@ -1455,17 +1455,100 @@ function renderDiagram() {{
 
   function avoidNodes(pts, fromId, toId) {{
     const MARGIN = 25;
+    const SECTION_MARGIN = 12;
     let points = pts.map(p => ({{...p}}));
     // Save original anchors — these must NEVER move (they attach to nodes)
     const startAnchor = {{...points[0]}};
     const endAnchor = {{...points[points.length - 1]}};
 
-    for (let iter = 0; iter < 8; iter++) {{
+    // Section (groupBox) obstacles: groupBoxes containing NEITHER endpoint.
+    // Skip PE group since PE-type edges legitimately traverse into it.
+    const _fromGrp = _nodeGrp[fromId];
+    const _toGrp = _nodeGrp[toId];
+    const sectionObstacles = [];
+    for (let gi = 0; gi < groupBoxes.length; gi++) {{
+      if (gi === _fromGrp || gi === _toGrp) continue;
+      const gb = groupBoxes[gi];
+      if (gb.isPE) continue;
+      sectionObstacles.push(gb);
+    }}
+
+    for (let iter = 0; iter < 20; iter++) {{
       let found = false;
 
       for (let i = 0; i < points.length - 1 && !found; i++) {{
         const p1 = points[i], p2 = points[i+1];
 
+        // 1) Section obstacles (larger, checked first)
+        for (const gb of sectionObstacles) {{
+          const pos = {{x: gb.x, y: gb.y}};
+          if (!segHitsNode(p1.x, p1.y, p2.x, p2.y, pos, gb.w, gb.h, SECTION_MARGIN)) continue;
+
+          found = true;
+          const isVert = Math.abs(p1.x - p2.x) < 1;
+          const isFirst = (i === 0);
+          const isLast = (i + 1 === points.length - 1);
+
+          if (points.length <= 2) {{
+            if (isVert) {{
+              const leftX = gb.x - SECTION_MARGIN;
+              const rightX = gb.x + gb.w + SECTION_MARGIN;
+              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              points = [points[0], {{x: detourX, y: p1.y}}, {{x: detourX, y: p2.y}}, points[points.length-1]];
+            }} else {{
+              const topY = gb.y - SECTION_MARGIN;
+              const bottomY = gb.y + gb.h + SECTION_MARGIN;
+              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              points = [points[0], {{x: p1.x, y: detourY}}, {{x: p2.x, y: detourY}}, points[points.length-1]];
+            }}
+          }} else if (isFirst) {{
+            if (isVert) {{
+              const leftX = gb.x - SECTION_MARGIN;
+              const rightX = gb.x + gb.w + SECTION_MARGIN;
+              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              points.splice(1, 0, {{x: p1.x, y: p1.y}}, {{x: detourX, y: p1.y}});
+              points[3] = {{x: detourX, y: p2.y}};
+            }} else {{
+              const topY = gb.y - SECTION_MARGIN;
+              const bottomY = gb.y + gb.h + SECTION_MARGIN;
+              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              points.splice(1, 0, {{x: p1.x, y: detourY}});
+              points[2] = {{x: p2.x, y: detourY}};
+            }}
+          }} else if (isLast) {{
+            if (isVert) {{
+              const leftX = gb.x - SECTION_MARGIN;
+              const rightX = gb.x + gb.w + SECTION_MARGIN;
+              const detourX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              points[i] = {{x: detourX, y: p1.y}};
+              points.splice(i + 1, 0, {{x: detourX, y: p2.y}}, {{x: p2.x, y: p2.y}});
+            }} else {{
+              const topY = gb.y - SECTION_MARGIN;
+              const bottomY = gb.y + gb.h + SECTION_MARGIN;
+              const detourY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              points[i] = {{x: p1.x, y: detourY}};
+              points.splice(i + 1, 0, {{x: p2.x, y: detourY}});
+            }}
+          }} else {{
+            if (isVert) {{
+              const leftX = gb.x - SECTION_MARGIN;
+              const rightX = gb.x + gb.w + SECTION_MARGIN;
+              const newX = Math.abs(p1.x - leftX) <= Math.abs(p1.x - rightX) ? leftX : rightX;
+              points[i] = {{ x: newX, y: p1.y }};
+              points[i+1] = {{ x: newX, y: p2.y }};
+            }} else {{
+              const topY = gb.y - SECTION_MARGIN;
+              const bottomY = gb.y + gb.h + SECTION_MARGIN;
+              const newY = Math.abs(p1.y - topY) <= Math.abs(p1.y - bottomY) ? topY : bottomY;
+              points[i] = {{ x: p1.x, y: newY }};
+              points[i+1] = {{ x: p2.x, y: newY }};
+            }}
+          }}
+          break;
+        }}
+        if (found) break;
+
+        // 2) Service node obstacles
         for (const node of NODES) {{
           if (node.id === fromId || node.id === toId) continue;
           const pos = positions[node.id];
@@ -2304,6 +2387,27 @@ function renderDiagram() {{
             }}
           }}
         }}
+      }}
+    }}
+  }}
+
+  // FINAL DIAGONAL BREAKER — any non-orthogonal segment is split into an L-shape.
+  // Diagonals may be introduced by the separation pass above when only one
+  // endpoint of a segment is shifted. Axis-align every segment as a last safety net.
+  for (const _ep of _allEdgePaths) {{
+    const pts = _ep.pts;
+    for (let k = 0; k < pts.length - 1; k++) {{
+      const q1 = pts[k], q2 = pts[k + 1];
+      const dx = q2.x - q1.x;
+      const dy = q2.y - q1.y;
+      if (Math.abs(dx) > 1 && Math.abs(dy) > 1) {{
+        // Insert elbow at (q2.x, q1.y) — preserves endpoints, forces L-shape.
+        // Direction heuristic: follow the dominant axis first.
+        const elbow = Math.abs(dx) >= Math.abs(dy)
+          ? {{ x: q2.x, y: q1.y }}
+          : {{ x: q1.x, y: q2.y }};
+        pts.splice(k + 1, 0, elbow);
+        // Re-check the newly inserted segments in the next iteration
       }}
     }}
   }}
